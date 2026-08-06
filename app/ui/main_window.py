@@ -9,7 +9,12 @@ from PySide6.QtWidgets import (
 )
 
 from app.resources.language import TEXT
+from app.ui.customers_page import CustomersPage
 from app.ui.products_page import ProductsPage
+from app.ui.reports_page import ReportsPage
+from app.ui.sale_page import SalePage
+from app.ui.suppliers_page import SuppliersPage
+from app.ui.warehouse_page import WarehousePage
 
 
 class MainWindow(QMainWindow):
@@ -43,8 +48,23 @@ class MainWindow(QMainWindow):
 
         self.workspace = QStackedWidget()
 
+        self.sale_page = SalePage()
+        self.workspace.addWidget(self.sale_page)
+
         self.products_page = ProductsPage()
         self.workspace.addWidget(self.products_page)
+
+        self.warehouse_page = WarehousePage()
+        self.workspace.addWidget(self.warehouse_page)
+
+        self.reports_page = ReportsPage()
+        self.workspace.addWidget(self.reports_page)
+
+        self.customers_page = CustomersPage()
+        self.workspace.addWidget(self.customers_page)
+
+        self.suppliers_page = SuppliersPage()
+        self.workspace.addWidget(self.suppliers_page)
 
         self.menu.currentRowChanged.connect(self.change_page)
 
@@ -59,5 +79,21 @@ class MainWindow(QMainWindow):
         self.menu.setCurrentRow(1)
 
     def change_page(self, index):
-        if index == 1:
+        if index == 0:
+            self.sale_page.load_products()
+            self.workspace.setCurrentWidget(self.sale_page)
+
+        elif index == 1:
             self.workspace.setCurrentWidget(self.products_page)
+
+        elif index == 2:
+            self.workspace.setCurrentWidget(self.warehouse_page)
+
+        elif index == 3:
+            self.workspace.setCurrentWidget(self.reports_page)
+
+        elif index == 4:
+            self.workspace.setCurrentWidget(self.customers_page)
+
+        elif index == 5:
+            self.workspace.setCurrentWidget(self.suppliers_page)

@@ -1,18 +1,19 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
+    QVBoxLayout,
+    QWidget,
 )
 
-from app.widgets.primary_button import PrimaryButton
-from app.widgets.danger_button import DangerButton
+from app.services.product_service import ProductService
 from app.ui.pages.products.table import ProductsTable
 from app.ui.product_dialog import ProductDialog
-from app.services.product_service import ProductService
-from PySide6.QtWidgets import QMessageBox
-from PySide6.QtCore import Qt
+from app.widgets.danger_button import DangerButton
+from app.widgets.primary_button import PrimaryButton
+
 
 class ProductsPage(QWidget):
     def __init__(self):
@@ -27,23 +28,27 @@ class ProductsPage(QWidget):
 
         top_layout = QHBoxLayout()
 
-        search = QLineEdit()
-        search.setPlaceholderText("Qidirish...")
+        self.search = QLineEdit()
+        self.search.setPlaceholderText("Qidirish...")
 
-        add_btn = PrimaryButton("➕ Qo'shish")
+        add_btn = PrimaryButton("Qo'shish")
         add_btn.clicked.connect(self.open_add_dialog)
-        edit_btn = PrimaryButton("✏ Tahrirlash")
+
+        edit_btn = PrimaryButton("Tahrirlash")
         edit_btn.clicked.connect(self.edit_product)
-        delete_btn = DangerButton("🗑 O'chirish")
+
+        delete_btn = DangerButton("O'chirish")
         delete_btn.clicked.connect(self.delete_product)
 
-        top_layout.addWidget(search)
+        top_layout.addWidget(self.search)
         top_layout.addWidget(add_btn)
         top_layout.addWidget(edit_btn)
         top_layout.addWidget(delete_btn)
 
         self.table = ProductsTable()
         self.table.load_data()
+
+        self.search.textChanged.connect(self.table.search_products)
 
         main_layout.addWidget(title)
         main_layout.addLayout(top_layout)
@@ -53,8 +58,30 @@ class ProductsPage(QWidget):
         dialog = ProductDialog()
 
         if dialog.exec():
-            ProductService.create_product(dialog.get_data())
+            data = dialog.get_data()
+            barcode_was_empty = not data["barcode"].strip()
+
+            try:
+                product = ProductService.create_product(data)
+
+            except ValueError as error:
+                QMessageBox.warning(
+                    self,
+                    "Diqqat",
+                    str(error),
+                )
+                return
+
             self.table.load_data()
+            self.table.search_products(self.search.text())
+
+            if barcode_was_empty:
+                QMessageBox.information(
+                    self,
+                    "Mahsulot saqlandi",
+                    "Avtomatik shtrix-kod berildi:\n"
+                    f"{product.barcode}",
+                )
 
     def edit_product(self):
         current_row = self.table.currentRow()
@@ -63,23 +90,32 @@ class ProductsPage(QWidget):
             QMessageBox.information(
                 self,
                 "Diqqat",
-                "Tahrirlash uchun mahsulotni tanlang."
+                "Tahrirlash uchun mahsulotni tanlang.",
             )
             return
 
         product_id = self.table.item(current_row, 0).data(Qt.UserRole)
-
         product = ProductService.get_product(product_id)
 
         dialog = ProductDialog(product)
 
         if dialog.exec():
-            ProductService.update_product(
-                product_id,
-                dialog.get_data()
-            )
+            try:
+                ProductService.update_product(
+                    product_id,
+                    dialog.get_data(),
+                )
+
+            except ValueError as error:
+                QMessageBox.warning(
+                    self,
+                    "Diqqat",
+                    str(error),
+                )
+                return
 
             self.table.load_data()
+            self.table.search_products(self.search.text())
 
     def delete_product(self):
         current_row = self.table.currentRow()
@@ -88,7 +124,7 @@ class ProductsPage(QWidget):
             QMessageBox.information(
                 self,
                 "Diqqat",
-                "O'chirish uchun mahsulotni tanlang."
+                "O'chirish uchun mahsulotni tanlang.",
             )
             return
 
@@ -105,3 +141,4 @@ class ProductsPage(QWidget):
         if reply == QMessageBox.Yes:
             ProductService.delete_product(product_id)
             self.table.load_data()
+            self.table.search_products(self.search.text())
