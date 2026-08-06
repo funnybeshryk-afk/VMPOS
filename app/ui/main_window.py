@@ -13,6 +13,7 @@ from app.ui.customers_page import CustomersPage
 from app.ui.products_page import ProductsPage
 from app.ui.reports_page import ReportsPage
 from app.ui.sale_page import SalePage
+from app.ui.settings_page import SettingsPage
 from app.ui.suppliers_page import SuppliersPage
 from app.ui.warehouse_page import WarehousePage
 
@@ -66,6 +67,9 @@ class MainWindow(QMainWindow):
         self.suppliers_page = SuppliersPage()
         self.workspace.addWidget(self.suppliers_page)
 
+        self.settings_page = SettingsPage()
+        self.workspace.addWidget(self.settings_page)
+
         self.menu.currentRowChanged.connect(self.change_page)
 
         content_layout.addWidget(self.menu)
@@ -97,3 +101,6 @@ class MainWindow(QMainWindow):
 
         elif index == 5:
             self.workspace.setCurrentWidget(self.suppliers_page)
+
+        elif index == 6:
+            self.workspace.setCurrentWidget(self.settings_page)

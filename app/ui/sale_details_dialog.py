@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.services.sale_service import SaleService
+from app.utils.formatters import format_money, format_quantity
 
 
 class SaleDetailsDialog(QDialog):
@@ -54,7 +55,9 @@ class SaleDetailsDialog(QDialog):
             QHeaderView.Stretch
         )
 
-        total_label = QLabel(f"Jami: {sale.total_amount} so'm")
+        total_label = QLabel(
+            f"Jami: {format_money(sale.total_amount)} so'm"
+        )
 
         self.refund_button = QPushButton("Chekni qaytarish")
         self.refund_button.clicked.connect(self.refund_sale)
@@ -88,17 +91,21 @@ class SaleDetailsDialog(QDialog):
             self.items_table.setItem(
                 row,
                 1,
-                QTableWidgetItem(str(sale_item.price)),
+                QTableWidgetItem(format_money(sale_item.price)),
             )
             self.items_table.setItem(
                 row,
                 2,
-                QTableWidgetItem(str(sale_item.quantity)),
+                QTableWidgetItem(
+                    format_quantity(sale_item.quantity)
+                ),
             )
             self.items_table.setItem(
                 row,
                 3,
-                QTableWidgetItem(str(sale_item.line_total)),
+                QTableWidgetItem(
+                    format_money(sale_item.line_total)
+                ),
             )
 
     def refund_sale(self):

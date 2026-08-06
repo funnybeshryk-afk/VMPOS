@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 from app.services.product_service import ProductService
 from app.ui.stock_receipt_dialog import StockReceiptDialog
 from app.ui.stock_receipts_dialog import StockReceiptsDialog
+from app.utils.formatters import format_quantity
 
 
 class WarehousePage(QWidget):
@@ -78,14 +79,17 @@ class WarehousePage(QWidget):
         self.products_table.setRowCount(len(products))
 
         for row, product in enumerate(products):
-            is_low_stock = product.quantity <= product.min_quantity
+            if product.quantity <= 0:
+                status = "Yo'q"
+                color = QColor("#ffcdd2")
 
-            if is_low_stock:
+            elif product.quantity <= product.min_quantity:
                 status = "Kam qoldi"
-                color = QColor("#ffd6d6")
+                color = QColor("#fff3cd")
+
             else:
                 status = "Yetarli"
-                color = QColor("#ffffff")
+                color = QColor("#d9f2df")
 
             barcode_item = QTableWidgetItem(product.barcode or "")
             barcode_item.setData(Qt.UserRole, product.id)
@@ -93,8 +97,12 @@ class WarehousePage(QWidget):
             items = [
                 barcode_item,
                 QTableWidgetItem(product.name),
-                QTableWidgetItem(str(product.quantity)),
-                QTableWidgetItem(str(product.min_quantity)),
+                QTableWidgetItem(
+                    format_quantity(product.quantity)
+                ),
+                QTableWidgetItem(
+                    format_quantity(product.min_quantity)
+                ),
                 QTableWidgetItem(status),
             ]
 
@@ -154,7 +162,7 @@ class WarehousePage(QWidget):
             self,
             "Muvaffaqiyatli",
             f"{updated_product.name} qoldig'i: "
-            f"{updated_product.quantity}",
+            f"{format_quantity(updated_product.quantity)}",
         )
 
     def open_receipts_history(self):

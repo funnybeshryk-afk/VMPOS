@@ -7,6 +7,7 @@ from app.database.database import engine
 from app.database.migrations import apply_migrations
 from app.ui.main_window import MainWindow
 
+import app.models.app_setting
 import app.models.customer
 import app.models.debt_payment
 import app.models.product

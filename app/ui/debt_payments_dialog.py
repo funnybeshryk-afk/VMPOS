@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.services.customer_service import CustomerService
+from app.utils.formatters import format_money
 
 
 class DebtPaymentsDialog(QDialog):
@@ -70,5 +71,7 @@ class DebtPaymentsDialog(QDialog):
             self.payments_table.setItem(
                 row,
                 2,
-                QTableWidgetItem(f"{payment.amount} so'm"),
+                QTableWidgetItem(
+                    f"{format_money(payment.amount)} so'm"
+                ),
             )

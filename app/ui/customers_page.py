@@ -16,6 +16,7 @@ from app.services.customer_service import CustomerService
 from app.ui.customer_dialog import CustomerDialog
 from app.ui.debt_payment_dialog import DebtPaymentDialog
 from app.ui.debt_payments_dialog import DebtPaymentsDialog
+from app.utils.formatters import format_money
 
 
 class CustomersPage(QWidget):
@@ -98,7 +99,9 @@ class CustomersPage(QWidget):
             name_item.setData(Qt.UserRole, customer.id)
 
             if customer.debt_amount > 0:
-                debt_amount = f"{customer.debt_amount} so'm"
+                debt_amount = (
+                    f"{format_money(customer.debt_amount)} so'm"
+                )
 
                 if customer.debt_date:
                     debt_date = customer.debt_date.strftime(
@@ -273,7 +276,8 @@ class CustomersPage(QWidget):
         QMessageBox.information(
             self,
             "Muvaffaqiyatli",
-            f"Qolgan qarz: {updated_customer.debt_amount} so'm",
+            "Qolgan qarz: "
+            f"{format_money(updated_customer.debt_amount)} so'm",
         )
 
     def open_debt_payments_history(self):

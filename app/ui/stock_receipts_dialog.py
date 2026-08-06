@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.services.product_service import ProductService
+from app.utils.formatters import format_quantity
 
 
 class StockReceiptsDialog(QDialog):
@@ -78,5 +79,7 @@ class StockReceiptsDialog(QDialog):
             self.receipts_table.setItem(
                 row,
                 3,
-                QTableWidgetItem(str(receipt.quantity)),
+                QTableWidgetItem(
+                    format_quantity(receipt.quantity)
+                ),
             )

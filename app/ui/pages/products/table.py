@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.services.product_service import ProductService
+from app.utils.formatters import format_money, format_quantity
 
 
 class ProductsTable(QTableWidget):
@@ -80,12 +81,12 @@ class ProductsTable(QTableWidget):
             self.setItem(
                 row,
                 3,
-                QTableWidgetItem(
-                    f"{product.sell_price:,.0f}".replace(",", " ")
-                ),
+                QTableWidgetItem(format_money(product.sell_price)),
             )
             self.setItem(
                 row,
                 4,
-                QTableWidgetItem(f"{product.quantity:g}"),
+                QTableWidgetItem(
+                    format_quantity(product.quantity)
+                ),
             )

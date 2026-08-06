@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 
 from app.services.sale_service import SaleService
 from app.ui.sale_details_dialog import SaleDetailsDialog
+from app.utils.formatters import format_money
 
 
 class ReportsPage(QWidget):
@@ -109,13 +110,13 @@ class ReportsPage(QWidget):
             f"Cheklar: {summary['sales_count']}"
         )
         self.today_total_label.setText(
-            f"Savdo: {summary['total_amount']} so'm"
+            f"Savdo: {format_money(summary['total_amount'])} so'm"
         )
         self.cash_total_label.setText(
-            f"Naqd pul: {summary['cash_total']} so'm"
+            f"Naqd pul: {format_money(summary['cash_total'])} so'm"
         )
         self.card_total_label.setText(
-            f"Karta: {summary['card_total']} so'm"
+            f"Karta: {format_money(summary['card_total'])} so'm"
         )
 
         self.sales_table.setRowCount(len(sales))
@@ -140,7 +141,9 @@ class ReportsPage(QWidget):
             self.sales_table.setItem(
                 row,
                 2,
-                QTableWidgetItem(f"{sale.total_amount} so'm"),
+                QTableWidgetItem(
+                    f"{format_money(sale.total_amount)} so'm"
+                ),
             )
             self.sales_table.setItem(
                 row,

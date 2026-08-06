@@ -1,10 +1,12 @@
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
-    QDoubleSpinBox,
     QFormLayout,
     QLabel,
+    QLineEdit,
 )
+
+from app.utils.formatters import format_money, parse_number
 
 
 class DebtPaymentDialog(QDialog):
@@ -17,17 +19,21 @@ class DebtPaymentDialog(QDialog):
         layout = QFormLayout(self)
 
         customer_name = QLabel(customer.name)
-        debt_amount = QLabel(f"{customer.debt_amount} so'm")
+        debt_amount = QLabel(
+            f"{format_money(customer.debt_amount)} so'm"
+        )
 
-        self.amount_spinbox = QDoubleSpinBox()
-        self.amount_spinbox.setDecimals(2)
-        self.amount_spinbox.setMinimum(0.01)
-        self.amount_spinbox.setMaximum(customer.debt_amount)
-        self.amount_spinbox.setValue(customer.debt_amount)
+        self.amount_edit = QLineEdit()
+        self.amount_edit.setText(
+            format_money(customer.debt_amount)
+        )
+        self.amount_edit.setPlaceholderText(
+            "Masalan: 150 000 yoki 150 000,50"
+        )
 
         layout.addRow("Mijoz:", customer_name)
         layout.addRow("Qarz:", debt_amount)
-        layout.addRow("To'lov summasi:", self.amount_spinbox)
+        layout.addRow("To'lov summasi:", self.amount_edit)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel
@@ -39,4 +45,4 @@ class DebtPaymentDialog(QDialog):
         layout.addRow(buttons)
 
     def get_amount(self):
-        return self.amount_spinbox.value()
+        return parse_number(self.amount_edit.text())
