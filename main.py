@@ -12,8 +12,10 @@ import app.models.customer
 import app.models.debt_payment
 import app.models.product
 import app.models.sale
+import app.models.shift
 import app.models.stock_receipt
 import app.models.supplier
+import app.models.user
 
 
 def main():
