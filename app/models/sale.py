@@ -17,6 +17,13 @@ class Sale(Base):
     paid_amount = Column(Float, default=0, nullable=False)
     change_amount = Column(Float, default=0, nullable=False)
 
+    # "cash"/"card" savdolarda bittasi total_amount'ga teng, ikkinchisi 0.
+    # "mixed"da ikkalasi ham > 0 va yig'indisi total_amount'ga teng bo'ladi.
+    # Hisobotlarda naqd/karta bo'yicha to'g'ri taqsimlash shu ikki ustunga
+    # tayanadi — payment_method bo'yicha emas (mixed'ni ham ajratish uchun).
+    cash_amount = Column(Float, default=0, nullable=False)
+    card_amount = Column(Float, default=0, nullable=False)
+
     status = Column(
         String(20),
         default="completed",

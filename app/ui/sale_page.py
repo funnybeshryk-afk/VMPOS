@@ -1,14 +1,11 @@
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QLineEdit,
     QMessageBox,
-    QPushButton,
-    QTableWidget,
+    QStackedWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -16,11 +13,23 @@ from PySide6.QtWidgets import (
 
 from app.services.product_service import ProductService
 from app.services.sale_service import SaleService
+from app.ui.mixed_payment_dialog import MixedPaymentDialog
 from app.ui.payment_dialog import PaymentDialog
 from app.ui.quantity_edit_dialog import QuantityEditDialog
 from app.ui.weight_dialog import WeightDialog
 from app.utils.formatters import format_money, format_quantity
-from app.utils.sounds import play_error_sound, play_success_sound
+from app.utils.icons import load_icon
+from app.utils.sounds import (
+    play_add_sound,
+    play_error_sound,
+    play_payment_sound,
+)
+from app.widgets.badge import stock_status_badge
+from app.widgets.category_bar import CategoryBar
+from app.widgets.danger_button import DangerButton
+from app.widgets.data_table import DataTable
+from app.widgets.secondary_button import SecondaryButton
+from app.widgets.success_button import SuccessButton
 
 
 class SalePage(QWidget):
@@ -28,49 +37,57 @@ class SalePage(QWidget):
         super().__init__()
 
         self.cart = {}
+        self.selected_category = None
 
         main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(16)
 
         left_layout = QVBoxLayout()
+        left_layout.setSpacing(12)
 
         self.search_edit = QLineEdit()
-        self.search_edit.setPlaceholderText("Mahsulot qidirish...")
+        self.search_edit.setObjectName("searchInput")
+        self.search_edit.setPlaceholderText(
+            "Shtrix-kod yoki nomi bo'yicha qidirish..."
+        )
         self.search_edit.textChanged.connect(self.search_products)
         self.search_edit.returnPressed.connect(
             self.add_product_by_barcode
         )
 
-        self.products_table = QTableWidget()
-        self.products_table.setColumnCount(4)
+        # Kategoriya bo'yicha tezkor filtr — sensorli ekranda barmoq
+        # bilan bosish uchun, qidiruv maydoniga qo'shimcha.
+        self.category_bar = CategoryBar()
+        self.category_bar.categorySelected.connect(
+            self.on_category_selected
+        )
+
+        self.products_table = DataTable()
+        self.products_table.setColumnCount(5)
         self.products_table.setHorizontalHeaderLabels([
             "Shtrix-kod",
             "Mahsulot",
             "Narxi",
             "Qoldiq",
+            "Holat",
         ])
-        self.products_table.setEditTriggers(
-            QAbstractItemView.NoEditTriggers
-        )
-        self.products_table.setSelectionBehavior(
-            QAbstractItemView.SelectRows
-        )
-        self.products_table.setSelectionMode(
-            QAbstractItemView.SingleSelection
-        )
-        self.products_table.verticalHeader().setVisible(False)
-        self.products_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
-        )
+        self.products_table.pin_column_width(4)
         self.products_table.cellDoubleClicked.connect(
             self.on_product_double_clicked
         )
 
         left_layout.addWidget(self.search_edit)
+        left_layout.addWidget(self.category_bar)
         left_layout.addWidget(self.products_table)
 
         right_layout = QVBoxLayout()
+        right_layout.setSpacing(10)
 
-        self.cart_table = QTableWidget()
+        cart_title = QLabel("Korzina")
+        cart_title.setObjectName("sectionTitle")
+
+        self.cart_table = DataTable()
         self.cart_table.setColumnCount(4)
         self.cart_table.setHorizontalHeaderLabels([
             "Mahsulot",
@@ -78,111 +95,96 @@ class SalePage(QWidget):
             "Soni",
             "Jami",
         ])
-        self.cart_table.setEditTriggers(
-            QAbstractItemView.NoEditTriggers
-        )
-        self.cart_table.setSelectionBehavior(
-            QAbstractItemView.SelectRows
-        )
-        self.cart_table.setSelectionMode(
-            QAbstractItemView.SingleSelection
-        )
-        self.cart_table.verticalHeader().setVisible(False)
-        self.cart_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
-        )
         self.cart_table.cellDoubleClicked.connect(
             self.on_cart_item_double_clicked
         )
 
-        self.edit_quantity_button = QPushButton(
+        self.cart_empty_state = self.build_cart_empty_state()
+
+        # Bo'sh korzina uchun oddiy jadval o'rniga ikonka bilan
+        # placeholder ko'rsatiladi — shunday holatda foydalanuvchiga
+        # nima qilish kerakligi ko'rinib turadi ("Mahsulot tanlang").
+        self.cart_stack = QStackedWidget()
+        self.cart_stack.addWidget(self.cart_table)
+        self.cart_stack.addWidget(self.cart_empty_state)
+
+        # Ombordan chiqarish/miqdorni o'zgartirish — ikkinchi darajali
+        # amallar, shuning uchun SecondaryButton. O'chirish esa
+        # korzinadan mahsulotni olib tashlaydi, shu sabab DangerButton.
+        self.edit_quantity_button = SecondaryButton(
             "Miqdorni o'zgartirish"
         )
         self.edit_quantity_button.clicked.connect(
             self.edit_selected_quantity
         )
 
-        self.remove_button = QPushButton("Tanlanganni o'chirish")
+        self.remove_button = DangerButton("Tanlanganni o'chirish")
         self.remove_button.clicked.connect(self.remove_selected_item)
 
-        self.new_sale_button = QPushButton("Yangi savdo")
+        self.new_sale_button = SecondaryButton("Yangi savdo")
         self.new_sale_button.clicked.connect(self.clear_cart)
 
-        self.cash_payment_button = QPushButton(
-            "Naqd pul bilan to'lash"
+        utility_row = QHBoxLayout()
+        utility_row.addWidget(self.edit_quantity_button)
+        utility_row.addWidget(self.remove_button)
+        utility_row.addWidget(self.new_sale_button)
+
+        self.total_label = QLabel("Jami: 0 so'm")
+        self.total_label.setObjectName("cartTotal")
+        self.total_label.setAlignment(Qt.AlignCenter)
+
+        # To'lovni yakunlash — sahifaning eng ko'p bosiladigan amali.
+        # Yagona SuccessButton (yashil) shu yerda: "pul qabul qilindi"
+        # degani, xuddi Hisobotlardagi "to'langan" bilan bir xil rangda.
+        # Karta va aralash to'lov — kamroq ishlatiladi, shuning uchun
+        # SecondaryButton: ular ham bosiladi, lekin ko'zga tashlanmaydi.
+        self.cash_payment_button = SuccessButton(
+            "Naqd pul bilan to'lash",
+            large=True,
         )
         self.cash_payment_button.clicked.connect(
             lambda: self.complete_sale("cash")
         )
-        self.cash_payment_button.setStyleSheet(
-            """
-            background-color: #2e7d32;
-            color: white;
-            font-size: 16px;
-            font-weight: 700;
-            min-height: 42px;
-            border-radius: 7px;
-            """
+        self.cash_payment_button.setIcon(
+            load_icon("dollar-sign", color="#ffffff")
         )
+        self.cash_payment_button.setIconSize(QSize(20, 20))
 
-        self.card_payment_button = QPushButton(
-            "Karta bilan to'lash"
+        self.card_payment_button = SecondaryButton(
+            "Karta bilan to'lash",
+            large=True,
         )
         self.card_payment_button.clicked.connect(
             lambda: self.complete_sale("card")
         )
-        self.card_payment_button.setStyleSheet(
-            """
-            background-color: #1565c0;
-            color: white;
-            font-size: 16px;
-            font-weight: 700;
-            min-height: 42px;
-            border-radius: 7px;
-            """
+        self.card_payment_button.setIcon(
+            load_icon("credit-card", color="#334155")
         )
+        self.card_payment_button.setIconSize(QSize(20, 20))
 
-        self.mixed_payment_button = QPushButton("Aralash to'lov")
-        self.mixed_payment_button.clicked.connect(self.complete_sale)
-        self.mixed_payment_button.setStyleSheet(
-            """
-            background-color: #ef6c00;
-            color: white;
-            font-size: 15px;
-            font-weight: 700;
-            min-height: 38px;
-            border-radius: 7px;
-            """
+        self.mixed_payment_button = SecondaryButton("Aralash to'lov")
+        self.mixed_payment_button.clicked.connect(
+            lambda: self.complete_sale("mixed")
         )
-
-        self.total_label = QLabel("Jami: 0 so'm")
-        self.total_label.setAlignment(Qt.AlignCenter)
-        self.total_label.setMinimumHeight(72)
-        self.total_label.setStyleSheet(
-            """
-            font-size: 24px;
-            font-weight: 700;
-            color: white;
-            background-color: #2e7d32;
-            border-radius: 8px;
-            padding: 10px;
-            """
+        self.mixed_payment_button.setIcon(
+            load_icon("shuffle", color="#334155")
         )
+        self.mixed_payment_button.setIconSize(QSize(16, 16))
 
-        right_layout.addWidget(self.cart_table)
-        right_layout.addWidget(self.edit_quantity_button)
-        right_layout.addWidget(self.remove_button)
-        right_layout.addWidget(self.new_sale_button)
+        right_layout.addWidget(cart_title)
+        right_layout.addWidget(self.cart_stack)
+        right_layout.addLayout(utility_row)
+        right_layout.addWidget(self.total_label)
         right_layout.addWidget(self.cash_payment_button)
         right_layout.addWidget(self.card_payment_button)
         right_layout.addWidget(self.mixed_payment_button)
-        right_layout.addWidget(self.total_label)
 
         main_layout.addLayout(left_layout, 2)
         main_layout.addLayout(right_layout, 1)
 
         self.setup_shortcuts()
         self.load_products()
+        self.update_cart_table()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -213,6 +215,25 @@ class SalePage(QWidget):
 
     def load_products(self):
         self.products = ProductService.get_all_products()
+
+        self.selected_category = None
+        self.category_bar.set_categories(
+            self.get_distinct_categories()
+        )
+
+        self.search_products(self.search_edit.text())
+
+    def get_distinct_categories(self):
+        categories = {
+            product.category.strip()
+            for product in self.products
+            if product.category and product.category.strip()
+        }
+
+        return sorted(categories)
+
+    def on_category_selected(self, category):
+        self.selected_category = category
         self.search_products(self.search_edit.text())
 
     def populate_table(self, products):
@@ -236,22 +257,34 @@ class SalePage(QWidget):
                 3,
                 QTableWidgetItem(format_quantity(product.quantity)),
             )
+            self.products_table.setCellWidget(
+                row,
+                4,
+                stock_status_badge(
+                    product.quantity,
+                    product.min_quantity,
+                ),
+            )
 
     def search_products(self, text):
         text = text.strip().lower()
-
-        if not text:
-            self.populate_table(self.products)
-            return
-
         filtered = []
 
         for product in self.products:
-            barcode = product.barcode.lower() if product.barcode else ""
-            name = product.name.lower() if product.name else ""
+            if self.selected_category:
+                category = (product.category or "").strip()
 
-            if text in barcode or text in name:
-                filtered.append(product)
+                if category != self.selected_category:
+                    continue
+
+            if text:
+                barcode = (product.barcode or "").lower()
+                name = (product.name or "").lower()
+
+                if text not in barcode and text not in name:
+                    continue
+
+            filtered.append(product)
 
         self.populate_table(filtered)
 
@@ -304,6 +337,16 @@ class SalePage(QWidget):
         if product is None:
             return
 
+        if product.quantity <= 0:
+            play_error_sound()
+
+            QMessageBox.warning(
+                self,
+                "Diqqat",
+                f"Qoldiq yo'q: {product.name}",
+            )
+            return
+
         if self.is_weight_product(product):
             dialog = WeightDialog(product, self)
 
@@ -325,6 +368,12 @@ class SalePage(QWidget):
                 break
 
         if product is None:
+            return
+
+        # Ehtiyot chorasi: yuqorida add_product() nolinchi qoldiqni
+        # allaqachon to'xtatadi, lekin bu yerda ham tekshiruv qoldiq —
+        # korzinada 0 miqdorli qator hech qachon paydo bo'lmasligi kerak.
+        if quantity <= 0:
             return
 
         quantity_in_cart = 0
@@ -351,7 +400,7 @@ class SalePage(QWidget):
             }
 
         self.update_cart_table()
-        play_success_sound()
+        play_add_sound()
 
     def get_selected_product_id(self):
         selected_items = self.cart_table.selectedItems()
@@ -418,8 +467,23 @@ class SalePage(QWidget):
 
         total_amount = self.calculate_cart_total()
 
-        if payment_method == "card":
+        cash_amount = None
+        card_amount = None
+
+        if payment_method == "mixed":
+            mixed_dialog = MixedPaymentDialog(total_amount, self)
+
+            if not mixed_dialog.exec():
+                return
+
+            cash_amount, card_amount = (
+                mixed_dialog.get_payment_data()
+            )
+            paid_amount = cash_amount + card_amount
+
+        elif payment_method == "card":
             paid_amount = total_amount
+
         else:
             payment_dialog = PaymentDialog(
                 total_amount,
@@ -439,6 +503,8 @@ class SalePage(QWidget):
                 self.cart,
                 payment_method,
                 paid_amount,
+                cash_amount,
+                card_amount,
             )
 
         except ValueError as error:
@@ -463,7 +529,7 @@ class SalePage(QWidget):
 
         self.clear_cart()
         self.load_products()
-        play_success_sound()
+        play_payment_sound()
 
         QMessageBox.information(
             self,
@@ -472,7 +538,40 @@ class SalePage(QWidget):
             f"Qaytim: {format_money(sale.change_amount)} so'm",
         )
 
+    def build_cart_empty_state(self):
+        widget = QWidget()
+
+        layout = QVBoxLayout(widget)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(6)
+
+        icon_label = QLabel()
+        icon_label.setPixmap(
+            load_icon(
+                "shopping-cart", color="#94a3b8", size=48
+            ).pixmap(QSize(48, 48))
+        )
+        icon_label.setAlignment(Qt.AlignCenter)
+
+        title_label = QLabel("Savat bo'sh")
+        title_label.setObjectName("cartEmptyTitle")
+        title_label.setAlignment(Qt.AlignCenter)
+
+        subtitle_label = QLabel("Mahsulot tanlang")
+        subtitle_label.setObjectName("cartEmptySubtitle")
+        subtitle_label.setAlignment(Qt.AlignCenter)
+
+        layout.addWidget(icon_label)
+        layout.addWidget(title_label)
+        layout.addWidget(subtitle_label)
+
+        return widget
+
     def update_cart_table(self):
+        self.cart_stack.setCurrentWidget(
+            self.cart_table if self.cart else self.cart_empty_state
+        )
+
         self.cart_table.setRowCount(len(self.cart))
 
         for row, (product_id, item) in enumerate(self.cart.items()):

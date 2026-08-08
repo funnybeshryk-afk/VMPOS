@@ -8,7 +8,13 @@ from app.models.sale import Sale, SaleItem
 class SaleService:
 
     @staticmethod
-    def create_sale(cart, payment_method, paid_amount):
+    def create_sale(
+        cart,
+        payment_method,
+        paid_amount,
+        cash_amount=None,
+        card_amount=None,
+    ):
         session = SessionLocal()
 
         try:
@@ -40,6 +46,36 @@ class SaleService:
             if payment_method == "card":
                 paid_amount = total_amount
 
+            if payment_method == "mixed":
+                if cash_amount is None or card_amount is None:
+                    raise ValueError(
+                        "Aralash to'lov summalari ko'rsatilmagan."
+                    )
+
+                if cash_amount < 0 or card_amount < 0:
+                    raise ValueError(
+                        "Summalar manfiy bo'lishi mumkin emas."
+                    )
+
+                if (
+                    abs((cash_amount + card_amount) - total_amount)
+                    > 0.01
+                ):
+                    raise ValueError(
+                        "Naqd va karta summalari jami chek "
+                        "summasiga teng emas."
+                    )
+
+                paid_amount = cash_amount + card_amount
+
+            elif payment_method == "card":
+                cash_amount = 0
+                card_amount = total_amount
+
+            else:
+                cash_amount = total_amount
+                card_amount = 0
+
             change_amount = paid_amount - total_amount
 
             sale = Sale(
@@ -47,6 +83,8 @@ class SaleService:
                 payment_method=payment_method,
                 paid_amount=paid_amount,
                 change_amount=change_amount,
+                cash_amount=cash_amount,
+                card_amount=card_amount,
                 status="completed",
             )
             session.add(sale)
@@ -186,11 +224,11 @@ class SaleService:
 
             sales_count += 1
             total_amount += sale.total_amount
-
-            if sale.payment_method == "card":
-                card_total += sale.total_amount
-            else:
-                cash_total += sale.total_amount
+            # cash_amount/card_amount orqali hisoblanadi, payment_method
+            # orqali emas — "mixed" savdoda ikkalasi ham > 0 bo'ladi,
+            # va u avval to'liq "naqd"ga tushib qolardi.
+            cash_total += sale.cash_amount
+            card_total += sale.card_amount
 
         return {
             "sales_count": sales_count,

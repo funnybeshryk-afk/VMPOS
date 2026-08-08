@@ -21,6 +21,12 @@ def apply_migrations():
             "status": (
                 "VARCHAR(20) NOT NULL DEFAULT 'completed'"
             ),
+            "cash_amount": (
+                "FLOAT NOT NULL DEFAULT 0"
+            ),
+            "card_amount": (
+                "FLOAT NOT NULL DEFAULT 0"
+            ),
         },
         "stock_receipts": {
             "supplier_id": "INTEGER",
@@ -47,6 +53,8 @@ def apply_migrations():
                 for column in inspector.get_columns(table_name)
             }
 
+            newly_added_columns = set()
+
             for column_name, column_definition in new_columns.items():
                 if column_name not in existing_columns:
                     connection.execute(
@@ -56,3 +64,27 @@ def apply_migrations():
                             f"{column_definition}"
                         )
                     )
+                    newly_added_columns.add(column_name)
+
+            # cash_amount/card_amount birinchi marta qo'shilganda eski
+            # savdolarda ikkalasi ham 0 bo'lib qoladi — hisobotlarda
+            # eski kunlar naqd/karta jamidan yo'qolib qoladi. Eski
+            # yozuvlarni payment_method asosida qayta tiklaymiz: bu
+            # ustunlar paydo bo'lishidan oldin "mixed" umuman
+            # saqlanmagan (eski xato tufayli har doim "cash" yoki
+            # "card" bo'lib yozilgan), shuning uchun bu tiklash aniq.
+            if (
+                table_name == "sales"
+                and "cash_amount" in newly_added_columns
+            ):
+                connection.execute(
+                    text(
+                        "UPDATE sales SET "
+                        "cash_amount = CASE "
+                        "WHEN payment_method = 'card' THEN 0 "
+                        "ELSE total_amount END, "
+                        "card_amount = CASE "
+                        "WHEN payment_method = 'card' THEN total_amount "
+                        "ELSE 0 END"
+                    )
+                )
