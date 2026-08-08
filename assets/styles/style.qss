@@ -1,83 +1,786 @@
-QMainWindow {
-    background: #f4f6f9;
-}
+/* ==========================================================================
+   VMPOS — единая тема оформления
+   ==========================================================================
+
+   ПАЛИТРА
+   -------
+   В QSS нет переменных (это не CSS), поэтому цвета приходится писать
+   числами. Чтобы тема не расползлась — весь список держим здесь, и
+   ниже используем ТОЛЬКО эти значения.
+
+   Фон приложения      #f1f5f9
+   Поверхность (карточка, таблица, поле ввода)   #ffffff
+   Рамка обычная       #e2e8f0
+   Рамка контрастная   #cbd5e1
+   Разделитель         #eef2f7
+
+   Текст основной      #0f172a
+   Текст вторичный     #475569
+   Текст приглушённый  #64748b
+   Текст неактивный    #94a3b8
+
+   ГЛАВНОЕ ДЕЙСТВИЕ (чёрный, стиль Square/Shopify POS)
+                       #111827   hover #1f2937   pressed #030712
+
+   НАВИГАЦИЯ / ФОКУС (синий) #2563eb
+   Синяя подложка      #e8effc   (активный пункт меню, фокус поля)
+
+   Успех (зелёный)     #15803d   hover #166534
+   Опасность (красный) #dc2626   hover #b91c1c   рамка #fca5a5
+   Предупреждение      #b45309   подложка #fef3c7
+
+   Бейдж «ок»          подложка #f0fdf4   текст #14532d   (см. §7, ratio 8.70:1)
+   Бейдж «мало»        подложка #fef3c7   текст #92400e
+   Бейдж «нет»         подложка #fee2e2   текст #991b1b
+   Бейдж нейтральный   подложка #f1f5f9   текст #1e293b
+
+   ПРАВИЛО ЦВЕТА
+   -------------
+   Чёрный — это цвет ДЕЙСТВИЯ («нажми меня»): главная кнопка страницы.
+   Синий — это цвет СОСТОЯНИЯ («ты здесь / это в фокусе»): активный
+   пункт меню, рамка поля при фокусе, подсветка выбранной строки
+   таблицы. Это разные роли, поэтому один экран может показывать оба
+   цвета одновременно, не превращаясь в разноцветный — глаз всегда
+   понимает, где кнопка, а где просто "текущее место".
+
+   Зелёный НЕ является цветом темы. Это семантический цвет «деньги
+   получены/всё в порядке» и живёт в двух ролях: кнопка завершения
+   продажи и бейдж статуса "ок". Красный и жёлтый — те же роли
+   наоборот: "проблема" и "требует внимания".
+
+   Единственное намеренное исключение — логотип "Vodiy Market" вверху
+   сайдбара (main_window.py, #sidebarLogo) и иконка окна: они цветные
+   как есть, потому что это айдентика бренда, а не элемент интерфейса.
+   Новых цветных элементов рядом с ним не добавлять.
+
+   ИЕРАРХИЯ КНОПОК (задаётся через objectName)
+   -------------------------------------------
+   без objectName    — вторичная: белая с рамкой. ЭТО ЗНАЧЕНИЕ ПО УМОЛЧАНИЮ.
+   #primaryButton    — главное действие. Одна штука на экран.
+   #successButton    — завершение продажи. Только страница продажи.
+   #dangerButton     — удаление. Красная рамка, заливка только при наведении.
+   #ghostButton      — третьестепенное действие, без рамки.
+
+   Дополнительно свойство sizeVariant="lg" делает кнопку крупной (касса).
+   В Python: button.setProperty("sizeVariant", "lg")
+   ========================================================================== */
+
+
+/* --------------------------------------------------------------------------
+   1. БАЗА
+   -------------------------------------------------------------------------- */
 
 QWidget {
-    background: #f4f6f9;
-    color: #222;
+    background: #f1f5f9;
+    color: #0f172a;
     font-family: "Segoe UI";
     font-size: 14px;
 }
 
+QMainWindow {
+    background: #f1f5f9;
+}
+
+QDialog {
+    background: #f1f5f9;
+}
+
+QToolTip {
+    background: #0f172a;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+
+/* --------------------------------------------------------------------------
+   2. ТЕКСТОВЫЕ РОЛИ
+
+   Вместо того чтобы в каждой странице писать setStyleSheet("font-size: 22px"),
+   странице достаточно сказать label.setObjectName("pageTitle").
+   Размер заголовка потом меняется здесь — сразу во всём приложении.
+   -------------------------------------------------------------------------- */
+
 QLabel#pageTitle {
     font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    background: transparent;
+}
+
+QLabel#pageSubtitle {
+    font-size: 13px;
+    color: #64748b;
+    background: transparent;
+}
+
+QLabel#sectionTitle {
+    font-size: 15px;
     font-weight: 600;
-    color: #222;
-    padding-bottom: 8px;
+    color: #0f172a;
+    background: transparent;
+}
+
+QLabel#mutedText {
+    color: #64748b;
+    background: transparent;
+}
+
+QLabel#cartEmptyTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #64748b;
+    background: transparent;
+}
+
+QLabel#cartEmptySubtitle {
+    font-size: 13px;
+    color: #94a3b8;
+    background: transparent;
+}
+
+/* Итоговая сумма чека (Sotuv). Раньше была всегда зелёной — как будто
+   уже оплачена. Зелёный теперь появляется только на кнопке оплаты
+   и в бейджах статуса, а сумма сама по себе — просто число, нейтральный
+   тёмный блок в тон главной кнопке. */
+
+QLabel#cartTotal {
+    background: #111827;
+    color: #ffffff;
+    border-radius: 10px;
+    font-size: 24px;
+    font-weight: 700;
+    padding: 14px;
+}
+
+
+/* --------------------------------------------------------------------------
+   3. ПОВЕРХНОСТИ (карточки и панели)
+
+   ВАЖНО: background и border в QSS работают у QFrame, но НЕ работают
+   у голого QWidget (у него нет собственной отрисовки фона по стилю).
+   Поэтому карточки строим на QFrame.
+   -------------------------------------------------------------------------- */
+
+QFrame#card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+QFrame#panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+/* Карточка-показатель: подпись сверху, число снизу.
+   Цветом больше не различаем — различаем размером и весом шрифта. */
+
+QFrame#statCard {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+QFrame#statCard QLabel {
+    background: transparent;
+}
+
+QLabel#statCaption {
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+}
+
+QLabel#statValue {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* Смысловые оттенки показателей: только цвет ЧИСЛА, не всей карточки. */
+
+QLabel#statValueWarning {
+    font-size: 20px;
+    font-weight: 700;
+    color: #b45309;
+}
+
+QLabel#statValueDanger {
+    font-size: 20px;
+    font-weight: 700;
+    color: #dc2626;
+}
+
+QFrame#separator {
+    background: #e2e8f0;
+    border: none;
+    max-height: 1px;
+    min-height: 1px;
+}
+
+
+/* --------------------------------------------------------------------------
+   4. БОКОВОЕ МЕНЮ
+
+   Раньше активный пункт заливался насыщенным зелёным — самое яркое
+   пятно на экране находилось на навигации, а не на действии.
+   Теперь активный пункт — светлая акцентная подложка + акцентный текст
+   + акцентная полоса слева.
+   -------------------------------------------------------------------------- */
+
+/* Логотип и список пунктов лежат в одном контейнере (#sidebar), и
+   именно контейнер даёт фон и правую границу — иначе между логотипом
+   и списком была бы граница шва, а не единая панель. */
+
+QWidget#sidebar {
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+}
+
+QLabel#sidebarLogo {
+    background: transparent;
+    padding: 24px 16px 16px 16px;
 }
 
 QListWidget {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
+    background: transparent;
+    border: none;
     outline: none;
-    padding: 8px;
+    padding: 10px 8px;
 }
 
 QListWidget::item {
     height: 42px;
     border-radius: 8px;
-    padding-left: 14px;
+    padding-left: 12px;
+    margin-bottom: 2px;
+    color: #475569;
+    border-left: 3px solid transparent;
+}
+
+QListWidget::item:hover {
+    background: #f1f5f9;
+    color: #0f172a;
 }
 
 QListWidget::item:selected {
-    background: #2e7d32;
-    color: white;
+    background: #e8effc;
+    color: #1d4ed8;
+    border-left: 3px solid #2563eb;
+    font-weight: 600;
 }
 
+
+/* --------------------------------------------------------------------------
+   5. КНОПКИ
+   -------------------------------------------------------------------------- */
+
+/* 5.1 База = вторичная кнопка.
+   Любая кнопка, которой не назначили objectName, выглядит так. */
+
 QPushButton {
-    background: #2e7d32;
-    color: white;
-    border: none;
+    background: #ffffff;
+    color: #334155;
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
-    min-height: 40px;
-    padding: 0 18px;
-    font-weight: 600;
+    min-height: 38px;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 QPushButton:hover {
-    background: #388e3c;
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
 }
 
-QLineEdit {
-    background: white;
-    border: 1px solid #d0d7de;
-    border-radius: 8px;
-    min-height: 40px;
-    padding: 0 12px;
+QPushButton:pressed {
+    background: #f1f5f9;
 }
 
-QTableWidget {
-    background: white;
-    border: 1px solid #d0d7de;
-    border-radius: 8px;
-    alternate-background-color: #f8fafc;
-    selection-background-color: #d9f2df;
-    selection-color: #222;
+QPushButton:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    border-color: #e2e8f0;
 }
 
-QHeaderView::section {
-    background: #eef2f6;
-    border: none;
-    border-bottom: 1px solid #d0d7de;
-    padding: 10px;
+/* 5.2 Главное действие.
+   Чёрная кнопка (стиль Square / Shopify POS) — единственный по-настоящему
+   "тяжёлый" элемент на странице. Ровно одна такая кнопка на экран,
+   на самое частое действие; остальное — вторичные кнопки ниже.
+
+   QPushButton:default — это кнопка, назначенная в диалоге кнопкой
+   по умолчанию (обычно OK/Сохранить в QDialogButtonBox). Ловим её тем же
+   правилом, чтобы диалоги получили акцентную кнопку без правки кода. */
+
+QPushButton#primaryButton,
+QDialogButtonBox QPushButton:default {
+    background: #111827;
+    color: #ffffff;
+    border: 1px solid #111827;
     font-weight: 600;
 }
 
+QPushButton#primaryButton:hover,
+QDialogButtonBox QPushButton:default:hover {
+    background: #1f2937;
+    border-color: #1f2937;
+    color: #ffffff;
+}
+
+QPushButton#primaryButton:pressed,
+QDialogButtonBox QPushButton:default:pressed {
+    background: #030712;
+    border-color: #030712;
+}
+
+QPushButton#primaryButton:disabled,
+QDialogButtonBox QPushButton:default:disabled {
+    background: #d1d5db;
+    border-color: #d1d5db;
+    color: #f9fafb;
+}
+
+/* 5.3 Успех — завершение продажи. Единственный зелёный в приложении. */
+
+QPushButton#successButton {
+    background: #15803d;
+    color: #ffffff;
+    border: 1px solid #15803d;
+    font-weight: 600;
+}
+
+QPushButton#successButton:hover {
+    background: #166534;
+    border-color: #166534;
+    color: #ffffff;
+}
+
+QPushButton#successButton:pressed {
+    background: #14532d;
+    border-color: #14532d;
+}
+
+QPushButton#successButton:disabled {
+    background: #bbf7d0;
+    border-color: #bbf7d0;
+    color: #ffffff;
+}
+
+/* 5.4 Опасное действие.
+   В покое — только красный текст и бледная рамка: удаление не должно
+   бороться за внимание с главным действием. Заливку получает при
+   наведении, когда намерение уже подтверждено движением мыши. */
+
 QPushButton#dangerButton {
-    background: #d32f2f;
+    background: #ffffff;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+    font-weight: 500;
 }
 
 QPushButton#dangerButton:hover {
-    background: #c62828;
+    background: #dc2626;
+    color: #ffffff;
+    border-color: #dc2626;
+}
+
+QPushButton#dangerButton:pressed {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    color: #ffffff;
+}
+
+QPushButton#dangerButton:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+}
+
+/* 5.5 Призрачная кнопка — третьестепенное действие. */
+
+QPushButton#ghostButton {
+    background: transparent;
+    color: #475569;
+    border: 1px solid transparent;
+    font-weight: 500;
+}
+
+QPushButton#ghostButton:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+QPushButton#ghostButton:pressed {
+    background: #cbd5e1;
+}
+
+/* 5.6 Размер.
+   Отдельное «динамическое свойство» Qt: setProperty("sizeVariant", "lg").
+   Ортогонально цвету — крупной может стать кнопка любого вида.
+
+   Имя НЕ "size": так уже называется штатное свойство QWidget (геометрия),
+   и setProperty("size", "lg") молча ничего не сделает. Динамическое
+   свойство создаётся только под ещё не занятым именем. */
+
+QPushButton[sizeVariant="lg"] {
+    min-height: 52px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 10px;
+}
+
+QPushButton[sizeVariant="sm"] {
+    min-height: 30px;
+    font-size: 13px;
+    padding: 0 12px;
+    border-radius: 6px;
+}
+
+/* 5.7 Плитка категории (Sotuv). Выбранная категория — это состояние
+   "что сейчас показано", а не действие, поэтому синий, а не чёрный —
+   та же роль, что у активного пункта бокового меню (см. §4). */
+
+/* Явный сплошной цвет фона страницы вместо "transparent" — так
+   надёжнее: alpha-прозрачность у виджетов внутри QScrollArea иногда
+   просвечивает не туда, куда ожидаешь (композиция через viewport),
+   а сплошной цвет однозначен при любой внутренней структуре. */
+
+QScrollArea#categoryScrollArea,
+QWidget#categoryScrollViewport,
+QWidget#categoryBarContent {
+    background: #f1f5f9;
+    border: none;
+}
+
+QPushButton#categoryTile {
+    background: #ffffff;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    min-height: 40px;
+    padding: 0 18px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QPushButton#categoryTile:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+}
+
+QPushButton#categoryTile:checked {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+
+/* --------------------------------------------------------------------------
+   6. ПОЛЯ ВВОДА
+
+   Фокус показываем цветом рамки. Толщину рамки при фокусе НЕ меняем:
+   иначе виджет прыгает на 2 пикселя и текст дёргается.
+   -------------------------------------------------------------------------- */
+
+QLineEdit,
+QComboBox,
+QDateEdit,
+QSpinBox,
+QDoubleSpinBox {
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    min-height: 38px;
+    padding: 0 12px;
+    selection-background-color: #2563eb;
+    selection-color: #ffffff;
+}
+
+QLineEdit:hover,
+QComboBox:hover,
+QDateEdit:hover,
+QSpinBox:hover,
+QDoubleSpinBox:hover {
+    border-color: #94a3b8;
+}
+
+QLineEdit:focus,
+QComboBox:focus,
+QDateEdit:focus,
+QSpinBox:focus,
+QDoubleSpinBox:focus,
+QTextEdit:focus {
+    border-color: #2563eb;
+}
+
+QLineEdit:disabled,
+QComboBox:disabled,
+QDateEdit:disabled,
+QSpinBox:disabled,
+QDoubleSpinBox:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+}
+
+/* Поле поиска — то же поле, но с чуть большим внутренним отступом. */
+
+QLineEdit#searchInput {
+    min-height: 40px;
+    padding: 0 14px;
+}
+
+QTextEdit {
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    selection-background-color: #2563eb;
+    selection-color: #ffffff;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 26px;
+}
+
+QComboBox QAbstractItemView {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 4px;
+    outline: none;
+    selection-background-color: #e8effc;
+    selection-color: #1d4ed8;
+}
+
+QSpinBox::up-button,
+QSpinBox::down-button,
+QDoubleSpinBox::up-button,
+QDoubleSpinBox::down-button {
+    width: 20px;
+    border: none;
+    background: transparent;
+}
+
+QRadioButton,
+QCheckBox {
+    background: transparent;
+    color: #0f172a;
+    spacing: 8px;
+    min-height: 26px;
+}
+
+QRadioButton:disabled,
+QCheckBox:disabled {
+    color: #94a3b8;
+}
+
+
+/* --------------------------------------------------------------------------
+   7. ТАБЛИЦЫ
+
+   Сетку убираем, строки разделяем чередованием фона — так плотный
+   список читается спокойнее. Выделение — акцентная подложка,
+   текст остаётся тёмным (белый текст на выделении хуже читается
+   при быстром сканировании цен).
+   -------------------------------------------------------------------------- */
+
+QTableView,
+QTableWidget {
+    background: #ffffff;
+    alternate-background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    gridline-color: #eef2f7;
+    outline: none;
+    selection-background-color: #e8effc;
+    selection-color: #0f172a;
+}
+
+QTableView::item,
+QTableWidget::item {
+    padding: 8px 10px;
+    border: none;
+}
+
+QTableView::item:selected,
+QTableWidget::item:selected {
+    background: #e8effc;
+    color: #0f172a;
+}
+
+QHeaderView {
+    background: transparent;
+}
+
+QHeaderView::section {
+    background: #ffffff;
+    color: #64748b;
+    border: none;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QHeaderView::section:horizontal {
+    border-right: 1px solid #f1f5f9;
+}
+
+QTableCornerButton::section {
+    background: #ffffff;
+    border: none;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* Бейдж-статус (StatusBadge / badge_cell из app/widgets/badge.py).
+   Ставится как cell widget, а не текстом в ячейку — тексту нельзя
+   задать закруглённый цветной фон, а QLabel-виджету можно.
+
+   badgeCell — обёртка вокруг бейджа внутри ячейки; ей нужен
+   прозрачный фон, иначе она перекроет зебру и подсветку строки
+   собственным непрозрачным фоном QWidget из раздела 1. */
+
+QWidget#badgeCell {
+    background: transparent;
+}
+
+QLabel#badgeSuccess,
+QLabel#badgeDanger,
+QLabel#badgeWarning,
+QLabel#badgeNeutral {
+    border-radius: 10px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Текст — тон 800 палитры, фон — тон 100. Раньше текст брался из
+   тона 600-700 (у danger вообще #dc2626, тон 600) — контраст с фоном
+   не дотягивал до WCAG AA (3.95:1 у danger при минимуме 4.5:1),
+   из-за чего текст читался как почти слившийся с подложкой. */
+
+/* success — единственный, кому 800/100 оказалось мало (6.49:1 по
+   формуле, но зелёный на зелёном воспринимается мягче, чем цифры
+   говорят). Причина в самой формуле контраста: зелёный канал в ней
+   весит 0.7152 против 0.0722 у синего — почти вся яркость пары
+   "зелёный текст на зелёном фоне" идёт из одного канала, поэтому
+   глазу не за что "зацепиться", в отличие от danger/warning, где
+   каналы разнесены сильнее. Раздвинул до предела разрешённого
+   диапазона: текст 900, фон 50 — 8.70:1, с запасом выше AAA (7:1). */
+
+QLabel#badgeSuccess {
+    background: #f0fdf4;
+    color: #14532d;
+}
+
+QLabel#badgeDanger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+QLabel#badgeWarning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+QLabel#badgeNeutral {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+
+/* --------------------------------------------------------------------------
+   8. ПОЛОСЫ ПРОКРУТКИ
+   -------------------------------------------------------------------------- */
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 4px 2px 4px 2px;
+}
+
+QScrollBar::handle:vertical {
+    background: #cbd5e1;
+    border-radius: 4px;
+    min-height: 30px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #94a3b8;
+}
+
+QScrollBar:horizontal {
+    background: transparent;
+    height: 10px;
+    margin: 2px 4px 2px 4px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #cbd5e1;
+    border-radius: 4px;
+    min-width: 30px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: #94a3b8;
+}
+
+QScrollBar::add-line,
+QScrollBar::sub-line {
+    width: 0;
+    height: 0;
+    border: none;
+    background: none;
+}
+
+QScrollBar::add-page,
+QScrollBar::sub-page {
+    background: none;
+}
+
+
+/* --------------------------------------------------------------------------
+   9. ДИАЛОГИ И СИСТЕМНЫЕ ОКНА
+   -------------------------------------------------------------------------- */
+
+QMessageBox {
+    background: #ffffff;
+}
+
+QMessageBox QLabel {
+    background: transparent;
+    color: #0f172a;
+}
+
+QDialogButtonBox {
+    background: transparent;
+}
+
+QDialogButtonBox QPushButton {
+    min-width: 96px;
+}
+
+
+/* --------------------------------------------------------------------------
+   10. СТРОКА СОСТОЯНИЯ
+   -------------------------------------------------------------------------- */
+
+QWidget#statusBar {
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+}
+
+QLabel#statusBarHint {
+    color: #64748b;
+    font-size: 12px;
+    background: transparent;
 }
