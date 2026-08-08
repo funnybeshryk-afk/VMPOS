@@ -32,6 +32,9 @@ def apply_migrations():
             ),
             "debt_date": "DATE",
         },
+        "shifts": {
+            "cashier_user_id": "INTEGER",
+        },
     }
 
     with engine.begin() as connection:
