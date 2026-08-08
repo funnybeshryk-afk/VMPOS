@@ -1,17 +1,18 @@
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QDialog,
-    QHeaderView,
+    QHBoxLayout,
     QLabel,
     QMessageBox,
-    QPushButton,
-    QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
 )
 
 from app.services.sale_service import SaleService
 from app.utils.formatters import format_money, format_quantity
+from app.widgets.badge import StatusBadge
+from app.widgets.danger_button import DangerButton
+from app.widgets.data_table import DataTable
+from app.widgets.secondary_button import SecondaryButton
 
 
 class SaleDetailsDialog(QDialog):
@@ -25,17 +26,21 @@ class SaleDetailsDialog(QDialog):
 
         main_layout = QVBoxLayout(self)
 
+        header_layout = QHBoxLayout()
+
         title = QLabel(f"Chek #{sale.id}")
         title.setObjectName("pageTitle")
 
         if sale.status == "refunded":
-            status_text = "Holat: Qaytarilgan"
+            self.status_badge = StatusBadge("Qaytarilgan", "danger")
         else:
-            status_text = "Holat: Yakunlangan"
+            self.status_badge = StatusBadge("Yakunlangan", "success")
 
-        self.status_label = QLabel(status_text)
+        header_layout.addWidget(title)
+        header_layout.addWidget(self.status_badge)
+        header_layout.addStretch()
 
-        self.items_table = QTableWidget()
+        self.items_table = DataTable()
         self.items_table.setColumnCount(4)
         self.items_table.setHorizontalHeaderLabels([
             "Mahsulot",
@@ -44,32 +49,23 @@ class SaleDetailsDialog(QDialog):
             "Jami",
         ])
 
-        self.items_table.setEditTriggers(
-            QAbstractItemView.NoEditTriggers
-        )
-        self.items_table.setSelectionBehavior(
-            QAbstractItemView.SelectRows
-        )
-        self.items_table.verticalHeader().setVisible(False)
-        self.items_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
-        )
-
         total_label = QLabel(
             f"Jami: {format_money(sale.total_amount)} so'm"
         )
+        total_label.setObjectName("cartTotal")
 
-        self.refund_button = QPushButton("Chekni qaytarish")
+        # Qaytarish — sotuvni bekor qiladi va tovarni omborga
+        # qaytaradi, orqaga qaytarib bo'lmaydi — shuning uchun DangerButton.
+        self.refund_button = DangerButton("Chekni qaytarish")
         self.refund_button.clicked.connect(self.refund_sale)
 
         if sale.status == "refunded":
             self.refund_button.setDisabled(True)
 
-        close_button = QPushButton("Yopish")
+        close_button = SecondaryButton("Yopish")
         close_button.clicked.connect(self.accept)
 
-        main_layout.addWidget(title)
-        main_layout.addWidget(self.status_label)
+        main_layout.addLayout(header_layout)
         main_layout.addWidget(self.items_table)
         main_layout.addWidget(total_label)
         main_layout.addWidget(self.refund_button)

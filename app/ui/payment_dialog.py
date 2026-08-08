@@ -1,3 +1,4 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -31,9 +32,8 @@ class PaymentDialog(QDialog):
         total_label = QLabel(
             f"Jami: {format_money(total_amount)} so'm"
         )
-        total_label.setStyleSheet(
-            "font-size: 18px; font-weight: 700;"
-        )
+        total_label.setObjectName("cartTotal")
+        total_label.setAlignment(Qt.AlignCenter)
 
         form_layout = QFormLayout()
 

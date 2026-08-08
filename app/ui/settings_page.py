@@ -3,12 +3,12 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMessageBox,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
 from app.services.settings_service import SettingsService
+from app.widgets.primary_button import PrimaryButton
 
 
 class SettingsPage(QWidget):
@@ -16,6 +16,8 @@ class SettingsPage(QWidget):
         super().__init__()
 
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
 
         title = QLabel("Sozlamalar")
         title.setObjectName("pageTitle")
@@ -30,7 +32,9 @@ class SettingsPage(QWidget):
         form_layout.addRow("Telefon:", self.store_phone_edit)
         form_layout.addRow("Manzil:", self.store_address_edit)
 
-        self.save_button = QPushButton("Saqlash")
+        # Sahifadagi yagona amal — saqlash, shuning uchun yagona
+        # qora PrimaryButton.
+        self.save_button = PrimaryButton("Saqlash")
         self.save_button.clicked.connect(self.save_settings)
 
         main_layout.addWidget(title)

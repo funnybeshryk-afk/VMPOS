@@ -1,15 +1,9 @@
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QDialog,
-    QHeaderView,
-    QPushButton,
-    QTableWidget,
-    QTableWidgetItem,
-    QVBoxLayout,
-)
+from PySide6.QtWidgets import QDialog, QTableWidgetItem, QVBoxLayout
 
 from app.services.product_service import ProductService
 from app.utils.formatters import format_quantity
+from app.widgets.data_table import DataTable
+from app.widgets.secondary_button import SecondaryButton
 
 
 class StockReceiptsDialog(QDialog):
@@ -21,7 +15,7 @@ class StockReceiptsDialog(QDialog):
 
         main_layout = QVBoxLayout(self)
 
-        self.receipts_table = QTableWidget()
+        self.receipts_table = DataTable()
         self.receipts_table.setColumnCount(4)
         self.receipts_table.setHorizontalHeaderLabels([
             "Sana",
@@ -30,18 +24,7 @@ class StockReceiptsDialog(QDialog):
             "Miqdor",
         ])
 
-        self.receipts_table.setEditTriggers(
-            QAbstractItemView.NoEditTriggers
-        )
-        self.receipts_table.setSelectionBehavior(
-            QAbstractItemView.SelectRows
-        )
-        self.receipts_table.verticalHeader().setVisible(False)
-        self.receipts_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
-        )
-
-        close_button = QPushButton("Yopish")
+        close_button = SecondaryButton("Yopish")
         close_button.clicked.connect(self.accept)
 
         main_layout.addWidget(self.receipts_table)

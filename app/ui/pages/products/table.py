@@ -1,21 +1,19 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QHeaderView,
-    QTableWidget,
-    QTableWidgetItem,
-)
+from PySide6.QtWidgets import QTableWidgetItem
 
 from app.services.product_service import ProductService
 from app.utils.formatters import format_money, format_quantity
+from app.widgets.badge import stock_status_badge
+from app.widgets.data_table import DataTable
 
 
-class ProductsTable(QTableWidget):
+class ProductsTable(DataTable):
     def __init__(self):
         super().__init__()
 
         self.products = []
 
-        self.setColumnCount(5)
+        self.setColumnCount(6)
 
         self.setHorizontalHeaderLabels([
             "Shtrix kod",
@@ -23,19 +21,9 @@ class ProductsTable(QTableWidget):
             "Kategoriya",
             "Narxi",
             "Qoldiq",
+            "Holat",
         ])
-
-        self.horizontalHeader().setStretchLastSection(True)
-        self.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
-        )
-
-        self.verticalHeader().setVisible(False)
-
-        self.setAlternatingRowColors(True)
-        self.setSelectionBehavior(QTableWidget.SelectRows)
-        self.setSelectionMode(QTableWidget.SingleSelection)
-        self.setShowGrid(False)
+        self.pin_column_width(5)
 
     def load_data(self):
         self.products = ProductService.get_all_products()
@@ -88,5 +76,13 @@ class ProductsTable(QTableWidget):
                 4,
                 QTableWidgetItem(
                     format_quantity(product.quantity)
+                ),
+            )
+            self.setCellWidget(
+                row,
+                5,
+                stock_status_badge(
+                    product.quantity,
+                    product.min_quantity,
                 ),
             )

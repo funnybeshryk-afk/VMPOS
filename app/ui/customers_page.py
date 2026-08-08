@@ -1,12 +1,8 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QMessageBox,
-    QPushButton,
-    QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -17,6 +13,11 @@ from app.ui.customer_dialog import CustomerDialog
 from app.ui.debt_payment_dialog import DebtPaymentDialog
 from app.ui.debt_payments_dialog import DebtPaymentsDialog
 from app.utils.formatters import format_money
+from app.widgets.badge import badge_cell
+from app.widgets.danger_button import DangerButton
+from app.widgets.data_table import DataTable
+from app.widgets.primary_button import PrimaryButton
+from app.widgets.secondary_button import SecondaryButton
 
 
 class CustomersPage(QWidget):
@@ -24,25 +25,30 @@ class CustomersPage(QWidget):
         super().__init__()
 
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
 
         title = QLabel("Mijozlar")
         title.setObjectName("pageTitle")
 
         buttons_layout = QHBoxLayout()
 
-        self.add_button = QPushButton("Qo'shish")
+        # "Qo'shish" — ro'yxat sahifalarining barchasida (Mahsulotlar,
+        # Yetkazib beruvchilar) bir xil qoidaga bo'ysunadi: eng ko'p
+        # bosiladigan amal — yagona qora PrimaryButton.
+        self.add_button = PrimaryButton("Qo'shish")
         self.add_button.clicked.connect(self.add_customer)
 
-        self.edit_button = QPushButton("Tahrirlash")
+        self.edit_button = SecondaryButton("Tahrirlash")
         self.edit_button.clicked.connect(self.edit_customer)
 
-        self.delete_button = QPushButton("O'chirish")
+        self.delete_button = DangerButton("O'chirish")
         self.delete_button.clicked.connect(self.delete_customer)
 
-        self.debt_payment_button = QPushButton("Qarz to'lovi")
+        self.debt_payment_button = SecondaryButton("Qarz to'lovi")
         self.debt_payment_button.clicked.connect(self.pay_debt)
 
-        self.debt_history_button = QPushButton("To'lovlar tarixi")
+        self.debt_history_button = SecondaryButton("To'lovlar tarixi")
         self.debt_history_button.clicked.connect(
             self.open_debt_payments_history
         )
@@ -54,30 +60,17 @@ class CustomersPage(QWidget):
         buttons_layout.addWidget(self.debt_history_button)
         buttons_layout.addStretch()
 
-        self.customers_table = QTableWidget()
-        self.customers_table.setColumnCount(5)
+        self.customers_table = DataTable()
+        self.customers_table.setColumnCount(6)
         self.customers_table.setHorizontalHeaderLabels([
             "Nomi",
             "Telefon",
             "Manzil",
             "Qarz",
             "Qarz sanasi",
+            "Holat",
         ])
-
-        self.customers_table.setEditTriggers(
-            QAbstractItemView.NoEditTriggers
-        )
-        self.customers_table.setSelectionBehavior(
-            QAbstractItemView.SelectRows
-        )
-        self.customers_table.setSelectionMode(
-            QAbstractItemView.SingleSelection
-        )
-
-        self.customers_table.verticalHeader().setVisible(False)
-        self.customers_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
-        )
+        self.customers_table.pin_column_width(5)
 
         main_layout.addWidget(title)
         main_layout.addLayout(buttons_layout)
@@ -134,6 +127,13 @@ class CustomersPage(QWidget):
                 4,
                 QTableWidgetItem(debt_date),
             )
+
+            if customer.debt_amount > 0:
+                status_badge = badge_cell("Qarz bor", "warning")
+            else:
+                status_badge = badge_cell("Qarz yo'q", "success")
+
+            self.customers_table.setCellWidget(row, 5, status_badge)
 
     def get_selected_customer_id(self):
         current_row = self.customers_table.currentRow()

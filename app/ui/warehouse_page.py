@@ -1,12 +1,8 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QHeaderView,
+    QHBoxLayout,
     QLabel,
     QMessageBox,
-    QPushButton,
-    QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -16,6 +12,11 @@ from app.services.product_service import ProductService
 from app.ui.stock_receipt_dialog import StockReceiptDialog
 from app.ui.stock_receipts_dialog import StockReceiptsDialog
 from app.utils.formatters import format_quantity
+from app.widgets.badge import stock_status_badge
+from app.widgets.data_table import DataTable
+from app.widgets.primary_button import PrimaryButton
+from app.widgets.secondary_button import SecondaryButton
+from app.widgets.summary_card import SummaryCard
 
 
 class WarehousePage(QWidget):
@@ -23,20 +24,43 @@ class WarehousePage(QWidget):
         super().__init__()
 
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
 
         title = QLabel("Ombor")
         title.setObjectName("pageTitle")
 
-        self.refresh_button = QPushButton("Yangilash")
-        self.refresh_button.clicked.connect(self.load_products)
+        summary_layout = QHBoxLayout()
 
-        self.receive_button = QPushButton("Tovar qabul qilish")
+        self.total_products_card = SummaryCard("Jami mahsulotlar")
+        self.low_stock_card = SummaryCard("Kam qolgan", "warning")
+        self.out_of_stock_card = SummaryCard("Tugagan", "danger")
+
+        summary_layout.addWidget(self.total_products_card)
+        summary_layout.addWidget(self.low_stock_card)
+        summary_layout.addWidget(self.out_of_stock_card)
+
+        buttons_layout = QHBoxLayout()
+
+        # "Tovar qabul qilish" — bu sahifadagi eng ko'p bosiladigan
+        # amal (ombordan tovar kirimi), shuning uchun yagona qora
+        # PrimaryButton. Qolgan ikkitasi — yordamchi amallar.
+        self.receive_button = PrimaryButton("Tovar qabul qilish")
         self.receive_button.clicked.connect(self.receive_stock)
 
-        self.history_button = QPushButton("Qabul tarixi")
+        self.history_button = SecondaryButton("Qabul tarixi")
         self.history_button.clicked.connect(self.open_receipts_history)
 
-        self.products_table = QTableWidget()
+        self.refresh_button = SecondaryButton("Yangilash")
+        self.refresh_button.clicked.connect(self.load_products)
+
+        buttons_layout.addWidget(self.receive_button)
+        buttons_layout.addWidget(self.history_button)
+        buttons_layout.addWidget(self.refresh_button)
+        buttons_layout.addStretch()
+
+        self.products_table = DataTable()
+        self.products_table.verticalHeader().setDefaultSectionSize(36)
         self.products_table.setColumnCount(5)
         self.products_table.setHorizontalHeaderLabels([
             "Shtrix-kod",
@@ -45,26 +69,11 @@ class WarehousePage(QWidget):
             "Minimal qoldiq",
             "Holat",
         ])
-
-        self.products_table.setEditTriggers(
-            QAbstractItemView.NoEditTriggers
-        )
-        self.products_table.setSelectionBehavior(
-            QAbstractItemView.SelectRows
-        )
-        self.products_table.setSelectionMode(
-            QAbstractItemView.SingleSelection
-        )
-
-        self.products_table.verticalHeader().setVisible(False)
-        self.products_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
-        )
+        self.products_table.pin_column_width(4)
 
         main_layout.addWidget(title)
-        main_layout.addWidget(self.refresh_button)
-        main_layout.addWidget(self.receive_button)
-        main_layout.addWidget(self.history_button)
+        main_layout.addLayout(summary_layout)
+        main_layout.addLayout(buttons_layout)
         main_layout.addWidget(self.products_table)
 
         self.load_products()
@@ -78,37 +87,46 @@ class WarehousePage(QWidget):
 
         self.products_table.setRowCount(len(products))
 
+        low_stock_count = 0
+        out_of_stock_count = 0
+
         for row, product in enumerate(products):
             if product.quantity <= 0:
-                status = "Yo'q"
-                color = QColor("#ffcdd2")
-
+                out_of_stock_count += 1
             elif product.quantity <= product.min_quantity:
-                status = "Kam qoldi"
-                color = QColor("#fff3cd")
-
-            else:
-                status = "Yetarli"
-                color = QColor("#d9f2df")
+                low_stock_count += 1
 
             barcode_item = QTableWidgetItem(product.barcode or "")
             barcode_item.setData(Qt.UserRole, product.id)
 
-            items = [
-                barcode_item,
-                QTableWidgetItem(product.name),
-                QTableWidgetItem(
-                    format_quantity(product.quantity)
-                ),
+            self.products_table.setItem(row, 0, barcode_item)
+            self.products_table.setItem(
+                row, 1, QTableWidgetItem(product.name)
+            )
+            self.products_table.setItem(
+                row,
+                2,
+                QTableWidgetItem(format_quantity(product.quantity)),
+            )
+            self.products_table.setItem(
+                row,
+                3,
                 QTableWidgetItem(
                     format_quantity(product.min_quantity)
                 ),
-                QTableWidgetItem(status),
-            ]
+            )
+            self.products_table.setCellWidget(
+                row,
+                4,
+                stock_status_badge(
+                    product.quantity,
+                    product.min_quantity,
+                ),
+            )
 
-            for column, item in enumerate(items):
-                item.setBackground(color)
-                self.products_table.setItem(row, column, item)
+        self.total_products_card.set_value(len(products))
+        self.low_stock_card.set_value(low_stock_count)
+        self.out_of_stock_card.set_value(out_of_stock_count)
 
     def receive_stock(self):
         current_row = self.products_table.currentRow()

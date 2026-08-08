@@ -1,12 +1,8 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QMessageBox,
-    QPushButton,
-    QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -14,6 +10,10 @@ from PySide6.QtWidgets import (
 
 from app.services.supplier_service import SupplierService
 from app.ui.supplier_dialog import SupplierDialog
+from app.widgets.danger_button import DangerButton
+from app.widgets.data_table import DataTable
+from app.widgets.primary_button import PrimaryButton
+from app.widgets.secondary_button import SecondaryButton
 
 
 class SuppliersPage(QWidget):
@@ -21,19 +21,21 @@ class SuppliersPage(QWidget):
         super().__init__()
 
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
 
         title = QLabel("Yetkazib beruvchilar")
         title.setObjectName("pageTitle")
 
         buttons_layout = QHBoxLayout()
 
-        self.add_button = QPushButton("Qo'shish")
+        self.add_button = PrimaryButton("Qo'shish")
         self.add_button.clicked.connect(self.add_supplier)
 
-        self.edit_button = QPushButton("Tahrirlash")
+        self.edit_button = SecondaryButton("Tahrirlash")
         self.edit_button.clicked.connect(self.edit_supplier)
 
-        self.delete_button = QPushButton("O'chirish")
+        self.delete_button = DangerButton("O'chirish")
         self.delete_button.clicked.connect(self.delete_supplier)
 
         buttons_layout.addWidget(self.add_button)
@@ -41,28 +43,13 @@ class SuppliersPage(QWidget):
         buttons_layout.addWidget(self.delete_button)
         buttons_layout.addStretch()
 
-        self.suppliers_table = QTableWidget()
+        self.suppliers_table = DataTable()
         self.suppliers_table.setColumnCount(3)
         self.suppliers_table.setHorizontalHeaderLabels([
             "Nomi",
             "Telefon",
             "Manzil",
         ])
-
-        self.suppliers_table.setEditTriggers(
-            QAbstractItemView.NoEditTriggers
-        )
-        self.suppliers_table.setSelectionBehavior(
-            QAbstractItemView.SelectRows
-        )
-        self.suppliers_table.setSelectionMode(
-            QAbstractItemView.SingleSelection
-        )
-
-        self.suppliers_table.verticalHeader().setVisible(False)
-        self.suppliers_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
-        )
 
         main_layout.addWidget(title)
         main_layout.addLayout(buttons_layout)

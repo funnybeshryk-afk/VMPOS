@@ -1,12 +1,8 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QDateEdit,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
-    QPushButton,
-    QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -15,6 +11,10 @@ from PySide6.QtWidgets import (
 from app.services.sale_service import SaleService
 from app.ui.sale_details_dialog import SaleDetailsDialog
 from app.utils.formatters import format_money
+from app.widgets.badge import badge_cell
+from app.widgets.data_table import DataTable
+from app.widgets.primary_button import PrimaryButton
+from app.widgets.summary_card import SummaryCard
 
 
 class ReportsPage(QWidget):
@@ -24,6 +24,8 @@ class ReportsPage(QWidget):
         self.sales = {}
 
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
 
         title = QLabel("Hisobotlar")
         title.setObjectName("pageTitle")
@@ -39,7 +41,9 @@ class ReportsPage(QWidget):
         )
         self.date_edit.dateChanged.connect(self.load_sales)
 
-        self.refresh_button = QPushButton("Yangilash")
+        # Bu sahifada yagona tugma — filtrni yangilaydi, shu bilan
+        # birga sahifadagi yagona qora PrimaryButton bo'lishi tabiiy.
+        self.refresh_button = PrimaryButton("Yangilash")
         self.refresh_button.clicked.connect(self.load_sales)
 
         filter_layout.addWidget(date_label)
@@ -49,18 +53,17 @@ class ReportsPage(QWidget):
 
         summary_layout = QHBoxLayout()
 
-        self.sales_count_label = QLabel("Cheklar: 0")
-        self.today_total_label = QLabel("Savdo: 0 so'm")
-        self.cash_total_label = QLabel("Naqd pul: 0 so'm")
-        self.card_total_label = QLabel("Karta: 0 so'm")
+        self.sales_count_card = SummaryCard("Cheklar")
+        self.today_total_card = SummaryCard("Savdo")
+        self.cash_total_card = SummaryCard("Naqd pul")
+        self.card_total_card = SummaryCard("Karta")
 
-        summary_layout.addWidget(self.sales_count_label)
-        summary_layout.addWidget(self.today_total_label)
-        summary_layout.addWidget(self.cash_total_label)
-        summary_layout.addWidget(self.card_total_label)
-        summary_layout.addStretch()
+        summary_layout.addWidget(self.sales_count_card)
+        summary_layout.addWidget(self.today_total_card)
+        summary_layout.addWidget(self.cash_total_card)
+        summary_layout.addWidget(self.card_total_card)
 
-        self.sales_table = QTableWidget()
+        self.sales_table = DataTable()
         self.sales_table.setColumnCount(4)
         self.sales_table.setHorizontalHeaderLabels([
             "Chek raqami",
@@ -68,21 +71,7 @@ class ReportsPage(QWidget):
             "Jami",
             "Holat",
         ])
-
-        self.sales_table.setEditTriggers(
-            QAbstractItemView.NoEditTriggers
-        )
-        self.sales_table.setSelectionBehavior(
-            QAbstractItemView.SelectRows
-        )
-        self.sales_table.setSelectionMode(
-            QAbstractItemView.SingleSelection
-        )
-
-        self.sales_table.verticalHeader().setVisible(False)
-        self.sales_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
-        )
+        self.sales_table.pin_column_width(3)
         self.sales_table.cellDoubleClicked.connect(
             self.open_sale_details
         )
@@ -106,17 +95,15 @@ class ReportsPage(QWidget):
 
         self.sales = {sale.id: sale for sale in sales}
 
-        self.sales_count_label.setText(
-            f"Cheklar: {summary['sales_count']}"
+        self.sales_count_card.set_value(summary["sales_count"])
+        self.today_total_card.set_value(
+            f"{format_money(summary['total_amount'])} so'm"
         )
-        self.today_total_label.setText(
-            f"Savdo: {format_money(summary['total_amount'])} so'm"
+        self.cash_total_card.set_value(
+            f"{format_money(summary['cash_total'])} so'm"
         )
-        self.cash_total_label.setText(
-            f"Naqd pul: {format_money(summary['cash_total'])} so'm"
-        )
-        self.card_total_label.setText(
-            f"Karta: {format_money(summary['card_total'])} so'm"
+        self.card_total_card.set_value(
+            f"{format_money(summary['card_total'])} so'm"
         )
 
         self.sales_table.setRowCount(len(sales))
@@ -125,9 +112,9 @@ class ReportsPage(QWidget):
             sale_date = sale.created_at.strftime("%d.%m.%Y %H:%M")
 
             if sale.status == "refunded":
-                status = "Qaytarilgan"
+                status_badge = badge_cell("Qaytarilgan", "danger")
             else:
-                status = "Yakunlangan"
+                status_badge = badge_cell("Yakunlangan", "success")
 
             sale_id_item = QTableWidgetItem(str(sale.id))
             sale_id_item.setData(Qt.UserRole, sale.id)
@@ -145,11 +132,7 @@ class ReportsPage(QWidget):
                     f"{format_money(sale.total_amount)} so'm"
                 ),
             )
-            self.sales_table.setItem(
-                row,
-                3,
-                QTableWidgetItem(status),
-            )
+            self.sales_table.setCellWidget(row, 3, status_badge)
 
     def open_sale_details(self, row, column):
         item = self.sales_table.item(row, 0)

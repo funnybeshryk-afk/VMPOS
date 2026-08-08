@@ -1,15 +1,9 @@
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QDialog,
-    QHeaderView,
-    QPushButton,
-    QTableWidget,
-    QTableWidgetItem,
-    QVBoxLayout,
-)
+from PySide6.QtWidgets import QDialog, QTableWidgetItem, QVBoxLayout
 
 from app.services.customer_service import CustomerService
 from app.utils.formatters import format_money
+from app.widgets.data_table import DataTable
+from app.widgets.secondary_button import SecondaryButton
 
 
 class DebtPaymentsDialog(QDialog):
@@ -21,7 +15,7 @@ class DebtPaymentsDialog(QDialog):
 
         main_layout = QVBoxLayout(self)
 
-        self.payments_table = QTableWidget()
+        self.payments_table = DataTable()
         self.payments_table.setColumnCount(3)
         self.payments_table.setHorizontalHeaderLabels([
             "Sana",
@@ -29,18 +23,7 @@ class DebtPaymentsDialog(QDialog):
             "To'lov",
         ])
 
-        self.payments_table.setEditTriggers(
-            QAbstractItemView.NoEditTriggers
-        )
-        self.payments_table.setSelectionBehavior(
-            QAbstractItemView.SelectRows
-        )
-        self.payments_table.verticalHeader().setVisible(False)
-        self.payments_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
-        )
-
-        close_button = QPushButton("Yopish")
+        close_button = SecondaryButton("Yopish")
         close_button.clicked.connect(self.accept)
 
         main_layout.addWidget(self.payments_table)
