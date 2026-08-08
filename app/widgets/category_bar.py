@@ -1,4 +1,5 @@
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QButtonGroup,
     QHBoxLayout,
@@ -7,7 +8,65 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.utils.icons import load_icon
+
 _ALL_LABEL = "Barchasi"
+_ALL_ICON = "grid"
+_BAR_HEIGHT = 56
+
+# Feather'da oziq-ovqatga xos ikonkalar yo'q (apple/egg kabi shakllar
+# umuman mavjud emas) — shuning uchun har bir kategoriya uchun eng
+# yaqin mazmundagi umumiy ikonka tanlangan, aniq surat emas.
+_CATEGORY_ICONS = {
+    "meva": "shopping-bag",
+    "mevalar": "shopping-bag",
+    "мева": "shopping-bag",
+    "tuxum": "circle",
+    "тухум": "circle",
+    "shakar": "package",
+    "шакар": "package",
+}
+_DEFAULT_CATEGORY_ICON = "tag"
+
+_ICON_SIZE = 16
+_ICON_COLOR_UNCHECKED = "#334155"
+_ICON_COLOR_CHECKED = "#ffffff"
+
+
+def _tile_icon(name):
+    """Checked/unchecked holati uchun ikkita rangda bitta QIcon.
+
+    QAbstractButton checkable tugmalarda QIcon.On/Off holatlarini
+    o'zi avtomatik tanlaydi — checked bo'lsa oq (matn singari),
+    bo'lmasa to'q kulrang, alohida signal ulashning hojati yo'q.
+    """
+
+    icon = QIcon()
+    icon.addPixmap(
+        load_icon(
+            name, color=_ICON_COLOR_UNCHECKED, size=_ICON_SIZE
+        ).pixmap(QSize(_ICON_SIZE, _ICON_SIZE)),
+        QIcon.Normal,
+        QIcon.Off,
+    )
+    icon.addPixmap(
+        load_icon(
+            name, color=_ICON_COLOR_CHECKED, size=_ICON_SIZE
+        ).pixmap(QSize(_ICON_SIZE, _ICON_SIZE)),
+        QIcon.Normal,
+        QIcon.On,
+    )
+
+    return icon
+
+
+def _icon_for_category(category):
+    if category is None:
+        return _ALL_ICON
+
+    return _CATEGORY_ICONS.get(
+        category.strip().lower(), _DEFAULT_CATEGORY_ICON
+    )
 
 
 class CategoryBar(QWidget):
@@ -26,13 +85,22 @@ class CategoryBar(QWidget):
     def __init__(self):
         super().__init__()
 
+        # QScrollArea'ning o'zi Expanding vertikal siyosat bilan
+        # tug'iladi (setFixedHeight faqat min/max'ni cheklaydi, lekin
+        # siyosatni o'zgartirmaydi) — shu sabab tashqi QVBoxLayout
+        # (Sotuv sahifasida) ortiqcha bo'sh joyni shu vidjetga ham
+        # bera boshlaydi va panel ichida katta bo'sh joy paydo
+        # bo'ladi. CategoryBar'ning o'zini ham qat'iy balandlikka
+        # qulflab, bu muammoning oldini olamiz.
+        self.setFixedHeight(_BAR_HEIGHT)
+
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
         self._scroll_area = QScrollArea()
         self._scroll_area.setObjectName("categoryScrollArea")
         self._scroll_area.setWidgetResizable(True)
-        self._scroll_area.setFixedHeight(56)
+        self._scroll_area.setFixedHeight(_BAR_HEIGHT)
         self._scroll_area.setHorizontalScrollBarPolicy(
             Qt.ScrollBarAsNeeded
         )
@@ -90,6 +158,8 @@ class CategoryBar(QWidget):
         tile.setObjectName("categoryTile")
         tile.setCheckable(True)
         tile.setCursor(Qt.PointingHandCursor)
+        tile.setIcon(_tile_icon(_icon_for_category(value)))
+        tile.setIconSize(QSize(_ICON_SIZE, _ICON_SIZE))
         tile.clicked.connect(
             lambda: self.categorySelected.emit(value)
         )

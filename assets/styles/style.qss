@@ -474,9 +474,9 @@ QPushButton#categoryTile:hover {
 }
 
 QPushButton#categoryTile:checked {
-    background: #2563eb;
+    background: #111827;
     color: #ffffff;
-    border-color: #2563eb;
+    border-color: #111827;
 }
 
 

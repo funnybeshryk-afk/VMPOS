@@ -101,6 +101,9 @@ class MainWindow(QMainWindow):
         self.workspace = QStackedWidget()
 
         self.sale_page = SalePage()
+        self.sale_page.shift_panel.openMoliyaRequested.connect(
+            self.go_to_finance_page
+        )
         self.products_page = ProductsPage()
         self.warehouse_page = WarehousePage()
         self.reports_page = ReportsPage()
@@ -227,6 +230,13 @@ class MainWindow(QMainWindow):
                 break
 
         self.menu.setCurrentRow(default_row)
+
+    def go_to_finance_page(self):
+        # Moliya barcha rollarga ochiq (_page_entries'da roles=None),
+        # shuning uchun u har doim joriy ko'rinadigan menyuda bo'ladi.
+        if self.finance_page in self._visible_pages:
+            index = self._visible_pages.index(self.finance_page)
+            self.menu.setCurrentRow(index)
 
     def change_page(self, index):
         if index < 0 or index >= len(self._visible_pages):

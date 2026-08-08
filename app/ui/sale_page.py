@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
@@ -13,6 +15,7 @@ from PySide6.QtWidgets import (
 
 from app.services.product_service import ProductService
 from app.services.sale_service import SaleService
+from app.services.shift_service import ShiftService
 from app.ui.mixed_payment_dialog import MixedPaymentDialog
 from app.ui.payment_dialog import PaymentDialog
 from app.ui.quantity_edit_dialog import QuantityEditDialog
@@ -29,7 +32,10 @@ from app.widgets.category_bar import CategoryBar
 from app.widgets.danger_button import DangerButton
 from app.widgets.data_table import DataTable
 from app.widgets.secondary_button import SecondaryButton
+from app.widgets.shift_status_panel import ShiftStatusPanel
 from app.widgets.success_button import SuccessButton
+
+_SHIFT_REFRESH_INTERVAL_MS = 60_000
 
 
 class SalePage(QWidget):
@@ -38,6 +44,7 @@ class SalePage(QWidget):
 
         self.cart = {}
         self.selected_category = None
+        self.current_shift = None
 
         main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(20, 20, 20, 20)
@@ -83,6 +90,11 @@ class SalePage(QWidget):
 
         right_layout = QVBoxLayout()
         right_layout.setSpacing(10)
+
+        # Joriy smena plashkasi — kassir kim ekanini va smena
+        # ochilganmi-yo'qmi ko'rsatadi. MainWindow buni Moliya
+        # sahifasiga o'tish tugmasiga ulaydi (openMoliyaRequested).
+        self.shift_panel = ShiftStatusPanel()
 
         cart_title = QLabel("Korzina")
         cart_title.setObjectName("sectionTitle")
@@ -171,6 +183,7 @@ class SalePage(QWidget):
         )
         self.mixed_payment_button.setIconSize(QSize(16, 16))
 
+        right_layout.addWidget(self.shift_panel)
         right_layout.addWidget(cart_title)
         right_layout.addWidget(self.cart_stack)
         right_layout.addLayout(utility_row)
@@ -186,9 +199,48 @@ class SalePage(QWidget):
         self.load_products()
         self.update_cart_table()
 
+        # Smena ochilgan/ochilmaganini va soatni sahifa fonda turganda
+        # ham yangilab turadi — real vaqt oqimida smena faqat Moliya
+        # sahifasiga o'tib ochiladi (bu bitta oynali ilova, bir vaqtda
+        # bitta sahifa ko'rinadi), shuning uchun showEvent() allaqachon
+        # har safar Sotuv'ga qaytilganda darhol yangilaydi; timer esa
+        # shunchaki soatni va smenani sahifa ochiq turgan paytda ham
+        # yangilab turish uchun zaxira sifatida ishlaydi.
+        self.refresh_shift_panel()
+
+        self._shift_refresh_timer = QTimer(self)
+        self._shift_refresh_timer.timeout.connect(
+            self.refresh_shift_panel
+        )
+        self._shift_refresh_timer.start(_SHIFT_REFRESH_INTERVAL_MS)
+
     def showEvent(self, event):
         super().showEvent(event)
         QTimer.singleShot(0, self.focus_search)
+        self.refresh_shift_panel()
+
+    def refresh_shift_panel(self):
+        self.current_shift = ShiftService.get_open_shift()
+        now_text = datetime.now().strftime("%d.%m.%Y, %H:%M")
+
+        if self.current_shift is None:
+            self.shift_panel.show_no_shift()
+        else:
+            self.shift_panel.show_shift(
+                self.current_shift.cashier_name,
+                self.current_shift.id,
+                self.current_shift.opened_at,
+                now_text,
+            )
+
+        self.update_payment_buttons_enabled()
+
+    def update_payment_buttons_enabled(self):
+        has_shift = self.current_shift is not None
+
+        self.cash_payment_button.setEnabled(has_shift)
+        self.card_payment_button.setEnabled(has_shift)
+        self.mixed_payment_button.setEnabled(has_shift)
 
     def setup_shortcuts(self):
         QShortcut(QKeySequence("F2"), self, self.focus_search)
@@ -457,6 +509,18 @@ class SalePage(QWidget):
         return total
 
     def complete_sale(self, payment_method=None):
+        # Tugmalar smena yopiq bo'lsa disabled bo'ladi, lekin F4
+        # klaviatura yorlig'i tugma holatidan mustaqil ishlaydi —
+        # shuning uchun bu yerda ham tekshiramiz.
+        if self.current_shift is None:
+            QMessageBox.warning(
+                self,
+                "Diqqat",
+                "Sotish uchun avval Moliya bo'limida smenani "
+                "oching.",
+            )
+            return
+
         if not self.cart:
             QMessageBox.warning(
                 self,
