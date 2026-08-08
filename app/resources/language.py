@@ -5,8 +5,9 @@ TEXT = {
     "reports": "Hisobotlar",
     "customers": "Mijozlar",
     "suppliers": "Yetkazib beruvchilar",
+    "finance": "Moliya",
+    "users": "Foydalanuvchilar",
     "settings": "Sozlamalar",
 
     "workspace": "Ishchi maydon",
-    "ready": "Holat: Tayyor",
 }
