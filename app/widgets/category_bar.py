@@ -1,5 +1,4 @@
 from PySide6.QtCore import QSize, Qt, Signal
-from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QButtonGroup,
     QHBoxLayout,
@@ -8,7 +7,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.utils.icons import load_icon
+from app.utils.icons import load_checkable_icon
 
 _ALL_LABEL = "Barchasi"
 _ALL_ICON = "grid"
@@ -31,33 +30,6 @@ _DEFAULT_CATEGORY_ICON = "tag"
 _ICON_SIZE = 16
 _ICON_COLOR_UNCHECKED = "#334155"
 _ICON_COLOR_CHECKED = "#ffffff"
-
-
-def _tile_icon(name):
-    """Checked/unchecked holati uchun ikkita rangda bitta QIcon.
-
-    QAbstractButton checkable tugmalarda QIcon.On/Off holatlarini
-    o'zi avtomatik tanlaydi — checked bo'lsa oq (matn singari),
-    bo'lmasa to'q kulrang, alohida signal ulashning hojati yo'q.
-    """
-
-    icon = QIcon()
-    icon.addPixmap(
-        load_icon(
-            name, color=_ICON_COLOR_UNCHECKED, size=_ICON_SIZE
-        ).pixmap(QSize(_ICON_SIZE, _ICON_SIZE)),
-        QIcon.Normal,
-        QIcon.Off,
-    )
-    icon.addPixmap(
-        load_icon(
-            name, color=_ICON_COLOR_CHECKED, size=_ICON_SIZE
-        ).pixmap(QSize(_ICON_SIZE, _ICON_SIZE)),
-        QIcon.Normal,
-        QIcon.On,
-    )
-
-    return icon
 
 
 def _icon_for_category(category):
@@ -158,7 +130,14 @@ class CategoryBar(QWidget):
         tile.setObjectName("categoryTile")
         tile.setCheckable(True)
         tile.setCursor(Qt.PointingHandCursor)
-        tile.setIcon(_tile_icon(_icon_for_category(value)))
+        tile.setIcon(
+            load_checkable_icon(
+                _icon_for_category(value),
+                _ICON_COLOR_UNCHECKED,
+                _ICON_COLOR_CHECKED,
+                _ICON_SIZE,
+            )
+        )
         tile.setIconSize(QSize(_ICON_SIZE, _ICON_SIZE))
         tile.clicked.connect(
             lambda: self.categorySelected.emit(value)

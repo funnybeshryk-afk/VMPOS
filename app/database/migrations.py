@@ -41,6 +41,9 @@ def apply_migrations():
         "shifts": {
             "cashier_user_id": "INTEGER",
         },
+        "products": {
+            "image_path": "VARCHAR(255)",
+        },
     }
 
     with engine.begin() as connection:

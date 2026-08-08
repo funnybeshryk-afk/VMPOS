@@ -36,3 +36,32 @@ def load_icon(name, color="#334155", size=24):
     painter.end()
 
     return QIcon(pixmap)
+
+
+def load_checkable_icon(name, unchecked_color, checked_color, size=24):
+    """Checkable tugma uchun ikki holatli (On/Off) QIcon.
+
+    QAbstractButton checkable bo'lsa, checked holatga o'tganda
+    QIcon.On pixmap'ni, aks holda QIcon.Off'ni o'zi avtomatik
+    tanlaydi — alohida signal ulashning hojati yo'q (CategoryBar va
+    SidebarMenu shu bitta funksiyadan foydalanadi).
+    """
+
+    icon = QIcon()
+
+    icon.addPixmap(
+        load_icon(name, color=unchecked_color, size=size).pixmap(
+            QSize(size, size)
+        ),
+        QIcon.Normal,
+        QIcon.Off,
+    )
+    icon.addPixmap(
+        load_icon(name, color=checked_color, size=size).pixmap(
+            QSize(size, size)
+        ),
+        QIcon.Normal,
+        QIcon.On,
+    )
+
+    return icon

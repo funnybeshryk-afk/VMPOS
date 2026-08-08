@@ -10,6 +10,7 @@ from app.ui.main_window import MainWindow
 import app.models.app_setting
 import app.models.customer
 import app.models.debt_payment
+import app.models.price_tier
 import app.models.product
 import app.models.sale
 import app.models.shift

@@ -14,6 +14,12 @@
    Рамка контрастная   #cbd5e1
    Разделитель         #eef2f7
 
+   САЙДБАР (едва отличим от фона приложения — минимальный, но
+   ненулевой контраст: #cbd5e1 vs #f1f5f9 = 1.36:1)
+   Фон сайдбара        #cbd5e1   ("рамка контрастная" сверху)
+   Рамка сайдбара      #e2e8f0   ("рамка обычная")
+   Заголовок группы / линия — бренд-цвета логотипа, см. §4.1
+
    Текст основной      #0f172a
    Текст вторичный     #475569
    Текст приглушённый  #64748b
@@ -127,6 +133,14 @@ QLabel#mutedText {
     background: transparent;
 }
 
+QLabel#productImagePreview {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
 QLabel#cartEmptyTitle {
     font-size: 15px;
     font-weight: 600;
@@ -231,19 +245,121 @@ QFrame#separator {
    + акцентная полоса слева.
    -------------------------------------------------------------------------- */
 
-/* Логотип и список пунктов лежат в одном контейнере (#sidebar), и
-   именно контейнер даёт фон и правую границу — иначе между логотипом
-   и списком была бы граница шва, а не единая панель. */
+/* Sidebar to'liq qayta qurildi (main_window.py, SidebarMenu):
+   logo qatori + guruhlangan ikonkali menyu + profil — barchasi bitta
+   #sidebar konteynerida, bitta fonda.
+
+   Fon — #cbd5e1 ("рамка контрастная", palitraga qarang): ish maydoni
+   fonidan (#f1f5f9) minimal, deyarli sezilmaydigan farq bilan
+   ajralib turadi (1.36:1) — atayin shunday, yorqin rang aksenti
+   yo'q. (Iliq/qo'ng'ir tus — #d6d3d1/#a8a29e — bir bosqichda
+   sinovdan o'tkazilgan va noto'g'ri chiqqan, shu sabab qaytarildi.) */
 
 QWidget#sidebar {
-    background: #ffffff;
+    background: #cbd5e1;
     border-right: 1px solid #e2e8f0;
 }
 
-QLabel#sidebarLogo {
+QWidget#sidebarLogo {
     background: transparent;
-    padding: 24px 16px 16px 16px;
 }
+
+QLabel#sidebarLogoText {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    background: transparent;
+}
+
+QWidget#sidebarUserPanel {
+    background: transparent;
+}
+
+QLabel#sidebarUserAvatar {
+    background: #111827;
+    color: #ffffff;
+    border-radius: 18px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+QLabel#sidebarUserName {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+    background: transparent;
+}
+
+QPushButton#sidebarSwitchUserButton {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+}
+
+QPushButton#sidebarSwitchUserButton:hover {
+    background: #ffffff;
+}
+
+QPushButton#sidebarSwitchUserButton:pressed {
+    background: #e7e5e4;
+}
+
+QWidget#sidebarGroupHeader {
+    background: transparent;
+}
+
+/* #3b6d11 — logotipdagi yashil (§ palitra tepasida qayd etilgan
+   yagona brend-rang istisnosidan tashqari, atayin qo'shimcha
+   ishlatilgan joy: guruh sarlavhalari, sidebar navigatsiyasining
+   o'z ichidagi tuzilishi uchun). Chiziq — #dedcd3, sarlavha
+   matnidan keyin qolgan bo'sh joyni to'ldiradi (stretch=1). */
+
+QLabel#sidebarGroupTitle {
+    font-size: 11px;
+    font-weight: 700;
+    color: #3b6d11;
+    background: transparent;
+}
+
+QFrame#sidebarGroupLine {
+    background: #dedcd3;
+    border: none;
+    max-height: 1px;
+    min-height: 1px;
+}
+
+/* Menyu bandi — CategoryBar'dagi kabi checkable QPushButton.
+   Belgilangan (checked) band #111827 — PrimaryButton bilan bir xil
+   to'q fon + oq matn: avvalgi "oq kartochka + ko'k chiziq" o'rniga
+   aniq, adashtirmaydigan holat belgisi. */
+
+QPushButton#sidebarMenuItem {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    padding-left: 8px;
+    min-height: 40px;
+    color: #44403c;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+QPushButton#sidebarMenuItem:hover {
+    background: #ffffff;
+    color: #0f172a;
+}
+
+QPushButton#sidebarMenuItem:checked {
+    background: #111827;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Quyidagi QListWidget qoidalari endi sidebar uchun emas (u endi
+   SidebarMenu — yuqoriga qarang), balki oddiy ro'yxatli dialoglar
+   uchun (masalan UserPickerDialog — "hozir kim ishlayapti"). */
 
 QListWidget {
     background: transparent;
@@ -439,6 +555,23 @@ QPushButton[sizeVariant="sm"] {
     font-size: 13px;
     padding: 0 12px;
     border-radius: 6px;
+}
+
+/* Xuddi shu sizeVariant naqshi: qatordagi matnni tugma ustidagi
+   boshqa elementlar bilan bir xil chap chetdan boshlash kerak
+   bo'lganda (masalan, sidebar'dagi "Almashtirish" — undan yuqoridagi
+   yorliq bilan bir xil chetda turishi uchun). Faqat shu tugmaga
+   ta'sir qiladi — umumiy #ghostButton qoidasi o'zgarmaydi.
+
+   Tugma konteyner bo'ylab cho'ziladi (QVBoxLayout uni to'liq
+   kenglikka tenglaydi), shuning uchun asosiy sabab padding emas —
+   QPushButton matni sukut bo'yicha MARKAZLASHTIRILGAN. text-align
+   shuni chapga suradi, padding/border-left esa matnni chetga
+   yopishtiradi. */
+QPushButton[flush="left"] {
+    text-align: left;
+    padding-left: 0;
+    border-left-width: 0;
 }
 
 /* 5.7 Плитка категории (Sotuv). Выбранная категория — это состояние

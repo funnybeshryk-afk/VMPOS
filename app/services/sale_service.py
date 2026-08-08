@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from app.database.database import SessionLocal
 from app.models.product import Product
 from app.models.sale import Sale, SaleItem
+from app.services.product_service import ProductService
 
 
 class SaleService:
@@ -20,6 +21,7 @@ class SaleService:
         try:
             total_amount = 0
             products = {}
+            unit_prices = {}
 
             for item in cart.values():
                 cart_product = item["product"]
@@ -37,8 +39,18 @@ class SaleService:
                         f"Qoldiq yetarli emas: {product.name}"
                     )
 
+                # Narx bu yerda, checkout paytida, serverda qayta
+                # hisoblanadi — optom narx daraja jadvali savat
+                # yig'ilayotgan paytdan keyin o'zgargan bo'lishi
+                # mumkin, shuning uchun UI ko'rsatgan narxga
+                # ishonilmaydi.
+                unit_price = ProductService.resolve_price(
+                    product, quantity
+                )
+
                 products[product.id] = product
-                total_amount += product.sell_price * quantity
+                unit_prices[product.id] = unit_price
+                total_amount += unit_price * quantity
 
             if payment_method == "cash" and paid_amount < total_amount:
                 raise ValueError("Berilgan summa yetarli emas.")
@@ -93,13 +105,14 @@ class SaleService:
             for product_id, item in cart.items():
                 product = products[product_id]
                 quantity = item["quantity"]
-                line_total = product.sell_price * quantity
+                unit_price = unit_prices[product_id]
+                line_total = unit_price * quantity
 
                 sale_item = SaleItem(
                     sale_id=sale.id,
                     product_id=product.id,
                     product_name=product.name,
-                    price=product.sell_price,
+                    price=unit_price,
                     quantity=quantity,
                     line_total=line_total,
                 )

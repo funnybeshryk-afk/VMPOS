@@ -161,8 +161,9 @@ class ProductsPage(QWidget):
 
         product_id = self.table.item(current_row, 0).data(Qt.UserRole)
         product = ProductService.get_product(product_id)
+        price_tiers = ProductService.get_price_tiers(product_id)
 
-        dialog = ProductDialog(product)
+        dialog = ProductDialog(product, price_tiers)
 
         if dialog.exec():
             try:

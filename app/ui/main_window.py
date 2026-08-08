@@ -1,10 +1,10 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
-    QListWidget,
     QMainWindow,
+    QPushButton,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -24,8 +24,28 @@ from app.ui.suppliers_page import SuppliersPage
 from app.ui.user_picker_dialog import UserPickerDialog
 from app.ui.users_page import UsersPage
 from app.ui.warehouse_page import WarehousePage
+from app.utils.icons import load_icon
 from app.widgets.app_status_bar import AppStatusBar
-from app.widgets.ghost_button import GhostButton
+from app.widgets.sidebar_menu import SidebarMenu
+
+_SIDEBAR_PADDING = 16
+
+# (matn kaliti -> Feather ikonka nomi). Aniq muqobili yo'q joylarda
+# eng yaqin ma'nodagi ikonka tanlangan: Ombor — "archive" (ombor
+# qutisi), Moliya — "layers" (Sotuv'dagi naqd to'lov tugmasidagi
+# bilan bir xil — "pul uyumi", valyuta belgisiz), Foydalanuvchilar —
+# "user-check" (xodimni tasdiqlash/boshqarish).
+_MENU_ICONS = {
+    "sale": "shopping-cart",
+    "products": "package",
+    "warehouse": "archive",
+    "reports": "bar-chart-2",
+    "customers": "users",
+    "suppliers": "truck",
+    "finance": "layers",
+    "users": "user-check",
+    "settings": "settings",
+}
 
 
 class MainWindow(QMainWindow):
@@ -52,10 +72,10 @@ class MainWindow(QMainWindow):
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
 
-        # Sidebar — logo va menyuni bitta ustunga birlashtiradigan
-        # konteyner. Ranglash (fon, o'ng chegara) shu konteynerda
-        # #sidebar orqali beriladi — logo va ro'yxat bir xil oq
-        # panelning qismidek ko'rinishi uchun.
+        # Sidebar — logo, menyu va profil bitta ustunda (#sidebar).
+        # Har uch bo'lim ham bir xil _SIDEBAR_PADDING'dan boshlanadi,
+        # shu sabab ular bitta tekis chetdagi yagona guruh sifatida
+        # ko'rinadi.
         sidebar = QWidget()
         sidebar.setObjectName("sidebar")
         sidebar.setFixedWidth(220)
@@ -64,39 +84,13 @@ class MainWindow(QMainWindow):
         sidebar_layout.setContentsMargins(0, 0, 0, 0)
         sidebar_layout.setSpacing(0)
 
-        logo_label = QLabel()
-        logo_label.setObjectName("sidebarLogo")
-        logo_label.setAlignment(Qt.AlignCenter)
-        logo_label.setPixmap(
-            QPixmap("assets/logo.png").scaledToWidth(
-                140,
-                Qt.SmoothTransformation,
-            )
-        )
+        sidebar_layout.addWidget(self._build_logo_row())
 
-        self.menu = QListWidget()
-        self.menu.currentRowChanged.connect(self.change_page)
+        self.sidebar_menu = SidebarMenu()
+        self.sidebar_menu.itemSelected.connect(self.change_page)
 
-        # Ilovada parol talab qilmaydigan yengil "hozir kim
-        # ishlayapti" ko'rsatkichi — menyuni rolga qarab moslashtirish
-        # va Moliya'da kassirni oldindan belgilash uchun ishlatiladi.
-        user_panel = QWidget()
-
-        user_panel_layout = QVBoxLayout(user_panel)
-        user_panel_layout.setContentsMargins(16, 12, 16, 16)
-        user_panel_layout.setSpacing(4)
-
-        self.current_user_label = QLabel()
-        self.current_user_label.setObjectName("mutedText")
-        self.current_user_label.setWordWrap(True)
-
-        self.switch_user_button = GhostButton("Almashtirish")
-        self.switch_user_button.clicked.connect(
-            self.switch_active_user
-        )
-
-        user_panel_layout.addWidget(self.current_user_label)
-        user_panel_layout.addWidget(self.switch_user_button)
+        sidebar_layout.addWidget(self.sidebar_menu, 1)
+        sidebar_layout.addWidget(self._build_user_panel())
 
         self.workspace = QStackedWidget()
 
@@ -113,31 +107,29 @@ class MainWindow(QMainWindow):
         self.users_page = UsersPage()
         self.settings_page = SettingsPage()
 
-        # (matn kaliti, sahifa, faqat shu rollarga ko'rinadi — None
-        # bo'lsa hammaga ko'rinadi). Kassirga faqat o'z ishi uchun
-        # kerakli ikkita bet ochiq — Sotuv (chek yozish) va Moliya
-        # (o'z smenasini boshqarish), qolgani — orqa ofis ishi —
-        # faqat Administratorga.
-        self._page_entries = [
-            ("sale", self.sale_page, None),
-            ("products", self.products_page, {ROLE_ADMIN}),
-            ("warehouse", self.warehouse_page, {ROLE_ADMIN}),
-            ("reports", self.reports_page, {ROLE_ADMIN}),
-            ("customers", self.customers_page, {ROLE_ADMIN}),
-            ("suppliers", self.suppliers_page, {ROLE_ADMIN}),
-            ("finance", self.finance_page, None),
-            ("users", self.users_page, {ROLE_ADMIN}),
-            ("settings", self.settings_page, {ROLE_ADMIN}),
+        # Kassirga faqat o'z ishi uchun kerakli ikkita bet ochiq —
+        # Sotuv (chek yozish) va Moliya (o'z smenasini boshqarish),
+        # qolgani — orqa ofis ishi — faqat Administratorga.
+        self._pages_by_key = {
+            "sale": (self.sale_page, None),
+            "products": (self.products_page, {ROLE_ADMIN}),
+            "warehouse": (self.warehouse_page, {ROLE_ADMIN}),
+            "reports": (self.reports_page, {ROLE_ADMIN}),
+            "customers": (self.customers_page, {ROLE_ADMIN}),
+            "suppliers": (self.suppliers_page, {ROLE_ADMIN}),
+            "finance": (self.finance_page, None),
+            "users": (self.users_page, {ROLE_ADMIN}),
+            "settings": (self.settings_page, {ROLE_ADMIN}),
+        }
+
+        self._menu_groups = [
+            ("Asosiy", ["sale", "products", "warehouse", "reports"]),
+            ("Aloqalar", ["customers", "suppliers"]),
+            ("Boshqaruv", ["finance", "users", "settings"]),
         ]
 
-        for _text_key, page, _roles in self._page_entries:
+        for page, _roles in self._pages_by_key.values():
             self.workspace.addWidget(page)
-
-        self._visible_pages = []
-
-        sidebar_layout.addWidget(logo_label)
-        sidebar_layout.addWidget(self.menu, 1)
-        sidebar_layout.addWidget(user_panel)
 
         content_layout.addWidget(sidebar)
         content_layout.addWidget(self.workspace)
@@ -146,6 +138,87 @@ class MainWindow(QMainWindow):
 
         main_layout.addLayout(content_layout)
         main_layout.addWidget(self.status_bar)
+
+    def _build_logo_row(self):
+        logo_row = QWidget()
+        logo_row.setObjectName("sidebarLogo")
+
+        logo_row_layout = QHBoxLayout(logo_row)
+        logo_row_layout.setContentsMargins(
+            _SIDEBAR_PADDING, 16, _SIDEBAR_PADDING, 16
+        )
+        logo_row_layout.setSpacing(10)
+
+        # To'liq logotipda "Vodiy Market" yozuvi ham bor — bu yerda
+        # faqat belgi (yuqori kvadrat qism) kesib olinadi, nomi esa
+        # alohida oddiy matn sifatida yoniga qo'yiladi, aks holda
+        # nom ikki marta takrorlanib qolardi.
+        icon_label = QLabel()
+        icon_label.setPixmap(
+            QPixmap("assets/logo.png")
+            .copy(150, 0, 960, 800)
+            .scaledToHeight(32, Qt.SmoothTransformation)
+        )
+
+        name_label = QLabel("Vodiy Market")
+        name_label.setObjectName("sidebarLogoText")
+
+        logo_row_layout.addWidget(icon_label)
+        logo_row_layout.addWidget(name_label)
+        logo_row_layout.addStretch()
+
+        return logo_row
+
+    def _build_user_panel(self):
+        # Ilovada parol talab qilmaydigan yengil "hozir kim
+        # ishlayapti" ko'rsatkichi — menyuni rolga qarab moslashtirish
+        # va Moliya'da kassirni oldindan belgilash uchun ishlatiladi.
+        user_panel = QWidget()
+        user_panel.setObjectName("sidebarUserPanel")
+
+        user_panel_layout = QHBoxLayout(user_panel)
+        user_panel_layout.setContentsMargins(
+            _SIDEBAR_PADDING, 12, _SIDEBAR_PADDING, 12
+        )
+        user_panel_layout.setSpacing(10)
+
+        self.user_avatar_label = QLabel()
+        self.user_avatar_label.setObjectName("sidebarUserAvatar")
+        self.user_avatar_label.setFixedSize(36, 36)
+        self.user_avatar_label.setAlignment(Qt.AlignCenter)
+
+        user_text_layout = QVBoxLayout()
+        user_text_layout.setSpacing(0)
+
+        self.current_user_name_label = QLabel()
+        self.current_user_name_label.setObjectName("sidebarUserName")
+
+        self.current_user_role_label = QLabel()
+        self.current_user_role_label.setObjectName("mutedText")
+
+        user_text_layout.addWidget(self.current_user_name_label)
+        user_text_layout.addWidget(self.current_user_role_label)
+
+        self.switch_user_button = QPushButton()
+        self.switch_user_button.setObjectName(
+            "sidebarSwitchUserButton"
+        )
+        self.switch_user_button.setIcon(
+            load_icon("log-out", color="#57534e", size=18)
+        )
+        self.switch_user_button.setIconSize(QSize(18, 18))
+        self.switch_user_button.setFixedSize(32, 32)
+        self.switch_user_button.setCursor(Qt.PointingHandCursor)
+        self.switch_user_button.setToolTip("Almashtirish")
+        self.switch_user_button.clicked.connect(
+            self.switch_active_user
+        )
+
+        user_panel_layout.addWidget(self.user_avatar_label)
+        user_panel_layout.addLayout(user_text_layout, 1)
+        user_panel_layout.addWidget(self.switch_user_button)
+
+        return user_panel
 
     def _choose_active_user(self):
         users = UserService.get_all_users()
@@ -181,68 +254,71 @@ class MainWindow(QMainWindow):
         current_user = get_current_user()
         current_role = current_user.role if current_user else None
 
-        visible_entries = []
+        groups = []
+        visible_keys = []
 
-        for text_key, page, roles in self._page_entries:
-            if (
-                roles is not None
-                and current_user is not None
-                and current_role not in roles
-            ):
-                continue
+        for group_title, keys in self._menu_groups:
+            entries = []
 
-            visible_entries.append((text_key, page))
+            for key in keys:
+                _page, roles = self._pages_by_key[key]
 
-        self.menu.blockSignals(True)
-        self.menu.clear()
+                if (
+                    roles is not None
+                    and current_user is not None
+                    and current_role not in roles
+                ):
+                    continue
 
-        for text_key, _page in visible_entries:
-            self.menu.addItem(TEXT[text_key])
+                entries.append((key, TEXT[key], _MENU_ICONS[key]))
+                visible_keys.append(key)
 
-        self.menu.blockSignals(False)
+            groups.append((group_title, entries))
 
-        self._visible_pages = [
-            page for _text_key, page in visible_entries
-        ]
+        self.sidebar_menu.set_groups(groups)
+        self._visible_keys = visible_keys
 
         if current_user is None:
-            self.current_user_label.setText(
+            self.user_avatar_label.setText("")
+            self.current_user_name_label.setText(
                 "Foydalanuvchi tanlanmagan"
             )
+            self.current_user_role_label.setText("")
         else:
-            role_label = ROLE_LABELS.get(
-                current_user.role, current_user.role
+            self.user_avatar_label.setText(
+                current_user.full_name[:1].upper()
             )
-            self.current_user_label.setText(
-                f"{current_user.full_name}\n{role_label}"
+            self.current_user_name_label.setText(
+                current_user.full_name
+            )
+            self.current_user_role_label.setText(
+                ROLE_LABELS.get(
+                    current_user.role, current_user.role
+                )
             )
 
-        if not self._visible_pages:
+        if not visible_keys:
             return
 
         # Mahsulotlar — sahifa ochilganda ko'rsatiladigan odatiy bet
         # (Kassir uchun ko'rinmasa, ro'yxatdagi birinchi bet olinadi).
-        default_row = 0
-
-        for row, (text_key, _page) in enumerate(visible_entries):
-            if text_key == "products":
-                default_row = row
-                break
-
-        self.menu.setCurrentRow(default_row)
+        default_key = (
+            "products"
+            if "products" in visible_keys
+            else visible_keys[0]
+        )
+        self.sidebar_menu.select(default_key)
 
     def go_to_finance_page(self):
-        # Moliya barcha rollarga ochiq (_page_entries'da roles=None),
+        # Moliya barcha rollarga ochiq (_pages_by_key'da roles=None),
         # shuning uchun u har doim joriy ko'rinadigan menyuda bo'ladi.
-        if self.finance_page in self._visible_pages:
-            index = self._visible_pages.index(self.finance_page)
-            self.menu.setCurrentRow(index)
+        self.sidebar_menu.select("finance")
 
-    def change_page(self, index):
-        if index < 0 or index >= len(self._visible_pages):
+    def change_page(self, key):
+        if key not in self._pages_by_key:
             return
 
-        page = self._visible_pages[index]
+        page, _roles = self._pages_by_key[key]
 
         if page is self.sale_page:
             self.sale_page.load_products()

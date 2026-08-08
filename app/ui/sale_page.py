@@ -4,6 +4,7 @@ from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QLineEdit,
     QMessageBox,
@@ -27,7 +28,7 @@ from app.utils.sounds import (
     play_error_sound,
     play_payment_sound,
 )
-from app.widgets.badge import stock_status_badge
+from app.widgets.badge import StatusBadge, stock_status_badge
 from app.widgets.category_bar import CategoryBar
 from app.widgets.danger_button import DangerButton
 from app.widgets.data_table import DataTable
@@ -107,6 +108,16 @@ class SalePage(QWidget):
             "Soni",
             "Jami",
         ])
+        # "Optom" bejchi bilan narx katakchasi Stretch rejimida
+        # torayib, bejchini kesib qo'yishi mumkin. ResizeToContents
+        # bu yerda setCellWidget() bilan qo'shilgan murakkab katakcha
+        # (matn + bejcha) kengligini ishonchli o'lchamadi, shuning
+        # uchun aniq kenglik beriladi — foydalanuvchi kerak bo'lsa
+        # qo'lda kengaytirishi mumkin (Interactive).
+        self.cart_table.horizontalHeader().setSectionResizeMode(
+            1, QHeaderView.Interactive
+        )
+        self.cart_table.horizontalHeader().resizeSection(1, 190)
         self.cart_table.cellDoubleClicked.connect(
             self.on_cart_item_double_clicked
         )
@@ -158,7 +169,7 @@ class SalePage(QWidget):
             lambda: self.complete_sale("cash")
         )
         self.cash_payment_button.setIcon(
-            load_icon("dollar-sign", color="#ffffff")
+            load_icon("layers", color="#ffffff")
         )
         self.cash_payment_button.setIconSize(QSize(20, 20))
 
@@ -433,7 +444,9 @@ class SalePage(QWidget):
         if product_id in self.cart:
             quantity_in_cart = self.cart[product_id]["quantity"]
 
-        if quantity_in_cart + quantity > product.quantity:
+        new_quantity = quantity_in_cart + quantity
+
+        if new_quantity > product.quantity:
             play_error_sound()
 
             QMessageBox.warning(
@@ -443,16 +456,32 @@ class SalePage(QWidget):
             )
             return
 
-        if product_id in self.cart:
-            self.cart[product_id]["quantity"] += quantity
-        else:
-            self.cart[product_id] = {
-                "product": product,
-                "quantity": quantity,
-            }
+        unit_price, is_wholesale = self.resolve_cart_pricing(
+            product, new_quantity
+        )
+
+        self.cart[product_id] = {
+            "product": product,
+            "quantity": new_quantity,
+            "unit_price": unit_price,
+            "is_wholesale": is_wholesale,
+        }
 
         self.update_cart_table()
         play_add_sound()
+
+    def resolve_cart_pricing(self, product, quantity):
+        """Berilgan miqdor uchun birlik narxi va u optommi-yo'qmi.
+
+        Miqdor o'zgarganda (qo'shilganda yoki tahrirlanganda) har
+        safar shu yerdan chaqiriladi — mos optom daraja avtomatik
+        qo'llanadi, kassir alohida hech narsa tanlamaydi.
+        """
+
+        unit_price = ProductService.resolve_price(product, quantity)
+        is_wholesale = unit_price != product.sell_price
+
+        return unit_price, is_wholesale
 
     def get_selected_product_id(self):
         selected_items = self.cart_table.selectedItems()
@@ -480,7 +509,15 @@ class SalePage(QWidget):
         if not dialog.exec():
             return
 
-        self.cart[product_id]["quantity"] = dialog.get_quantity()
+        new_quantity = dialog.get_quantity()
+        unit_price, is_wholesale = self.resolve_cart_pricing(
+            product, new_quantity
+        )
+
+        self.cart[product_id]["quantity"] = new_quantity
+        self.cart[product_id]["unit_price"] = unit_price
+        self.cart[product_id]["is_wholesale"] = is_wholesale
+
         self.update_cart_table()
 
     def remove_selected_item(self):
@@ -501,10 +538,7 @@ class SalePage(QWidget):
         total = 0
 
         for item in self.cart.values():
-            product = item["product"]
-            quantity = item["quantity"]
-
-            total += product.sell_price * quantity
+            total += item["unit_price"] * item["quantity"]
 
         return total
 
@@ -631,6 +665,33 @@ class SalePage(QWidget):
 
         return widget
 
+    def build_price_cell(self, unit_price, is_wholesale):
+        """Narx + (agar optom qo'llanilgan bo'lsa) "Optom" bejchi.
+
+        Kassir buni ko'rib, narx o'zi adashib emas, avtomatik
+        qoidaga ko'ra qo'llanilganini bilishi uchun.
+        """
+
+        cell = QWidget()
+        # badge_cell'dagi kabi — sichqoncha voqealari qatorni
+        # tanlash/qo'sh bosishga to'sqinlik qilmasligi kerak.
+        cell.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+
+        layout = QHBoxLayout(cell)
+        layout.setContentsMargins(8, 0, 8, 0)
+        layout.setSpacing(6)
+
+        price_label = QLabel(f"{format_money(unit_price)} so'm")
+
+        layout.addWidget(price_label)
+
+        if is_wholesale:
+            layout.addWidget(StatusBadge("Optom", "success"))
+
+        layout.addStretch()
+
+        return cell
+
     def update_cart_table(self):
         self.cart_stack.setCurrentWidget(
             self.cart_table if self.cart else self.cart_empty_state
@@ -641,16 +702,18 @@ class SalePage(QWidget):
         for row, (product_id, item) in enumerate(self.cart.items()):
             product = item["product"]
             quantity = item["quantity"]
-            line_total = product.sell_price * quantity
+            unit_price = item["unit_price"]
+            is_wholesale = item["is_wholesale"]
+            line_total = unit_price * quantity
 
             product_item = QTableWidgetItem(product.name)
             product_item.setData(Qt.UserRole, product_id)
 
             self.cart_table.setItem(row, 0, product_item)
-            self.cart_table.setItem(
+            self.cart_table.setCellWidget(
                 row,
                 1,
-                QTableWidgetItem(format_money(product.sell_price)),
+                self.build_price_cell(unit_price, is_wholesale),
             )
             self.cart_table.setItem(
                 row,
