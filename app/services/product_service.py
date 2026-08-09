@@ -7,8 +7,13 @@ from app.models.price_tier import PriceTier
 from app.models.product import Product
 from app.models.stock_receipt import StockReceipt
 from app.models.supplier import Supplier
+from app.utils.paths import get_app_base_dir
 
-_PRODUCT_IMAGES_DIR = Path("assets/products")
+# get_app_base_dir() orqali — .exe rejimida CWD emas, doim EXE
+# joylashgan papkaga nisbatan (database.py'dagi kabi sabab bilan:
+# mahsulot rasmlari ham foydalanuvchi ma'lumoti, build paketi
+# qayta yig'ilganda yo'qolmasligi kerak).
+_PRODUCT_IMAGES_DIR = get_app_base_dir() / "assets" / "products"
 
 
 class ProductService:

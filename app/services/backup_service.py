@@ -3,12 +3,15 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 
-from app.database.database import DATABASE_URL, engine
+from app.database.database import DATABASE_PATH, engine
+from app.utils.paths import get_app_base_dir
 
-# DATABASE_URL bilan bitta manba — yo'l shu yerda qayta yozilmaydi,
+# DATABASE_PATH bilan bitta manba — yo'l shu yerda qayta yozilmaydi,
 # aks holda ikkalasi kelajakda bir-biridan ajralib qolishi mumkin.
-_DB_PATH = Path(DATABASE_URL.replace("sqlite:///", "", 1))
-_BACKUP_DIR = Path("backups")
+_DB_PATH = DATABASE_PATH
+# get_app_base_dir() orqali — .exe rejimida CWD emas, doim EXE
+# joylashgan papkaga nisbatan (database.py'dagi kabi sabab bilan).
+_BACKUP_DIR = get_app_base_dir() / "backups"
 
 
 class BackupService:

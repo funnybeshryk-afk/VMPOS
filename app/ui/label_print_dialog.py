@@ -18,25 +18,38 @@ from PySide6.QtWidgets import (
 from app.utils.formatters import format_money
 from app.utils.label_printing import (
     LABEL_SIZE_PRESETS,
+    SHEET_HEIGHT_MM,
+    SHEET_WIDTH_MM,
     build_label_entries,
-    paint_product_label,
+    compute_grid_layout,
+    paginate_entries,
+    paint_label_sheet,
 )
 from app.widgets.data_table import DataTable
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.secondary_button import SecondaryButton
 
 _CUSTOM_SIZE_LABEL = "Boshqa..."
-_PREVIEW_SCALE = 8  # 1mm = 8px, ekrandagi ko'rinish uchun
+_COPIES_COLUMN = 3
+
+# Preview — A4 varaqning kichraytirilgan maketi (haqiqiy nisbatda),
+# yorliq o'lchamidan qat'iy nazar doim shu piksel o'lchamda —
+# faqat ichidagi panjara (necha ustun/qator) o'zgaradi.
+_SHEET_PREVIEW_WIDTH = 260
+_SHEET_PREVIEW_HEIGHT = int(
+    _SHEET_PREVIEW_WIDTH * SHEET_HEIGHT_MM / SHEET_WIDTH_MM
+)
 
 
 class LabelPrintDialog(QDialog):
     """Tanlangan mahsulot(lar) uchun narx yorlig'ini PDF yoki
     printerga chiqarish.
 
-    Har bir nusxa alohida "sahifa" sifatida chiqariladi (yorliq
-    printerlari odatda shunday ishlaydi — har sahifa bitta yorliq),
-    shuning uchun A4 varaqqa panjara joylashtirish kabi murakkab
-    tartib kerak emas.
+    Yorliqlar A4 varaqqa panjara (grid) tartibida joylashtiriladi —
+    har varaqqa yorliq o'lchamiga qarab bir nechtasi sig'adi (masalan
+    40x30mm'da ~36 dona). Preview xuddi shu tartibni (haqiqiy
+    nisbatda, kichraytirilgan) ko'rsatadi — nima chop etilsa, preview
+    aynan shuni aks ettiradi.
     """
 
     def __init__(self, products, parent=None):
@@ -45,7 +58,7 @@ class LabelPrintDialog(QDialog):
         self._products = products
 
         self.setWindowTitle("Narx yorliqlarini chop etish")
-        self.resize(560, 620)
+        self.resize(760, 700)
 
         main_layout = QVBoxLayout(self)
 
@@ -84,6 +97,11 @@ class LabelPrintDialog(QDialog):
 
         main_layout.addLayout(size_form)
 
+        # "Nusxalar soni" ustuni torayib ketmasligi uchun aniq kenglik
+        # bilan mahkamlanadi (pin_column_width) — qolgan ustunlar
+        # (Mahsulot/Narxi/Shtrix kod) qolgan joyni bo'lib oladi.
+        # Dialog ham kengroq (760px), shu bilan birga jadval hech
+        # qachon spinbox'ni kesib qo'ymaydi.
         self.items_table = DataTable()
         self.items_table.setColumnCount(4)
         self.items_table.setHorizontalHeaderLabels([
@@ -92,18 +110,27 @@ class LabelPrintDialog(QDialog):
             "Shtrix kod",
             "Nusxalar soni",
         ])
-        self.items_table.currentCellChanged.connect(
-            lambda *_: self.update_preview()
-        )
+        self.items_table.pin_column_width(_COPIES_COLUMN)
         main_layout.addWidget(self.items_table)
+
+        preview_row = QHBoxLayout()
+        preview_row.addStretch()
 
         self.preview_label = QLabel()
         self.preview_label.setAlignment(Qt.AlignCenter)
         self.preview_label.setObjectName("labelPreview")
-        self.preview_label.setMinimumHeight(
-            int(60 * _PREVIEW_SCALE)
+        self.preview_label.setFixedSize(
+            _SHEET_PREVIEW_WIDTH, _SHEET_PREVIEW_HEIGHT
         )
-        main_layout.addWidget(self.preview_label)
+        preview_row.addWidget(self.preview_label)
+        preview_row.addStretch()
+
+        main_layout.addLayout(preview_row)
+
+        self.preview_caption = QLabel()
+        self.preview_caption.setObjectName("mutedText")
+        self.preview_caption.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(self.preview_caption)
 
         button_row = QHBoxLayout()
 
@@ -156,7 +183,9 @@ class LabelPrintDialog(QDialog):
                 self.update_preview
             )
 
-            self.items_table.setCellWidget(row, 3, copies_spinbox)
+            self.items_table.setCellWidget(
+                row, _COPIES_COLUMN, copies_spinbox
+            )
             self._copy_inputs[product.id] = copies_spinbox
 
         if self._products:
@@ -185,37 +214,42 @@ class LabelPrintDialog(QDialog):
             self.custom_height_edit.value(),
         )
 
-    def _selected_preview_product(self):
-        current_row = self.items_table.currentRow()
-
-        if current_row < 0 or current_row >= len(self._products):
-            return self._products[0] if self._products else None
-
-        return self._products[current_row]
-
     def update_preview(self):
-        product = self._selected_preview_product()
-
-        if product is None:
-            self.preview_label.clear()
-            return
-
+        entries = self._collect_entries()
         width_mm, height_mm = self.get_label_size_mm()
+        cols, rows = compute_grid_layout(width_mm, height_mm)
 
-        pixmap_width = max(1, int(width_mm * _PREVIEW_SCALE))
-        pixmap_height = max(1, int(height_mm * _PREVIEW_SCALE))
-
-        pixmap = QPixmap(pixmap_width, pixmap_height)
+        pixmap = QPixmap(
+            _SHEET_PREVIEW_WIDTH, _SHEET_PREVIEW_HEIGHT
+        )
         pixmap.fill(Qt.white)
 
-        painter = QPainter(pixmap)
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        paint_product_label(
-            painter,
-            QRectF(0, 0, pixmap_width, pixmap_height),
-            product,
-        )
-        painter.end()
+        if entries:
+            pages = paginate_entries(entries, cols, rows)
+            first_page = pages[0]
+
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.Antialiasing, True)
+            paint_label_sheet(
+                painter,
+                QRectF(0, 0, _SHEET_PREVIEW_WIDTH, _SHEET_PREVIEW_HEIGHT),
+                first_page,
+                cols,
+                width_mm,
+                height_mm,
+            )
+            painter.end()
+
+            per_page = cols * rows
+            self.preview_caption.setText(
+                f"1-varaq / {len(pages)} varaq — har varaqqa "
+                f"{per_page} tagacha yorliq, jami {len(entries)} dona"
+            )
+        else:
+            self.preview_caption.setText(
+                "Chop etiladigan yorliq yo'q — nusxalar sonini "
+                "tekshiring."
+            )
 
         self.preview_label.setPixmap(pixmap)
 
@@ -228,25 +262,32 @@ class LabelPrintDialog(QDialog):
         return build_label_entries(products_with_copies)
 
     def _render_to_printer(self, printer, entries):
+        width_mm, height_mm = self.get_label_size_mm()
+        cols, rows = compute_grid_layout(width_mm, height_mm)
+        pages = paginate_entries(entries, cols, rows)
+
         painter = QPainter(printer)
         painter.setRenderHint(QPainter.Antialiasing, True)
 
-        for index, product in enumerate(entries):
+        for index, page_entries in enumerate(pages):
             if index > 0:
                 printer.newPage()
 
             rect = QRectF(printer.pageRect(QPrinter.DevicePixel))
-            paint_product_label(painter, rect, product)
+            paint_label_sheet(
+                painter, rect, page_entries, cols, width_mm, height_mm
+            )
 
         painter.end()
 
-    def _build_printer(self):
-        width_mm, height_mm = self.get_label_size_mm()
+        return len(pages)
 
+    def _build_printer(self):
         printer = QPrinter(QPrinter.HighResolution)
         printer.setPageSize(
             QPageSize(
-                QSizeF(width_mm, height_mm), QPageSize.Millimeter
+                QSizeF(SHEET_WIDTH_MM, SHEET_HEIGHT_MM),
+                QPageSize.Millimeter,
             )
         )
         printer.setPageMargins(
@@ -274,12 +315,16 @@ class LabelPrintDialog(QDialog):
         if not print_dialog.exec():
             return
 
-        self._render_to_printer(printer, entries)
+        # Bitta QPrinter + bitta QPainter sessiyasi — barcha
+        # tanlangan mahsulotlar va ularning nusxalari yagona chop
+        # etish topshirig'i sifatida yuboriladi, birma-bir emas.
+        page_count = self._render_to_printer(printer, entries)
 
         QMessageBox.information(
             self,
             "Muvaffaqiyatli",
-            f"{len(entries)} ta yorliq chop etildi.",
+            f"{len(entries)} ta yorliq ({page_count} varaqda) "
+            "chop etildi.",
         )
 
     def export_pdf(self):
@@ -310,10 +355,13 @@ class LabelPrintDialog(QDialog):
         printer.setOutputFormat(QPrinter.PdfFormat)
         printer.setOutputFileName(file_path)
 
-        self._render_to_printer(printer, entries)
+        # Yagona PDF fayl, ichida bir nechta varaq — har varaqqa
+        # yorliq o'lchamiga qarab bir nechta yorliq (panjara).
+        page_count = self._render_to_printer(printer, entries)
 
         QMessageBox.information(
             self,
             "Muvaffaqiyatli",
-            f"Saqlandi: {file_path}",
+            f"Saqlandi: {file_path}\n"
+            f"{len(entries)} ta yorliq, {page_count} varaq.",
         )

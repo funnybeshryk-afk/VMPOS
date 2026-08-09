@@ -25,6 +25,7 @@ from app.ui.user_picker_dialog import UserPickerDialog
 from app.ui.users_page import UsersPage
 from app.ui.warehouse_page import WarehousePage
 from app.utils.icons import load_icon
+from app.utils.paths import get_bundle_base_dir
 from app.widgets.app_status_bar import AppStatusBar
 from app.widgets.sidebar_menu import SidebarMenu
 
@@ -164,9 +165,11 @@ class MainWindow(QMainWindow):
         # tashlar edi, shu sabab ikonka siqilgan/obrezan ko'rinardi.
         # Balandlik 56px'ga oshirilgan (36px avvalgi urinishda hali
         # ham kichik ko'rinar edi) — kenglik nisbatiga ko'ra ~67px.
+        logo_path = get_bundle_base_dir() / "assets" / "logo.png"
+
         icon_label = QLabel()
         icon_label.setPixmap(
-            QPixmap("assets/logo.png")
+            QPixmap(str(logo_path))
             .copy(180, 80, 900, 750)
             .scaledToHeight(56, Qt.SmoothTransformation)
         )
