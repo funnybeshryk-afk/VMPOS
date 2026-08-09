@@ -7,38 +7,23 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.utils.category_icons import icon_for_category
 from app.utils.icons import load_checkable_icon
 
 _ALL_LABEL = "Barchasi"
 _ALL_ICON = "grid"
 _BAR_HEIGHT = 56
 
-# Feather'da oziq-ovqatga xos ikonkalar yo'q (apple/egg kabi shakllar
-# umuman mavjud emas) — shuning uchun har bir kategoriya uchun eng
-# yaqin mazmundagi umumiy ikonka tanlangan, aniq surat emas.
-_CATEGORY_ICONS = {
-    "meva": "shopping-bag",
-    "mevalar": "shopping-bag",
-    "мева": "shopping-bag",
-    "tuxum": "circle",
-    "тухум": "circle",
-    "shakar": "package",
-    "шакар": "package",
-}
-_DEFAULT_CATEGORY_ICON = "tag"
-
 _ICON_SIZE = 16
 _ICON_COLOR_UNCHECKED = "#334155"
 _ICON_COLOR_CHECKED = "#ffffff"
 
 
-def _icon_for_category(category):
+def _icon_for_tile(category):
     if category is None:
         return _ALL_ICON
 
-    return _CATEGORY_ICONS.get(
-        category.strip().lower(), _DEFAULT_CATEGORY_ICON
-    )
+    return icon_for_category(category)
 
 
 class CategoryBar(QWidget):
@@ -132,7 +117,7 @@ class CategoryBar(QWidget):
         tile.setCursor(Qt.PointingHandCursor)
         tile.setIcon(
             load_checkable_icon(
-                _icon_for_category(value),
+                _icon_for_tile(value),
                 _ICON_COLOR_UNCHECKED,
                 _ICON_COLOR_CHECKED,
                 _ICON_SIZE,

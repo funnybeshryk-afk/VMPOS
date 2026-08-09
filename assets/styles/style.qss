@@ -141,6 +141,12 @@ QLabel#productImagePreview {
     font-size: 11px;
 }
 
+QLabel#labelPreview {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+
 QLabel#cartEmptyTitle {
     font-size: 15px;
     font-weight: 600;
@@ -228,6 +234,25 @@ QLabel#statValueDanger {
     color: #dc2626;
 }
 
+/* Глаз-переключатель скрытия конфиденциальной суммы (например
+   "Ombor qiymati"). Иконка рисуется в Python (load_icon), здесь
+   только фон/рамка кнопки-контейнера. */
+
+QPushButton#summaryCardToggle {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 0px;
+}
+
+QPushButton#summaryCardToggle:hover {
+    background: #f1f5f9;
+}
+
+QPushButton#summaryCardToggle:pressed {
+    background: #e2e8f0;
+}
+
 QFrame#separator {
     background: #e2e8f0;
     border: none;
@@ -265,7 +290,7 @@ QWidget#sidebarLogo {
 }
 
 QLabel#sidebarLogoText {
-    font-size: 15px;
+    font-size: 18px;
     font-weight: 700;
     color: #0f172a;
     background: transparent;
@@ -609,6 +634,45 @@ QPushButton#categoryTile:hover {
 QPushButton#categoryTile:checked {
     background: #111827;
     color: #ffffff;
+    border-color: #111827;
+}
+
+/* 5.8 Sotuv — katalog panjarasi (grid) va ko'rinish almashtirgichi.
+
+   Panjara endi QListView (ProductGrid o'zi shu klassdan meros) —
+   1000+ mahsulotda ham faqat ko'rinadigan qatorlarni chizish uchun
+   ProductCardDelegate ishlatiladi (setIndexWidget() emas, aks holda
+   virtualizatsiya ishlamay qoladi). Delegate QPainter bilan qo'lda
+   chizganidan — kartochkaning o'zi (fon, matn, badge) uchun QSS
+   YETIB BORMAYDI, shu ranglar app/widgets/product_card_delegate.py
+   ichida qo'lda takrorlangan. Bu yerda faqat QListView'ning o'zi va
+   uning viewport foni beriladi — CategoryBar'dagi kabi ikkalasi ham
+   alohida nomlanadi, aks holda fon "noto'g'ri joydan" ko'rinadi. */
+
+QListView#productGridView,
+QWidget#productGridViewport {
+    background: #f1f5f9;
+    border: none;
+}
+
+/* Ro'yxat/panjara almashtirgichi — CategoryBar bilan bir xil
+   checkable tugma naqshi, faqat ikonka-yagona (matnsiz) va juft. */
+
+QPushButton#viewToggleButton {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 0;
+}
+
+QPushButton#viewToggleButton:hover {
+    border-color: #94a3b8;
+}
+
+QPushButton#viewToggleButton:checked {
+    background: #111827;
     border-color: #111827;
 }
 

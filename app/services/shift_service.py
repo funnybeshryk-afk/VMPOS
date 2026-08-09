@@ -26,7 +26,11 @@ class ShiftService:
         card_total = 0
 
         for sale in sales:
-            if sale.status != "completed":
+            # SaleService.get_summary_by_date'dagi kabi — to'liq
+            # qaytarilgan chek chiqarib tashlanadi, qisman qaytarilgan
+            # esa (RefundService tomonidan allaqachon kamaytirilgan
+            # summalari bilan) hisobga kiradi.
+            if sale.status == "refunded":
                 continue
 
             sales_count += 1

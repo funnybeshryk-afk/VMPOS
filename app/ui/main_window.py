@@ -1,5 +1,5 @@
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -52,8 +52,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("VMPOS")
-        self.setWindowIcon(QIcon("assets/logo.png"))
+        self.setWindowTitle("VMPOS v1.0.0")
         self.resize(1200, 700)
 
         self._build_ui()
@@ -144,20 +143,32 @@ class MainWindow(QMainWindow):
         logo_row.setObjectName("sidebarLogo")
 
         logo_row_layout = QHBoxLayout(logo_row)
+        # O'ng chekka boshqalarga qaraganda torroq (8px) — 220px
+        # sidebar'ga kattalashtirilgan ikonka (67px) + "Vodiy Market"
+        # matni (18px qalin shriftda ~114px) sig'ishi uchun, aks
+        # holda matn o'ngdan kesilib qolar edi. Chap chekka esa
+        # _SIDEBAR_PADDING bilan menyu bilan bir xil — tekislik
+        # buzilmaydi.
         logo_row_layout.setContentsMargins(
-            _SIDEBAR_PADDING, 16, _SIDEBAR_PADDING, 16
+            _SIDEBAR_PADDING, 18, 8, 18
         )
-        logo_row_layout.setSpacing(10)
+        logo_row_layout.setSpacing(8)
 
         # To'liq logotipda "Vodiy Market" yozuvi ham bor — bu yerda
-        # faqat belgi (yuqori kvadrat qism) kesib olinadi, nomi esa
-        # alohida oddiy matn sifatida yoniga qo'yiladi, aks holda
-        # nom ikki marta takrorlanib qolardi.
+        # faqat belgi (yuqori doira+savat+barglar qismi) kesib
+        # olinadi, nomi esa alohida oddiy matn sifatida yoniga
+        # qo'yiladi, aks holda nom ikki marta takrorlanib qolardi.
+        # Kesish to'rtburchagi rasmning haqiqiy piksel chegaralarini
+        # o'lchab aniqlangan (belgi x:208-1050, y:99-814) — avvalgi
+        # qiymat (150,0,960,800) pastki barglarning uchini kesib
+        # tashlar edi, shu sabab ikonka siqilgan/obrezan ko'rinardi.
+        # Balandlik 56px'ga oshirilgan (36px avvalgi urinishda hali
+        # ham kichik ko'rinar edi) — kenglik nisbatiga ko'ra ~67px.
         icon_label = QLabel()
         icon_label.setPixmap(
             QPixmap("assets/logo.png")
-            .copy(150, 0, 960, 800)
-            .scaledToHeight(32, Qt.SmoothTransformation)
+            .copy(180, 80, 900, 750)
+            .scaledToHeight(56, Qt.SmoothTransformation)
         )
 
         name_label = QLabel("Vodiy Market")

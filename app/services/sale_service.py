@@ -1,6 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from app.database.database import SessionLocal
+from app.models.customer import Customer
+from app.models.debt_payment import DebtPayment
 from app.models.product import Product
 from app.models.sale import Sale, SaleItem
 from app.services.product_service import ProductService
@@ -15,6 +17,11 @@ class SaleService:
         paid_amount,
         cash_amount=None,
         card_amount=None,
+        customer_id=None,
+        cashier_name=None,
+        cashier_user_id=None,
+        debt_amount=None,
+        shift_id=None,
     ):
         session = SessionLocal()
 
@@ -52,6 +59,31 @@ class SaleService:
                 unit_prices[product.id] = unit_price
                 total_amount += unit_price * quantity
 
+            if payment_method == "debt":
+                if not customer_id:
+                    raise ValueError(
+                        "Nasiya savdo uchun mijozni tanlash shart."
+                    )
+
+                # UI ko'rsatgan summaga ishonilmaydi — narx kabi bu
+                # yerda ham serverda tekshiriladi. debt_amount
+                # berilmasa (masalan eski chaqiruvlar), butun chek
+                # qarzga yoziladi — avvalgi xatti-harakat saqlanadi.
+                if debt_amount is None:
+                    debt_amount = total_amount
+
+                if debt_amount <= 0:
+                    raise ValueError(
+                        "Qarzga yoziladigan summa noldan katta "
+                        "bo'lishi kerak."
+                    )
+
+                if debt_amount > total_amount + 0.01:
+                    raise ValueError(
+                        "Qarzga yoziladigan summa chek jamisidan "
+                        "katta bo'lishi mumkin emas."
+                    )
+
             if payment_method == "cash" and paid_amount < total_amount:
                 raise ValueError("Berilgan summa yetarli emas.")
 
@@ -84,11 +116,26 @@ class SaleService:
                 cash_amount = 0
                 card_amount = total_amount
 
+            elif payment_method == "debt":
+                # Nasiya — debt_amount qarzga yoziladi (pastda,
+                # sale.id flush qilingandan keyin), qolgani
+                # (total_amount - debt_amount) esa hoziroq naqd
+                # qabul qilinadi — qisman to'lov + qisman nasiya
+                # holati uchun. To'liq nasiyada debt_amount ==
+                # total_amount, demak paid_amount == 0.
+                paid_amount = total_amount - debt_amount
+                cash_amount = paid_amount
+                card_amount = 0
+
             else:
                 cash_amount = total_amount
                 card_amount = 0
 
-            change_amount = paid_amount - total_amount
+            change_amount = (
+                0
+                if payment_method == "debt"
+                else paid_amount - total_amount
+            )
 
             sale = Sale(
                 total_amount=total_amount,
@@ -120,6 +167,33 @@ class SaleService:
                 product.quantity -= quantity
                 session.add(sale_item)
 
+            if payment_method == "debt":
+                customer = session.get(Customer, customer_id)
+
+                if customer is None:
+                    raise ValueError("Mijoz topilmadi.")
+
+                # Qarz hozir 0 bo'lsa — yangi qarz davri boshlanadi,
+                # sana bugungiga o'rnatiladi. Qarz allaqachon bor
+                # bo'lsa, boshlang'ich sanasi o'zgarmaydi (qachondan
+                # beri qarzdorligi haqiqatga mos qolishi uchun).
+                if customer.debt_amount <= 0:
+                    customer.debt_date = date.today()
+
+                customer.debt_amount += debt_amount
+
+                debt_record = DebtPayment(
+                    customer_id=customer.id,
+                    customer_name=customer.name,
+                    amount=debt_amount,
+                    type="sale",
+                    cashier_name=cashier_name,
+                    cashier_user_id=cashier_user_id,
+                    sale_id=sale.id,
+                    shift_id=shift_id,
+                )
+                session.add(debt_record)
+
             session.commit()
             session.refresh(sale)
 
@@ -133,43 +207,14 @@ class SaleService:
             session.close()
 
     @staticmethod
-    def refund_sale(sale_id):
+    def get_sale(sale_id):
         session = SessionLocal()
 
-        try:
-            sale = session.get(Sale, sale_id)
+        sale = session.get(Sale, sale_id)
 
-            if sale is None:
-                raise ValueError("Chek topilmadi.")
+        session.close()
 
-            if sale.status == "refunded":
-                raise ValueError("Bu chek allaqachon qaytarilgan.")
-
-            sale_items = (
-                session.query(SaleItem)
-                .filter(SaleItem.sale_id == sale_id)
-                .all()
-            )
-
-            for sale_item in sale_items:
-                product = session.get(Product, sale_item.product_id)
-
-                if product is not None:
-                    product.quantity += sale_item.quantity
-
-            sale.status = "refunded"
-
-            session.commit()
-            session.refresh(sale)
-
-            return sale
-
-        except Exception:
-            session.rollback()
-            raise
-
-        finally:
-            session.close()
+        return sale
 
     @staticmethod
     def get_all_sales():
@@ -232,7 +277,12 @@ class SaleService:
         sales_count = 0
 
         for sale in sales:
-            if sale.status != "completed":
+            # To'liq qaytarilgan chek hisobga kirmaydi. Qisman
+            # qaytarilgan esa kiradi — total_amount/cash_amount/
+            # card_amount RefundService tomonidan allaqachon
+            # qaytarilgan summaga mos kamaytirilgan bo'ladi, shuning
+            # uchun qolgan (haqiqiy) qismi to'g'ri hisoblanadi.
+            if sale.status == "refunded":
                 continue
 
             sales_count += 1

@@ -3,26 +3,31 @@ from datetime import datetime
 from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
+    QButtonGroup,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QLineEdit,
     QMessageBox,
+    QPushButton,
     QStackedWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
+from app.services.customer_service import CustomerService
 from app.services.product_service import ProductService
 from app.services.sale_service import SaleService
 from app.services.shift_service import ShiftService
+from app.state.session import get_current_user
+from app.ui.customer_picker_dialog import CustomerPickerDialog
 from app.ui.mixed_payment_dialog import MixedPaymentDialog
 from app.ui.payment_dialog import PaymentDialog
 from app.ui.quantity_edit_dialog import QuantityEditDialog
 from app.ui.weight_dialog import WeightDialog
 from app.utils.formatters import format_money, format_quantity
-from app.utils.icons import load_icon
+from app.utils.icons import load_checkable_icon, load_icon
 from app.utils.sounds import (
     play_add_sound,
     play_error_sound,
@@ -32,11 +37,15 @@ from app.widgets.badge import StatusBadge, stock_status_badge
 from app.widgets.category_bar import CategoryBar
 from app.widgets.danger_button import DangerButton
 from app.widgets.data_table import DataTable
+from app.widgets.product_grid import ProductGrid
 from app.widgets.secondary_button import SecondaryButton
 from app.widgets.shift_status_panel import ShiftStatusPanel
 from app.widgets.success_button import SuccessButton
 
 _SHIFT_REFRESH_INTERVAL_MS = 60_000
+_VIEW_TOGGLE_ICON_SIZE = 16
+_VIEW_TOGGLE_ICON_UNCHECKED = "#64748b"
+_VIEW_TOGGLE_ICON_CHECKED = "#ffffff"
 
 
 class SalePage(QWidget):
@@ -64,12 +73,24 @@ class SalePage(QWidget):
             self.add_product_by_barcode
         )
 
+        search_row = QHBoxLayout()
+        search_row.setSpacing(8)
+        search_row.addWidget(self.search_edit, 1)
+        search_row.addWidget(self._build_view_toggle())
+
         # Kategoriya bo'yicha tezkor filtr — sensorli ekranda barmoq
         # bilan bosish uchun, qidiruv maydoniga qo'shimcha.
         self.category_bar = CategoryBar()
         self.category_bar.categorySelected.connect(
             self.on_category_selected
         )
+
+        # Panjara (grid) — rasm/ikonka bilan kartochkalar, odatiy
+        # ko'rinish. Ro'yxat (list) — avvalgi DataTable, muqobil
+        # rejim sifatida saqlanadi (masalan ko'p qatorli ro'yxatni
+        # tez ko'rish uchun qulayroq bo'lishi mumkin).
+        self.product_grid = ProductGrid()
+        self.product_grid.productClicked.connect(self.add_product)
 
         self.products_table = DataTable()
         self.products_table.setColumnCount(5)
@@ -85,9 +106,13 @@ class SalePage(QWidget):
             self.on_product_double_clicked
         )
 
-        left_layout.addWidget(self.search_edit)
+        self.products_view_stack = QStackedWidget()
+        self.products_view_stack.addWidget(self.product_grid)
+        self.products_view_stack.addWidget(self.products_table)
+
+        left_layout.addLayout(search_row)
         left_layout.addWidget(self.category_bar)
-        left_layout.addWidget(self.products_table)
+        left_layout.addWidget(self.products_view_stack)
 
         right_layout = QVBoxLayout()
         right_layout.setSpacing(10)
@@ -194,6 +219,19 @@ class SalePage(QWidget):
         )
         self.mixed_payment_button.setIconSize(QSize(16, 16))
 
+        # Nasiya — pul kassaga tushmaydi, mijoz qarziga yoziladi,
+        # shuning uchun majburiy mijoz tanlovi bilan (complete_sale
+        # ichida). Naqd/Karta/Aralash bilan bir qatorda, lekin
+        # ularning eng kam ishlatiladigani sifatida SecondaryButton.
+        self.debt_payment_button = SecondaryButton("Nasiya")
+        self.debt_payment_button.clicked.connect(
+            lambda: self.complete_sale("debt")
+        )
+        self.debt_payment_button.setIcon(
+            load_icon("clock", color="#334155")
+        )
+        self.debt_payment_button.setIconSize(QSize(16, 16))
+
         right_layout.addWidget(self.shift_panel)
         right_layout.addWidget(cart_title)
         right_layout.addWidget(self.cart_stack)
@@ -202,6 +240,7 @@ class SalePage(QWidget):
         right_layout.addWidget(self.cash_payment_button)
         right_layout.addWidget(self.card_payment_button)
         right_layout.addWidget(self.mixed_payment_button)
+        right_layout.addWidget(self.debt_payment_button)
 
         main_layout.addLayout(left_layout, 2)
         main_layout.addLayout(right_layout, 1)
@@ -224,6 +263,68 @@ class SalePage(QWidget):
             self.refresh_shift_panel
         )
         self._shift_refresh_timer.start(_SHIFT_REFRESH_INTERVAL_MS)
+
+    def _build_view_toggle(self):
+        toggle_row = QWidget()
+
+        toggle_layout = QHBoxLayout(toggle_row)
+        toggle_layout.setContentsMargins(0, 0, 0, 0)
+        toggle_layout.setSpacing(2)
+
+        self._view_toggle_group = QButtonGroup(self)
+        self._view_toggle_group.setExclusive(True)
+
+        self.grid_view_button = self._make_view_toggle_button(
+            "grid", "Katakcha ko'rinishi"
+        )
+        self.grid_view_button.setChecked(True)
+        self.grid_view_button.clicked.connect(
+            lambda: self.set_view_mode("grid")
+        )
+
+        self.list_view_button = self._make_view_toggle_button(
+            "list", "Ro'yxat ko'rinishi"
+        )
+        self.list_view_button.clicked.connect(
+            lambda: self.set_view_mode("list")
+        )
+
+        toggle_layout.addWidget(self.grid_view_button)
+        toggle_layout.addWidget(self.list_view_button)
+
+        return toggle_row
+
+    def _make_view_toggle_button(self, icon_name, tooltip):
+        button = QPushButton()
+        button.setObjectName("viewToggleButton")
+        button.setCheckable(True)
+        button.setCursor(Qt.PointingHandCursor)
+        button.setToolTip(tooltip)
+        button.setIcon(
+            load_checkable_icon(
+                icon_name,
+                _VIEW_TOGGLE_ICON_UNCHECKED,
+                _VIEW_TOGGLE_ICON_CHECKED,
+                _VIEW_TOGGLE_ICON_SIZE,
+            )
+        )
+        button.setIconSize(
+            QSize(_VIEW_TOGGLE_ICON_SIZE, _VIEW_TOGGLE_ICON_SIZE)
+        )
+
+        self._view_toggle_group.addButton(button)
+
+        return button
+
+    def set_view_mode(self, mode):
+        if mode == "list":
+            self.products_view_stack.setCurrentWidget(
+                self.products_table
+            )
+        else:
+            self.products_view_stack.setCurrentWidget(
+                self.product_grid
+            )
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -252,6 +353,7 @@ class SalePage(QWidget):
         self.cash_payment_button.setEnabled(has_shift)
         self.card_payment_button.setEnabled(has_shift)
         self.mixed_payment_button.setEnabled(has_shift)
+        self.debt_payment_button.setEnabled(has_shift)
 
     def setup_shortcuts(self):
         QShortcut(QKeySequence("F2"), self, self.focus_search)
@@ -299,7 +401,8 @@ class SalePage(QWidget):
         self.selected_category = category
         self.search_products(self.search_edit.text())
 
-    def populate_table(self, products):
+    def populate_products(self, products):
+        self.product_grid.set_products(products)
         self.products_table.setRowCount(len(products))
 
         for row, product in enumerate(products):
@@ -349,7 +452,7 @@ class SalePage(QWidget):
 
             filtered.append(product)
 
-        self.populate_table(filtered)
+        self.populate_products(filtered)
 
     def is_weight_product(self, product):
         unit = (product.unit or "").strip().lower()
@@ -542,6 +645,32 @@ class SalePage(QWidget):
 
         return total
 
+    def _pick_debt_customer(self, total_amount):
+        """Nasiya uchun mijoz va qarzga yoziladigan summa tanlovi.
+
+        Dialogda mijozlar bazasi bo'sh bo'lsa ham "Yangi mijoz
+        qo'shish" orqali darhol yaratish mumkin, shuning uchun bu
+        yerda bo'sh bazani alohida to'xtatib qo'ymaymiz. Bekor
+        qilinsa (yoki dialog ichidagi tekshiruv o'tmasa) (None, None)
+        qaytadi — chaqiruvchi complete_sale butun savdoni bekor
+        qiladi, chunki Nasiya mijozsiz yoki noto'g'ri summada
+        ma'nosiz.
+        """
+
+        customers = CustomerService.get_all_customers()
+
+        dialog = CustomerPickerDialog(customers, total_amount, self)
+
+        if not dialog.exec():
+            return None, None
+
+        customer = dialog.get_selected_customer()
+
+        if customer is None:
+            return None, None
+
+        return customer, dialog.get_debt_amount()
+
     def complete_sale(self, payment_method=None):
         # Tugmalar smena yopiq bo'lsa disabled bo'ladi, lekin F4
         # klaviatura yorlig'i tugma holatidan mustaqil ishlaydi —
@@ -567,8 +696,21 @@ class SalePage(QWidget):
 
         cash_amount = None
         card_amount = None
+        customer_id = None
+        debt_amount = None
 
-        if payment_method == "mixed":
+        if payment_method == "debt":
+            customer, debt_amount = self._pick_debt_customer(
+                total_amount
+            )
+
+            if customer is None:
+                return
+
+            customer_id = customer.id
+            paid_amount = total_amount - debt_amount
+
+        elif payment_method == "mixed":
             mixed_dialog = MixedPaymentDialog(total_amount, self)
 
             if not mixed_dialog.exec():
@@ -596,6 +738,12 @@ class SalePage(QWidget):
                 payment_dialog.get_payment_data()
             )
 
+        current_user = get_current_user()
+        cashier_name = (
+            current_user.full_name if current_user else None
+        )
+        cashier_user_id = current_user.id if current_user else None
+
         try:
             sale = SaleService.create_sale(
                 self.cart,
@@ -603,6 +751,15 @@ class SalePage(QWidget):
                 paid_amount,
                 cash_amount,
                 card_amount,
+                customer_id=customer_id,
+                cashier_name=cashier_name,
+                cashier_user_id=cashier_user_id,
+                debt_amount=debt_amount,
+                shift_id=(
+                    self.current_shift.id
+                    if self.current_shift
+                    else None
+                ),
             )
 
         except ValueError as error:
@@ -629,11 +786,23 @@ class SalePage(QWidget):
         self.load_products()
         play_payment_sound()
 
+        if payment_method == "debt":
+            result_text = (
+                f"Savdo #{sale.id} muvaffaqiyatli saqlandi.\n"
+                f"Qarzga yozildi: {format_money(debt_amount)} so'm\n"
+                f"Hoziroq naqd qabul qilindi: "
+                f"{format_money(sale.paid_amount)} so'm"
+            )
+        else:
+            result_text = (
+                f"Savdo #{sale.id} muvaffaqiyatli saqlandi.\n"
+                f"Qaytim: {format_money(sale.change_amount)} so'm"
+            )
+
         QMessageBox.information(
             self,
             "Muvaffaqiyatli",
-            f"Savdo #{sale.id} muvaffaqiyatli saqlandi.\n"
-            f"Qaytim: {format_money(sale.change_amount)} so'm",
+            result_text,
         )
 
     def build_cart_empty_state(self):

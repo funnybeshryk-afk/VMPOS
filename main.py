@@ -12,6 +12,7 @@ import app.models.customer
 import app.models.debt_payment
 import app.models.price_tier
 import app.models.product
+import app.models.refund
 import app.models.sale
 import app.models.shift
 import app.models.stock_receipt

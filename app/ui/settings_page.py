@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import (
     QFormLayout,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QMessageBox,
@@ -7,8 +8,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.services.backup_service import BackupService
 from app.services.settings_service import SettingsService
+from app.ui.backup_restore_dialog import BackupRestoreDialog
+from app.widgets.danger_button import DangerButton
 from app.widgets.primary_button import PrimaryButton
+from app.widgets.secondary_button import SecondaryButton
 
 
 class SettingsPage(QWidget):
@@ -37,9 +42,37 @@ class SettingsPage(QWidget):
         self.save_button = PrimaryButton("Saqlash")
         self.save_button.clicked.connect(self.save_settings)
 
+        backup_title = QLabel("Ma'lumotlar bazasi")
+        backup_title.setObjectName("sectionTitle")
+
+        # Yaratish — xavfsiz, qaytariladigan amal (SecondaryButton).
+        # Tiklash esa joriy bazani butunlay almashtiradi — shuning
+        # uchun DangerButton, xuddi boshqa qaytarib bo'lmaydigan
+        # amallar kabi (masalan mahsulotni o'chirish).
+        self.create_backup_button = SecondaryButton(
+            "Zaxira nusxa yaratish"
+        )
+        self.create_backup_button.clicked.connect(
+            self.create_backup
+        )
+
+        self.restore_backup_button = DangerButton(
+            "Zaxiradan tiklash"
+        )
+        self.restore_backup_button.clicked.connect(
+            self.open_restore_dialog
+        )
+
+        backup_row = QHBoxLayout()
+        backup_row.addWidget(self.create_backup_button)
+        backup_row.addWidget(self.restore_backup_button)
+        backup_row.addStretch()
+
         main_layout.addWidget(title)
         main_layout.addLayout(form_layout)
         main_layout.addWidget(self.save_button)
+        main_layout.addWidget(backup_title)
+        main_layout.addLayout(backup_row)
         main_layout.addStretch()
 
         self.load_settings()
@@ -77,3 +110,29 @@ class SettingsPage(QWidget):
             "Muvaffaqiyatli",
             "Sozlamalar saqlandi.",
         )
+
+    def create_backup(self):
+        try:
+            backup_path = BackupService.create_backup()
+
+        except ValueError as error:
+            QMessageBox.warning(self, "Diqqat", str(error))
+            return
+
+        except Exception:
+            QMessageBox.critical(
+                self,
+                "Xatolik",
+                "Zaxira nusxa yaratishda xatolik yuz berdi.",
+            )
+            return
+
+        QMessageBox.information(
+            self,
+            "Muvaffaqiyatli",
+            f"Zaxira nusxa yaratildi: {backup_path.name}",
+        )
+
+    def open_restore_dialog(self):
+        dialog = BackupRestoreDialog(self)
+        dialog.exec()

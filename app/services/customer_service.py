@@ -126,6 +126,7 @@ class CustomerService:
                 customer_id=customer.id,
                 customer_name=customer.name,
                 amount=amount,
+                type="payment",
             )
 
             session.add(payment)
@@ -143,10 +144,15 @@ class CustomerService:
 
     @staticmethod
     def get_debt_payments():
+        # "Qarz to'lovlari tarixi" oynasi faqat to'lovlarni (qarz
+        # kamayishini) ko'rsatadi — Sotuv'dagi "Nasiya" savdolari
+        # (qarz ortishi) shu ro'yxatga chiqmaydi, aks holda nomi
+        # va'da qilgan ma'noga zid bo'lardi.
         session = SessionLocal()
 
         payments = (
             session.query(DebtPayment)
+            .filter(DebtPayment.type == "payment")
             .order_by(DebtPayment.created_at.desc())
             .all()
         )

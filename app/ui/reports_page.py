@@ -9,11 +9,14 @@ from PySide6.QtWidgets import (
 )
 
 from app.services.sale_service import SaleService
+from app.ui.refund_history_dialog import RefundHistoryDialog
+from app.ui.return_dialog import ReturnDialog
 from app.ui.sale_details_dialog import SaleDetailsDialog
 from app.utils.formatters import format_money
-from app.widgets.badge import badge_cell
+from app.widgets.badge import badge_cell, resolve_sale_status
 from app.widgets.data_table import DataTable
 from app.widgets.primary_button import PrimaryButton
+from app.widgets.secondary_button import SecondaryButton
 from app.widgets.summary_card import SummaryCard
 
 
@@ -41,14 +44,26 @@ class ReportsPage(QWidget):
         )
         self.date_edit.dateChanged.connect(self.load_sales)
 
-        # Bu sahifada yagona tugma — filtrni yangilaydi, shu bilan
-        # birga sahifadagi yagona qora PrimaryButton bo'lishi tabiiy.
+        # Bu sahifadagi yagona qora PrimaryButton — filtrni
+        # yangilaydi, eng ko'p bosiladigan amal.
         self.refresh_button = PrimaryButton("Yangilash")
         self.refresh_button.clicked.connect(self.load_sales)
+
+        self.return_button = SecondaryButton("Qaytarish")
+        self.return_button.clicked.connect(self.open_return_dialog)
+
+        self.refund_history_button = SecondaryButton(
+            "Qaytarishlar tarixi"
+        )
+        self.refund_history_button.clicked.connect(
+            self.open_refund_history
+        )
 
         filter_layout.addWidget(date_label)
         filter_layout.addWidget(self.date_edit)
         filter_layout.addWidget(self.refresh_button)
+        filter_layout.addWidget(self.return_button)
+        filter_layout.addWidget(self.refund_history_button)
         filter_layout.addStretch()
 
         summary_layout = QHBoxLayout()
@@ -111,10 +126,10 @@ class ReportsPage(QWidget):
         for row, sale in enumerate(sales):
             sale_date = sale.created_at.strftime("%d.%m.%Y %H:%M")
 
-            if sale.status == "refunded":
-                status_badge = badge_cell("Qaytarilgan", "danger")
-            else:
-                status_badge = badge_cell("Yakunlangan", "success")
+            status_text, status_variant = resolve_sale_status(
+                sale.status
+            )
+            status_badge = badge_cell(status_text, status_variant)
 
             sale_id_item = QTableWidgetItem(str(sale.id))
             sale_id_item.setData(Qt.UserRole, sale.id)
@@ -150,3 +165,14 @@ class ReportsPage(QWidget):
         dialog.exec()
 
         self.load_sales()
+
+    def open_return_dialog(self):
+        dialog = ReturnDialog(parent=self)
+        dialog.refundCompleted.connect(self.load_sales)
+        dialog.exec()
+
+        self.load_sales()
+
+    def open_refund_history(self):
+        dialog = RefundHistoryDialog(self)
+        dialog.exec()

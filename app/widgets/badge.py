@@ -80,11 +80,40 @@ def badge_cell(text, variant="neutral"):
     return wrapper
 
 
-def stock_status_badge(quantity, min_quantity):
+def resolve_stock_status(quantity, min_quantity):
+    """(matn, variant) — qoldiq holatining sof (vidjetsiz) hisobi.
+
+    stock_status_badge() (jadval/ro'yxat, QWidget) va
+    ProductCardDelegate (panjara, qo'lda QPainter chizuvi) shu bitta
+    funksiyadan foydalanadi — bosqichlar bitta joyda.
+    """
+
     if quantity <= 0:
-        return badge_cell("Tugagan", "danger")
+        return "Tugagan", "danger"
 
     if min_quantity and quantity <= min_quantity:
-        return badge_cell("Kam qoldi", "warning")
+        return "Kam qoldi", "warning"
 
-    return badge_cell("Yetarli", "success")
+    return "Yetarli", "success"
+
+
+def stock_status_badge(quantity, min_quantity):
+    text, variant = resolve_stock_status(quantity, min_quantity)
+
+    return badge_cell(text, variant)
+
+
+_SALE_STATUS_LABELS = {
+    "completed": ("Yakunlangan", "success"),
+    "partially_refunded": ("Qisman qaytarilgan", "warning"),
+    "refunded": ("To'liq qaytarilgan", "danger"),
+}
+
+
+def resolve_sale_status(status):
+    """(matn, variant) — Sale.status uchun, ReportsPage/SaleDetails
+    Dialog/ReturnDialog uch joyda bir xil belgilarni ko'rsatishi
+    uchun bitta joyda.
+    """
+
+    return _SALE_STATUS_LABELS.get(status, (status, "neutral"))

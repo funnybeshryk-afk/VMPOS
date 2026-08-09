@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.services.product_service import ProductService
+from app.ui.label_print_dialog import LabelPrintDialog
 from app.ui.pages.products.table import ProductsTable
 from app.ui.product_dialog import ProductDialog
 from app.utils.formatters import format_money
@@ -35,7 +36,9 @@ class ProductsPage(QWidget):
         self.categories_card = SummaryCard("Kategoriyalar")
         self.low_stock_card = SummaryCard("Kam qolgan", "warning")
         self.out_of_stock_card = SummaryCard("Tugagan", "danger")
-        self.stock_value_card = SummaryCard("Ombor qiymati")
+        self.stock_value_card = SummaryCard(
+            "Ombor qiymati", maskable=True, mask_text="•••••• so'm"
+        )
 
         summary_layout.addWidget(self.total_products_card)
         summary_layout.addWidget(self.categories_card)
@@ -61,10 +64,14 @@ class ProductsPage(QWidget):
         delete_btn = DangerButton("O'chirish")
         delete_btn.clicked.connect(self.delete_product)
 
+        labels_btn = SecondaryButton("Narx yorliqlari")
+        labels_btn.clicked.connect(self.open_label_print_dialog)
+
         top_layout.addWidget(self.search)
         top_layout.addWidget(add_btn)
         top_layout.addWidget(edit_btn)
         top_layout.addWidget(delete_btn)
+        top_layout.addWidget(labels_btn)
 
         self.table = ProductsTable()
         self.refresh_data()
@@ -206,3 +213,17 @@ class ProductsPage(QWidget):
         if reply == QMessageBox.Yes:
             ProductService.delete_product(product_id)
             self.refresh_data()
+
+    def open_label_print_dialog(self):
+        selected_products = self.table.get_selected_products()
+
+        if not selected_products:
+            QMessageBox.information(
+                self,
+                "Diqqat",
+                "Narx yorlig'i uchun mahsulot(lar)ni tanlang.",
+            )
+            return
+
+        dialog = LabelPrintDialog(selected_products, self)
+        dialog.exec()

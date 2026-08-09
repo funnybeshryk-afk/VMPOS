@@ -24,6 +24,9 @@ class Sale(Base):
     cash_amount = Column(Float, default=0, nullable=False)
     card_amount = Column(Float, default=0, nullable=False)
 
+    # "completed" -> "partially_refunded" (ba'zi qatorlar qisman
+    # qaytarilgan) -> "refunded" (barcha qatorlar to'liq qaytarilgan).
+    # SaleItem.returned_quantity asosida RefundService hisoblaydi.
     status = Column(
         String(20),
         default="completed",
@@ -53,5 +56,10 @@ class SaleItem(Base):
     price = Column(Float, nullable=False)
     quantity = Column(Float, nullable=False)
     line_total = Column(Float, nullable=False)
+
+    # Shu qatordan qancha miqdor qaytarilgani — bir nechta qisman
+    # qaytarish operatsiyasida ustma-ust to'planadi. Qoldiq (yana
+    # qancha qaytarish mumkin) = quantity - returned_quantity.
+    returned_quantity = Column(Float, default=0, nullable=False)
 
     sale = relationship("Sale", back_populates="items")

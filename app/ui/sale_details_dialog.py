@@ -2,14 +2,18 @@ from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QLabel,
-    QMessageBox,
     QTableWidgetItem,
     QVBoxLayout,
 )
 
 from app.services.sale_service import SaleService
+from app.ui.return_dialog import ReturnDialog
 from app.utils.formatters import format_money, format_quantity
-from app.widgets.badge import StatusBadge
+from app.widgets.badge import (
+    StatusBadge,
+    resolve_sale_status,
+    set_badge_variant,
+)
 from app.widgets.danger_button import DangerButton
 from app.widgets.data_table import DataTable
 from app.widgets.secondary_button import SecondaryButton
@@ -22,54 +26,63 @@ class SaleDetailsDialog(QDialog):
         self.sale = sale
 
         self.setWindowTitle(f"Chek #{sale.id}")
-        self.resize(600, 450)
+        self.resize(650, 470)
 
         main_layout = QVBoxLayout(self)
 
         header_layout = QHBoxLayout()
 
-        title = QLabel(f"Chek #{sale.id}")
-        title.setObjectName("pageTitle")
+        self.title_label = QLabel(f"Chek #{sale.id}")
+        self.title_label.setObjectName("pageTitle")
 
-        if sale.status == "refunded":
-            self.status_badge = StatusBadge("Qaytarilgan", "danger")
-        else:
-            self.status_badge = StatusBadge("Yakunlangan", "success")
+        self.status_badge = StatusBadge("", "neutral")
 
-        header_layout.addWidget(title)
+        header_layout.addWidget(self.title_label)
         header_layout.addWidget(self.status_badge)
         header_layout.addStretch()
 
         self.items_table = DataTable()
-        self.items_table.setColumnCount(4)
+        self.items_table.setColumnCount(6)
         self.items_table.setHorizontalHeaderLabels([
             "Mahsulot",
             "Narxi",
             "Soni",
             "Jami",
+            "Qaytarilgan",
+            "Qoldiq",
         ])
 
-        total_label = QLabel(
-            f"Jami: {format_money(sale.total_amount)} so'm"
-        )
-        total_label.setObjectName("cartTotal")
+        self.total_label = QLabel()
+        self.total_label.setObjectName("cartTotal")
 
-        # Qaytarish — sotuvni bekor qiladi va tovarni omborga
-        # qaytaradi, orqaga qaytarib bo'lmaydi — shuning uchun DangerButton.
-        self.refund_button = DangerButton("Chekni qaytarish")
-        self.refund_button.clicked.connect(self.refund_sale)
-
-        if sale.status == "refunded":
-            self.refund_button.setDisabled(True)
+        # Qaytarish — omborga tovar qaytadi va chekning moliyaviy
+        # summasi kamayadi, orqaga qaytarib bo'lmaydi — shuning uchun
+        # DangerButton. To'liq/qisman tanlov endi ReturnDialog ichida.
+        self.refund_button = DangerButton("Qaytarish")
+        self.refund_button.clicked.connect(self.open_return_dialog)
 
         close_button = SecondaryButton("Yopish")
         close_button.clicked.connect(self.accept)
 
         main_layout.addLayout(header_layout)
         main_layout.addWidget(self.items_table)
-        main_layout.addWidget(total_label)
+        main_layout.addWidget(self.total_label)
         main_layout.addWidget(self.refund_button)
         main_layout.addWidget(close_button)
+
+        self.refresh_sale(sale)
+
+    def refresh_sale(self, sale):
+        self.sale = sale
+
+        status_text, status_variant = resolve_sale_status(sale.status)
+        set_badge_variant(self.status_badge, status_text, status_variant)
+
+        self.total_label.setText(
+            f"Jami: {format_money(sale.total_amount)} so'm"
+        )
+
+        self.refund_button.setDisabled(sale.status == "refunded")
 
         self.load_sale_items(sale.id)
 
@@ -79,6 +92,10 @@ class SaleDetailsDialog(QDialog):
         self.items_table.setRowCount(len(sale_items))
 
         for row, sale_item in enumerate(sale_items):
+            remaining = max(
+                0, sale_item.quantity - sale_item.returned_quantity
+            )
+
             self.items_table.setItem(
                 row,
                 0,
@@ -103,35 +120,24 @@ class SaleDetailsDialog(QDialog):
                     format_money(sale_item.line_total)
                 ),
             )
-
-    def refund_sale(self):
-        reply = QMessageBox.question(
-            self,
-            "Tasdiqlash",
-            "Bu chekni qaytarmoqchimisiz?",
-            QMessageBox.Yes | QMessageBox.No,
-        )
-
-        if reply != QMessageBox.Yes:
-            return
-
-        try:
-            SaleService.refund_sale(self.sale.id)
-
-        except ValueError as error:
-            QMessageBox.warning(
-                self,
-                "Diqqat",
-                str(error),
+            self.items_table.setItem(
+                row,
+                4,
+                QTableWidgetItem(
+                    format_quantity(sale_item.returned_quantity)
+                ),
             )
-            return
+            self.items_table.setItem(
+                row,
+                5,
+                QTableWidgetItem(format_quantity(remaining)),
+            )
 
-        self.sale.status = "refunded"
+    def open_return_dialog(self):
+        dialog = ReturnDialog(sale=self.sale, parent=self)
+        dialog.exec()
 
-        QMessageBox.information(
-            self,
-            "Muvaffaqiyatli",
-            "Chek qaytarildi. Mahsulotlar qoldiqqa qaytdi.",
-        )
+        updated_sale = SaleService.get_sale(self.sale.id)
 
-        self.accept()
+        if updated_sale is not None:
+            self.refresh_sale(updated_sale)

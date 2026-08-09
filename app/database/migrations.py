@@ -44,6 +44,16 @@ def apply_migrations():
         "products": {
             "image_path": "VARCHAR(255)",
         },
+        "debt_payments": {
+            "type": "VARCHAR(20) NOT NULL DEFAULT 'payment'",
+            "cashier_name": "VARCHAR(255)",
+            "cashier_user_id": "INTEGER",
+            "sale_id": "INTEGER",
+            "shift_id": "INTEGER",
+        },
+        "sale_items": {
+            "returned_quantity": "FLOAT NOT NULL DEFAULT 0",
+        },
     }
 
     with engine.begin() as connection:

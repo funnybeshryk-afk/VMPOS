@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QTableWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QTableWidgetItem
 
 from app.services.product_service import ProductService
 from app.utils.formatters import format_money, format_quantity
@@ -24,6 +24,29 @@ class ProductsTable(DataTable):
             "Holat",
         ])
         self.pin_column_width(5)
+
+        # Narx yorliqlarini bir nechta mahsulot uchun birdaniga chop
+        # etish mumkin bo'lishi kerak — shuning uchun bu yerda,
+        # boshqa sahifalardan farqli, ko'p qatorli tanlov yoqilgan
+        # (Ctrl/Shift bilan). Tahrirlash/o'chirish currentRow() dan
+        # foydalanadi va bu rejimda ham xuddi shunday ishlayveradi.
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+
+    def get_selected_products(self):
+        selected_rows = sorted({
+            index.row() for index in self.selectedIndexes()
+        })
+
+        selected_ids = [
+            self.item(row, 0).data(Qt.UserRole)
+            for row in selected_rows
+        ]
+
+        return [
+            product
+            for product in self.products
+            if product.id in selected_ids
+        ]
 
     def load_data(self):
         self.products = ProductService.get_all_products()
