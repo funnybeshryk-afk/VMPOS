@@ -1,0 +1,71 @@
+name: Build Windows (test)
+
+# Sinov yig'ma: .exe va o'rnatuvchini yig'adi va Actions ARTEFAKTI sifatida
+# beradi. Reliz YARATMAYDI va teg talab qilmaydi — shuning uchun o'rnatilgan
+# dasturlarning avto-yangilashiga ta'sir qilmaydi (u faqat GitHub Release'larni
+# o'qiydi). Haqiqiy reliz uchun — release.yml (teg v*).
+
+on:
+  push:
+    branches: ["claude/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Bog'liqliklarni o'rnatish
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt "pyinstaller>=6.11,<7"
+
+      - name: Testlar
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m pytest tests -q
+
+      - name: .exe yig'ish
+        run: powershell -File packaging\build_windows.ps1
+
+      - name: Yig'ilgan .exe smoke-testi
+        env:
+          VMPOS_DATA_DIR: ${{ runner.temp }}\vmpos-smoke
+        run: |
+          $p = Start-Process -FilePath "dist\VMPOS\VMPOS.exe" -ArgumentList "--smoke-test" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "smoke-test yiqildi, exit code $($p.ExitCode)" }
+
+      - name: Portativ arxiv (o'rnatmasdan ishga tushirish uchun)
+        run: |
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Compress-Archive -Path dist\VMPOS -DestinationPath out\VMPOS-portable.zip
+
+      - name: O'rnatuvchini yig'ish (Inno Setup)
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+          }
+          $version = (python -c "from app.version import APP_VERSION; print(APP_VERSION)").Trim()
+          & $iscc "/DAppVersion=$version" installer\vmpos.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC xato bilan tugadi" }
+          Copy-Item dist-installer\VMPOS-Setup-*.exe out\
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VMPOS-windows-test
+          path: out/*
+          retention-days: 14
+          if-no-files-found: error
