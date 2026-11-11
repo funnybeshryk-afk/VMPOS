@@ -11,7 +11,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DB = r"Z:\Projects\VMPOS\app\database\vmpos.db"
+from app.utils.paths import get_database_path
+
+DB = str(get_database_path())
 
 
 @app.get("/sales")

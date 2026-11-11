@@ -7,13 +7,11 @@ from app.models.price_tier import PriceTier
 from app.models.product import Product
 from app.models.stock_receipt import StockReceipt
 from app.models.supplier import Supplier
-from app.utils.paths import get_app_base_dir
-
-# get_app_base_dir() orqali — .exe rejimida CWD emas, doim EXE
-# joylashgan papkaga nisbatan (database.py'dagi kabi sabab bilan:
-# mahsulot rasmlari ham foydalanuvchi ma'lumoti, build paketi
-# qayta yig'ilganda yo'qolmasligi kerak).
-_PRODUCT_IMAGES_DIR = get_app_base_dir() / "assets" / "products"
+from app.utils.paths import (
+    get_product_images_dir,
+    resolve_data_path,
+    to_data_relative,
+)
 
 
 class ProductService:
@@ -27,15 +25,19 @@ class ProductService:
         hojat qolmaydi, bitta mahsulotga bitta noyob fayl.
         """
 
-        _PRODUCT_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+        images_dir = get_product_images_dir()
+        images_dir.mkdir(parents=True, exist_ok=True)
 
         extension = Path(source_path).suffix.lower()
         filename = f"{uuid.uuid4().hex}{extension}"
-        destination = _PRODUCT_IMAGES_DIR / filename
+        destination = images_dir / filename
 
         shutil.copyfile(source_path, destination)
 
-        return destination.as_posix()
+        # Bazada NISBIY yo'l ("assets/products/<uuid>.jpg") saqlanadi —
+        # mutlaq yo'l dastur/ma'lumotlar papkasi ko'chirilganda
+        # rasmlarni sindirar edi.
+        return to_data_relative(destination)
 
     @staticmethod
     def _delete_product_image(image_path):
@@ -43,7 +45,7 @@ class ProductService:
             return
 
         try:
-            Path(image_path).unlink(missing_ok=True)
+            resolve_data_path(image_path).unlink(missing_ok=True)
         except OSError:
             pass
 

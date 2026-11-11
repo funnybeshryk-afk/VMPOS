@@ -1,6 +1,120 @@
+import importlib
+import logging
+
 from sqlalchemy import inspect, text
 
-from app.database.database import engine
+from app.database.base import Base
+from app.database.database import DATABASE_PATH, engine
+from app.version import SCHEMA_VERSION
+
+logger = logging.getLogger(__name__)
+
+# Barcha model modullari — Base.metadata.create_all() ularni bilishi
+# uchun import qilinishi shart. Yangi model qo'shsangiz — shu yerga ham.
+_MODEL_MODULES = (
+    "app_setting",
+    "customer",
+    "debt_payment",
+    "price_tier",
+    "product",
+    "refund",
+    "sale",
+    "shift",
+    "stock_receipt",
+    "supplier",
+    "user",
+)
+
+
+class DatabaseTooNewError(RuntimeError):
+    """Baza dasturdan yangiroq versiyada — eski dastur uni ochmaydi."""
+
+    def __init__(self, db_version, app_version):
+        super().__init__(
+            f"Baza sxemasi v{db_version}, dastur esa faqat "
+            f"v{app_version} gacha biladi."
+        )
+        self.db_version = db_version
+        self.app_version = app_version
+
+
+def _register_models():
+    for module_name in _MODEL_MODULES:
+        importlib.import_module(f"app.models.{module_name}")
+
+
+def _read_schema_version():
+    with engine.connect() as connection:
+        return connection.exec_driver_sql("PRAGMA user_version").scalar()
+
+
+def _write_schema_version(version):
+    # PRAGMA parametr qabul qilmaydi; version — bizning o'zimizning int.
+    with engine.begin() as connection:
+        connection.exec_driver_sql(f"PRAGMA user_version = {int(version)}")
+
+
+def prepare_database():
+    """Dastur ochilganda bazani xavfsiz tayyorlaydi:
+
+    1. Baza dasturdan yangiroq bo'lsa — DatabaseTooNewError (hech narsaga
+       tegmaydi).
+    2. Mavjud baza eski sxemada bo'lsa — migratsiyadan OLDIN avtomatik
+       zaxira oladi.
+    3. Jadvallarni yaratadi, ustunlarni qo'shadi (apply_migrations).
+    4. Migratsiya yarim yo'lda yiqilsa — bazani zaxiradan avtomatik
+       tiklaydi va xatoni yuqoriga uzatadi (yarim-migratsiyalangan baza
+       qolmaydi).
+    5. Sxema versiyasini belgilaydi.
+
+    Yangi (bo'sh) baza uchun zaxira olinmaydi — saqlanadigan narsa yo'q.
+    """
+
+    # Kechiktirilgan import — backup_service ham shu paketga bog'liq.
+    from app.services.backup_service import BackupService, KIND_PREMIGRATE
+
+    _register_models()
+
+    existed = (
+        DATABASE_PATH.exists() and DATABASE_PATH.stat().st_size > 0
+    )
+    backup_path = None
+
+    if existed:
+        db_version = _read_schema_version()
+
+        if db_version > SCHEMA_VERSION:
+            raise DatabaseTooNewError(db_version, SCHEMA_VERSION)
+
+        if db_version < SCHEMA_VERSION:
+            backup_path = BackupService.create_backup(KIND_PREMIGRATE)
+            logger.info(
+                "Migratsiyadan oldingi zaxira: %s (baza v%s -> v%s)",
+                backup_path,
+                db_version,
+                SCHEMA_VERSION,
+            )
+
+    try:
+        Base.metadata.create_all(bind=engine)
+        apply_migrations()
+        _write_schema_version(SCHEMA_VERSION)
+    except Exception:
+        logger.exception("Migratsiya yiqildi")
+
+        if backup_path is not None:
+            try:
+                BackupService.restore_backup(backup_path)
+                logger.warning(
+                    "Baza migratsiyadan oldingi holatga qaytarildi: %s",
+                    backup_path,
+                )
+            except Exception:
+                logger.exception(
+                    "Bazani zaxiradan tiklab bo'lmadi: %s", backup_path
+                )
+
+        raise
 
 
 def apply_migrations():

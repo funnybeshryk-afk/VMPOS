@@ -26,6 +26,7 @@ from app.ui.users_page import UsersPage
 from app.ui.warehouse_page import WarehousePage
 from app.utils.icons import load_icon
 from app.utils.paths import get_bundle_base_dir
+from app.version import APP_VERSION
 from app.widgets.app_status_bar import AppStatusBar
 from app.widgets.sidebar_menu import SidebarMenu
 
@@ -53,7 +54,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("VMPOS v1.0.0")
+        self.setWindowTitle(f"VMPOS v{APP_VERSION}")
         self.resize(1200, 700)
 
         self._build_ui()

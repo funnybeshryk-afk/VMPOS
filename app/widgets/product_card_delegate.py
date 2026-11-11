@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from PySide6.QtCore import QRect, QSize, Qt
 from PySide6.QtGui import (
     QColor,
@@ -14,6 +12,7 @@ from PySide6.QtWidgets import QStyle, QStyledItemDelegate
 from app.utils.category_icons import icon_for_category
 from app.utils.formatters import format_money, format_quantity
 from app.utils.icons import load_icon
+from app.utils.paths import resolve_data_path
 from app.widgets.badge import resolve_stock_status
 from app.widgets.product_list_model import ProductRole
 
@@ -120,7 +119,9 @@ class ProductCardDelegate(QStyledItemDelegate):
         painter.setClipping(False)
 
     def _resolve_pixmap(self, product, target_size):
-        if product.image_path and Path(product.image_path).is_file():
+        image_file = resolve_data_path(product.image_path)
+
+        if image_file is not None and image_file.is_file():
             cache_key = (
                 "photo",
                 product.image_path,
@@ -132,7 +133,7 @@ class ProductCardDelegate(QStyledItemDelegate):
             if cached is not None:
                 return cached
 
-            candidate = QPixmap(product.image_path)
+            candidate = QPixmap(str(image_file))
 
             if not candidate.isNull():
                 # KeepAspectRatioByExpanding to'ldirib, chetlarini
