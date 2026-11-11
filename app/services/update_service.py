@@ -30,9 +30,21 @@ from app.version import APP_VERSION
 
 logger = logging.getLogger(__name__)
 
-REPO = "funnybeshryk-afk/vmpos"
+REPO = "funnybeshryk-afk/VMPOS"
 LATEST_RELEASE_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
 ALLOWED_DOWNLOAD_PREFIX = f"https://github.com/{REPO}/releases/download/"
+
+
+
+def is_allowed_download_url(url):
+    """GitHub owner/repo nomida registr farqlamaydi (repo `VMPOS` deb
+    ham, `vmpos` deb ham ochiladi), shuning uchun solishtirish registrga
+    befarq — aks holda to'g'ri reliz ham rad etilib qolardi."""
+
+    return isinstance(url, str) and url.lower().startswith(
+        ALLOWED_DOWNLOAD_PREFIX.lower()
+    )
+
 
 INSTALLER_PATTERN = re.compile(r"^VMPOS-Setup-[0-9][0-9A-Za-z.\-]*\.exe$")
 
@@ -136,7 +148,7 @@ def _extract_sha256(assets, installer_asset):
         if asset.get("name") == hash_name:
             url = asset.get("browser_download_url", "")
 
-            if url.startswith(ALLOWED_DOWNLOAD_PREFIX):
+            if is_allowed_download_url(url):
                 return _read_hash_file(url)
 
     return None
@@ -173,7 +185,7 @@ def parse_release(release, current_version=APP_VERSION):
     installer = installers[0]
     url = installer.get("browser_download_url", "")
 
-    if not url.startswith(ALLOWED_DOWNLOAD_PREFIX):
+    if not is_allowed_download_url(url):
         logger.warning("Ruxsat etilmagan yuklab olish manzili: %s", url)
         return None
 
@@ -210,7 +222,7 @@ def download_installer(info, progress=None, is_cancelled=None):
     """O'rnatuvchini vaqtinchalik papkaga yuklaydi va SHA-256 ni
     tekshiradi. Mos kelmasa fayl o'chiriladi va UpdateError ko'tariladi."""
 
-    if not info.installer_url.startswith(ALLOWED_DOWNLOAD_PREFIX):
+    if not is_allowed_download_url(info.installer_url):
         raise UpdateError("Ruxsat etilmagan yuklab olish manzili.")
 
     target_dir = Path(tempfile.mkdtemp(prefix="vmpos_update_"))

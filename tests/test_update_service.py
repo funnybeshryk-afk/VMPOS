@@ -152,3 +152,13 @@ def test_installer_is_never_launched_outside_frozen_windows(monkeypatch, tmp_pat
 
     with pytest.raises(UpdateError):
         us.launch_installer(tmp_path / "x.exe")
+
+
+def test_download_url_check_ignores_repo_name_case_but_not_host_or_path():
+    ok = "https://github.com/funnybeshryk-afk/vmpos/releases/download/v1/x.exe"
+    assert us.is_allowed_download_url(ok)
+    assert us.is_allowed_download_url(ok.replace("vmpos", "VMPOS"))
+    assert not us.is_allowed_download_url("https://github.com.evil.example/funnybeshryk-afk/vmpos/releases/download/v1/x.exe")
+    assert not us.is_allowed_download_url("http://github.com/funnybeshryk-afk/vmpos/releases/download/v1/x.exe")
+    assert not us.is_allowed_download_url("https://github.com/other/repo/releases/download/v1/x.exe")
+    assert not us.is_allowed_download_url(None)
