@@ -20,12 +20,14 @@ _DB_PATH = DATABASE_PATH
 KIND_MANUAL = "manual"
 KIND_AUTO = "auto"
 KIND_PREMIGRATE = "premigrate"
+KIND_PREUPDATE = "preupdate"
 
 # Har tur uchun nechta nusxa saqlanadi. Qo'lda olinganlar hech qachon
 # avtomatik o'chirilmaydi.
 _KEEP_BY_KIND = {
     KIND_AUTO: 30,
     KIND_PREMIGRATE: 10,
+    KIND_PREUPDATE: 5,
 }
 
 # Avto-zaxira "kunlik": oxirgisidan shuncha soat o'tmagan bo'lsa, qayta

@@ -1,4 +1,3 @@
-import importlib
 import logging
 
 from sqlalchemy import inspect, text
@@ -8,23 +7,6 @@ from app.database.database import DATABASE_PATH, engine
 from app.version import SCHEMA_VERSION
 
 logger = logging.getLogger(__name__)
-
-# Barcha model modullari — Base.metadata.create_all() ularni bilishi
-# uchun import qilinishi shart. Yangi model qo'shsangiz — shu yerga ham.
-_MODEL_MODULES = (
-    "app_setting",
-    "customer",
-    "debt_payment",
-    "price_tier",
-    "product",
-    "refund",
-    "sale",
-    "shift",
-    "stock_receipt",
-    "supplier",
-    "user",
-)
-
 
 class DatabaseTooNewError(RuntimeError):
     """Baza dasturdan yangiroq versiyada — eski dastur uni ochmaydi."""
@@ -39,8 +21,23 @@ class DatabaseTooNewError(RuntimeError):
 
 
 def _register_models():
-    for module_name in _MODEL_MODULES:
-        importlib.import_module(f"app.models.{module_name}")
+    """Barcha modellar import qilinishi shart — Base.metadata.create_all()
+    ularni faqat shunda biladi. Importlar ATAYLAB statik (importlib
+    emas): PyInstaller satr bilan berilgan importlarni ko'rmaydi va
+    .exe'ga modelni qo'shmay qoldirardi. Yangi model qo'shsangiz — shu
+    yerga ham qo'shing."""
+
+    import app.models.app_setting  # noqa: F401
+    import app.models.customer  # noqa: F401
+    import app.models.debt_payment  # noqa: F401
+    import app.models.price_tier  # noqa: F401
+    import app.models.product  # noqa: F401
+    import app.models.refund  # noqa: F401
+    import app.models.sale  # noqa: F401
+    import app.models.shift  # noqa: F401
+    import app.models.stock_receipt  # noqa: F401
+    import app.models.supplier  # noqa: F401
+    import app.models.user  # noqa: F401
 
 
 def _read_schema_version():
