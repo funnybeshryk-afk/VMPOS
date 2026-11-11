@@ -7,6 +7,8 @@ from pathlib import Path
 # papkaga yo'naltiriladi — testlar hech qachon haqiqiy bazaga tegmaydi.
 _TEST_DATA_DIR = tempfile.mkdtemp(prefix="vmpos_test_")
 os.environ["VMPOS_DATA_DIR"] = _TEST_DATA_DIR
+# Qt oynalari ekransiz (CI/Linux) ishlashi uchun.
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import shutil  # noqa: E402
@@ -27,3 +29,10 @@ def clean_data_dir():
     wipe()
     yield
     wipe()
+
+
+@pytest.fixture(scope="session")
+def qapp():
+    from PySide6.QtWidgets import QApplication
+
+    return QApplication.instance() or QApplication([])

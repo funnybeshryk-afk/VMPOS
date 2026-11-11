@@ -1,6 +1,8 @@
 from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt
 
 ProductRole = Qt.UserRole + 1
+# Mahsulotning korzinadagi miqdori (0 — korzinada yo'q).
+CartQtyRole = Qt.UserRole + 2
 
 
 class ProductListModel(QAbstractListModel):
@@ -19,6 +21,24 @@ class ProductListModel(QAbstractListModel):
         super().__init__(parent)
 
         self._products = []
+        self._cart_quantities = {}
+
+    def set_cart_quantities(self, quantities):
+        """{product_id: miqdor}. Faqat o'zgargan bo'lsa qayta chizadi."""
+
+        quantities = dict(quantities)
+
+        if quantities == self._cart_quantities:
+            return
+
+        self._cart_quantities = quantities
+
+        if self._products:
+            self.dataChanged.emit(
+                self.index(0),
+                self.index(len(self._products) - 1),
+                [CartQtyRole],
+            )
 
     def set_products(self, products):
         self.beginResetModel()
@@ -39,6 +59,9 @@ class ProductListModel(QAbstractListModel):
 
         if role == ProductRole:
             return product
+
+        if role == CartQtyRole:
+            return self._cart_quantities.get(product.id, 0)
 
         if role == Qt.DisplayRole:
             return product.name

@@ -16,7 +16,7 @@ _VALUE_OBJECT_NAMES = {
 }
 
 _TOGGLE_ICON_SIZE = 14
-_TOGGLE_ICON_COLOR = "#64748b"
+_TOGGLE_ICON_COLOR = "#78716c"
 
 
 class SummaryCard(QFrame):

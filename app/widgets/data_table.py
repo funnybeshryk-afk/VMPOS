@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QTableWidget,
 )
 
-_HOVER_COLOR = QColor("#f1f5f9")
+_HOVER_COLOR = QColor("#faf8f4")
 
 
 class _RowHoverDelegate(QStyledItemDelegate):

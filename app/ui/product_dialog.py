@@ -24,7 +24,7 @@ from app.utils.paths import resolve_data_path
 from app.widgets.secondary_button import SecondaryButton
 
 _REMOVE_ICON_SIZE = 14
-_REMOVE_ICON_COLOR = "#64748b"
+_REMOVE_ICON_COLOR = "#78716c"
 
 _IMAGE_PREVIEW_SIZE = 72
 _IMAGE_FILE_FILTER = (

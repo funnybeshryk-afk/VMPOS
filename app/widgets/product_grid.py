@@ -1,10 +1,14 @@
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import QAbstractItemView, QListView
 
 from app.widgets.product_card_delegate import CARD_SIZE, ProductCardDelegate
 from app.widgets.product_list_model import ProductListModel, ProductRole
 
 _SPACING = 6
+
+# Kartochka eni kengligi shu minimaldan boshlab ustunlarga bo'linadi:
+# qator har doim to'liq to'ladi (o'ng tomonda bo'sh joy qolmaydi).
+_MIN_CARD_WIDTH = 204
 
 
 class ProductGrid(QListView):
@@ -45,8 +49,30 @@ class ProductGrid(QListView):
 
         self.clicked.connect(self._on_clicked)
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._fit_columns()
+
+    def _fit_columns(self):
+        """Mavjud kenglikka sig'adigan ustunlar sonini hisoblab, har
+        kartochkaga teng kenglik beradi. Balandlik qat'iy."""
+
+        available = self.viewport().width() - 2 * _SPACING
+
+        if available <= 0:
+            return
+
+        columns = max(1, available // _MIN_CARD_WIDTH)
+        cell_width = available // columns
+
+        if self.gridSize().width() != cell_width:
+            self.setGridSize(QSize(cell_width, CARD_SIZE.height()))
+
     def set_products(self, products):
         self._model.set_products(products)
+
+    def set_cart_quantities(self, quantities):
+        self._model.set_cart_quantities(quantities)
 
     def _on_clicked(self, index):
         product = index.data(ProductRole)
