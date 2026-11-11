@@ -33,7 +33,7 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
-ArchitecturesInstallMode=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
 ; Ochiq turgan VMPOS.exe'ni yopib, fayllarni almashtiradi.
 CloseApplications=yes
 RestartApplications=no
