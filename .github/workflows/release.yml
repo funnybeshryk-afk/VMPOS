@@ -52,8 +52,8 @@ jobs:
 
       - name: O'rnatuvchini yig'ish (Inno Setup)
         run: |
-          choco install innosetup -y --no-progress
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
           $version = "${env:GITHUB_REF_NAME}".TrimStart("v","V")
           & $iscc "/DAppVersion=$version" installer\vmpos.iss
           if ($LASTEXITCODE -ne 0) { throw "ISCC xato bilan tugadi" }
@@ -69,4 +69,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$env:GITHUB_REF_NAME" dist-installer\VMPOS-Setup-*.exe dist-installer\VMPOS-Setup-*.exe.sha256 --title "VMPOS $env:GITHUB_REF_NAME" --generate-notes
+          if (-not (Test-Path release-notes.md)) { throw "release-notes.md topilmadi" }
+          # PowerShell native buyruqqa "*" ni ochib bermaydi — fayllarni o'zimiz yig'amiz.
+          $files = @(Get-ChildItem dist-installer -File | Where-Object { $_.Name -like "VMPOS-Setup-*" } | ForEach-Object { $_.FullName })
+          if ($files.Count -ne 2) { throw "Kutilgan 2 fayl (exe + sha256), topildi: $($files.Count)" }
+          gh release create "$env:GITHUB_REF_NAME" @files --title "VMPOS $env:GITHUB_REF_NAME" --notes-file release-notes.md

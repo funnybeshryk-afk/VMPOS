@@ -11,6 +11,6 @@ app/database/migrations.py'ga mos migratsiyani qo'shing. Shu tufayli:
   * migratsiyadan oldin baza avtomatik zaxiralanadi.
 """
 
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.2.0"
 
 SCHEMA_VERSION = 1

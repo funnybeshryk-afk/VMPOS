@@ -1,13 +1,14 @@
 name: Build Windows (test)
 
+# Faqat QO'LDA ishga tushadi (Actions -> Run workflow) — har pushda
+# avtomatik yig'ilmaydi.
+#
 # Sinov yig'ma: .exe va o'rnatuvchini yig'adi va Actions ARTEFAKTI sifatida
 # beradi. Reliz YARATMAYDI va teg talab qilmaydi — shuning uchun o'rnatilgan
 # dasturlarning avto-yangilashiga ta'sir qilmaydi (u faqat GitHub Release'larni
 # o'qiydi). Haqiqiy reliz uchun — release.yml (teg v*).
 
 on:
-  push:
-    branches: ["claude/**"]
   workflow_dispatch:
 
 permissions:
