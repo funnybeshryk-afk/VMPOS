@@ -670,6 +670,19 @@ QComboBox::drop-down {
     width: 26px;
 }
 
+/* Sana maydoni: "dd.MM.yyyy" + o'ng tomonda strelka uchun joy. Avval
+   matn strelka ostiga kirib, "01.01.2000" kesilib qolardi. */
+
+QDateEdit {
+    min-width: 170px;
+    padding: 0 6px 0 12px;
+}
+
+QDateEdit::drop-down {
+    border: none;
+    width: 32px;
+}
+
 QComboBox QAbstractItemView {
     background: #ffffff;
     border: 1px solid #ece7df;

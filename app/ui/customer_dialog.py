@@ -33,6 +33,7 @@ class CustomerDialog(QDialog):
 
         self.debt_date_edit = QDateEdit()
         self.debt_date_edit.setCalendarPopup(True)
+        self.debt_date_edit.setDisplayFormat("dd.MM.yyyy")
         self.debt_date_edit.setDate(QDate.currentDate())
 
         if customer:
