@@ -36,3 +36,16 @@ def qapp():
     from PySide6.QtWidgets import QApplication
 
     return QApplication.instance() or QApplication([])
+
+
+@pytest.fixture(autouse=True)
+def animations_off_by_default():
+    """Mantiq testlari animatsiyasiz (darhol yakuniy holat) ishlaydi;
+    animatsiya testlari ularni o'zlari yoqadi (tests/test_motion.py)."""
+
+    from app.utils import motion
+
+    previous = motion.is_enabled()
+    motion.set_enabled(False)
+    yield
+    motion.set_enabled(previous)

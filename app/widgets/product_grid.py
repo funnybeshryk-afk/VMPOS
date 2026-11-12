@@ -1,4 +1,4 @@
-from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtWidgets import QAbstractItemView, QListView
 
 from app.widgets.product_card_delegate import CARD_SIZE, ProductCardDelegate
@@ -49,6 +49,13 @@ class ProductGrid(QListView):
 
         self.clicked.connect(self._on_clicked)
 
+        # Vspishka davomida (<= ~260 ms) viewport'ni ~60 kadr/s qayta
+        # chizadi; tugagach taymer to'xtaydi (bo'sh turganda hech narsa
+        # ishlamaydi).
+        self._flash_timer = QTimer(self)
+        self._flash_timer.setInterval(16)
+        self._flash_timer.timeout.connect(self._tick_flash)
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._fit_columns()
@@ -73,6 +80,18 @@ class ProductGrid(QListView):
 
     def set_cart_quantities(self, quantities):
         self._model.set_cart_quantities(quantities)
+
+    def flash_product(self, product_id):
+        self._model.flash(product_id)
+
+        if self._model.has_active_flash() and not self._flash_timer.isActive():
+            self._flash_timer.start()
+
+    def _tick_flash(self):
+        self.viewport().update()
+
+        if not self._model.has_active_flash():
+            self._flash_timer.stop()
 
     def _on_clicked(self, index):
         product = index.data(ProductRole)

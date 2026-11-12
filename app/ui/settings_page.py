@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import (
+    QCheckBox,
     QFormLayout,
     QHBoxLayout,
     QLabel,
@@ -12,6 +13,7 @@ from app.services.backup_service import BackupService
 from app.services.settings_service import SettingsService
 from app.ui.backup_restore_dialog import BackupRestoreDialog
 from app.ui.update_flow import UpdateFlow
+from app.utils import motion
 from app.widgets.danger_button import DangerButton
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.secondary_button import SecondaryButton
@@ -70,6 +72,18 @@ class SettingsPage(QWidget):
         backup_row.addWidget(self.restore_backup_button)
         backup_row.addStretch()
 
+        interface_title = QLabel("Interfeys")
+        interface_title.setObjectName("sectionTitle")
+
+        # Qisqa animatsiyalar (jami summa, qator chiqishi, kartochka
+        # "vspishka"si). Sekin kompyuterlarda o'chirib qo'yish mumkin —
+        # natija o'zgarmaydi, faqat silliqlik yo'qoladi.
+        self.animations_checkbox = QCheckBox(
+            "Animatsiyalar (sekin kompyuterda o'chiring)"
+        )
+        self.animations_checkbox.setChecked(motion.is_enabled())
+        self.animations_checkbox.toggled.connect(motion.save_enabled)
+
         update_title = QLabel("Dastur versiyasi")
         update_title.setObjectName("sectionTitle")
 
@@ -94,6 +108,8 @@ class SettingsPage(QWidget):
         main_layout.addWidget(self.save_button)
         main_layout.addWidget(backup_title)
         main_layout.addLayout(backup_row)
+        main_layout.addWidget(interface_title)
+        main_layout.addWidget(self.animations_checkbox)
         main_layout.addWidget(update_title)
         main_layout.addLayout(update_row)
         main_layout.addStretch()
@@ -106,6 +122,10 @@ class SettingsPage(QWidget):
 
     def load_settings(self):
         settings = SettingsService.get_store_settings()
+
+        self.animations_checkbox.blockSignals(True)
+        self.animations_checkbox.setChecked(motion.is_enabled())
+        self.animations_checkbox.blockSignals(False)
 
         self.store_name_edit.setText(settings["store_name"])
         self.store_phone_edit.setText(settings["store_phone"])

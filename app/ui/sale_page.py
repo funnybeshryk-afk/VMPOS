@@ -36,6 +36,7 @@ from app.utils.sounds import (
 )
 from app.widgets.badge import stock_status_badge
 from app.widgets.category_bar import CategoryBar
+from app.widgets.animated_number import AnimatedNumber
 from app.widgets.cart_list import CartList
 from app.widgets.data_table import DataTable
 from app.widgets.product_grid import ProductGrid
@@ -213,6 +214,10 @@ class SalePage(QWidget):
         self.total_label.setObjectName("cartTotalAmount")
         self.total_label.setTextFormat(Qt.RichText)
         self.total_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        # Jami summa yangi qiymatgacha "docrutka" qiladi (~220 ms).
+        self._total_counter = AnimatedNumber(
+            self.total_label, self._format_total
+        )
 
         total_row = QHBoxLayout(total_box)
         total_row.setContentsMargins(24, 0, 24, 0)
@@ -264,6 +269,14 @@ class SalePage(QWidget):
         layout.addLayout(body, 1)
 
         return card
+
+    @staticmethod
+    def _format_total(value):
+        return (
+            f"{format_money(value)} "
+            "<span style='font-size:18px;font-weight:500;"
+            "color:#a8a29e'>so'm</span>"
+        )
 
     def _make_alt_pay_button(self, text, icon_name, method):
         button = SecondaryButton(text)
@@ -571,6 +584,7 @@ class SalePage(QWidget):
         }
 
         self.update_cart_table()
+        self.product_grid.flash_product(product_id)
         play_add_sound()
 
     def resolve_cart_pricing(self, product, quantity):
@@ -883,12 +897,7 @@ class SalePage(QWidget):
         )
         self.cart_list.set_items(self.cart)
 
-        total = self.calculate_cart_total()
-        self.total_label.setText(
-            f"{format_money(total)} "
-            "<span style='font-size:18px;font-weight:500;"
-            "color:#a8a29e'>so'm</span>"
-        )
+        self._total_counter.set_value(self.calculate_cart_total())
         self.cart_count_label.setText(str(len(self.cart)))
 
         # Katalogdagi kartochkalar korzinadagi miqdorni ko'rsatadi.

@@ -1212,6 +1212,7 @@ QPushButton#padKey:hover {
 
 QPushButton#padKey:pressed {
     background: #ece7df;
+    padding-top: 3px;
 }
 
 QPushButton#padKey:disabled {
@@ -1238,6 +1239,7 @@ QPushButton#padChip:hover {
 
 QPushButton#padChip:pressed {
     background: #6ee7b7;
+    padding-top: 3px;
 }
 
 QPushButton#padChip:disabled {
@@ -1320,4 +1322,48 @@ QPushButton#tabButton:checked {
     background: #1c1917;
     border-color: #1c1917;
     color: #ffffff;
+}
+
+
+/* --------------------------------------------------------------------------
+   11. NAZORAT: bosilganda zudlik bilan javob (QSS animatsiya qila olmaydi)
+
+   Rang darhol o'zgaradi va matn 2-3 px "botadi" — barmoq ostida tugma
+   "bosilgandek" seziladi.
+   -------------------------------------------------------------------------- */
+
+QPushButton#qtyPlus:pressed {
+    background: #44403c;
+    padding-top: 3px;
+}
+
+QPushButton#qtyMinus:pressed {
+    background: #ece7df;
+    padding-top: 3px;
+}
+
+QPushButton#successButton[sizeVariant="lg"]:pressed {
+    background: #047857;
+    padding-top: 4px;
+}
+
+QPushButton#payAlt:pressed {
+    background: #ece7df;
+    padding-top: 3px;
+}
+
+QPushButton#categoryTile:pressed {
+    background: #ece7df;
+}
+
+QPushButton#categoryTile:checked:pressed {
+    background: #047857;
+}
+
+QToolButton#railItem:pressed {
+    background: #3a3532;
+}
+
+QPushButton#tabButton:pressed {
+    background: #ece7df;
 }

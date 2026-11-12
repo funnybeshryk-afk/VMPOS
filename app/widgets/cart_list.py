@@ -1,8 +1,18 @@
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import (
+    QEasingCurve,
+    QParallelAnimationGroup,
+    QPropertyAnimation,
+    Qt,
+    QVariantAnimation,
+    Signal,
+)
+from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import (
     QFrame,
+    QGraphicsOpacityEffect,
     QHBoxLayout,
     QLabel,
+    QLayout,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -10,11 +20,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.utils import motion
 from app.utils.formatters import format_money, format_quantity
 from app.utils.units import is_weight_unit
 from app.widgets.badge import StatusBadge
 
 _ROW_HEIGHT = 88
+
 
 class _ElidedLabel(QLabel):
     """Sig'maydigan matnni "…" bilan qisqartiradigan yorliq (to'liq
@@ -57,6 +69,7 @@ class _CartRow(QFrame):
         super().__init__()
 
         self._product_id = product_id
+        self._flash = 0.0
 
         self.setObjectName("cartRow")
         self.setProperty("selected", "true" if selected else "false")
@@ -68,6 +81,9 @@ class _CartRow(QFrame):
         weight = is_weight_unit(product.unit)
 
         layout = QVBoxLayout(self)
+        # Balandlik animatsiyasi paytida (0 dan o'sadi) tarkibning
+        # minimal o'lchami qatorni ushlab turmasligi uchun.
+        layout.setSizeConstraint(QLayout.SetNoConstraint)
         layout.setContentsMargins(16, 8, 14, 8)
         layout.setSpacing(2)
 
@@ -132,6 +148,36 @@ class _CartRow(QFrame):
         layout.addLayout(top_row)
         layout.addLayout(bottom_row)
 
+    def set_flash(self, value):
+        self._flash = value
+        self.update()
+
+    def flash(self):
+        """Miqdor o'zgardi — qator qisqa izumrud yonib o'chadi."""
+
+        if not motion.is_enabled():
+            return
+
+        animation = QVariantAnimation(self)
+        animation.setStartValue(1.0)
+        animation.setEndValue(0.0)
+        animation.setDuration(motion.DURATION_FLASH_MS)
+        animation.setEasingCurve(QEasingCurve.OutQuad)
+        animation.valueChanged.connect(self.set_flash)
+        animation.finished.connect(lambda: self.set_flash(0.0))
+        animation.start()
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+
+        if self._flash > 0.001:
+            painter = QPainter(self)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor(5, 150, 105, int(60 * self._flash)))
+            painter.drawRoundedRect(self.rect(), 14, 14)
+            painter.end()
+
     def mousePressEvent(self, event):
         self.selectRequested.emit(self._product_id)
         super().mousePressEvent(event)
@@ -169,6 +215,7 @@ class CartList(QScrollArea):
 
         self._selected_id = None
         self._rows = {}
+        self._quantities = {}
 
     def selected_product_id(self):
         return self._selected_id
@@ -187,6 +234,7 @@ class CartList(QScrollArea):
         """items: {product_id: {product, quantity, unit_price, is_wholesale}}."""
 
         scroll_value = self.verticalScrollBar().value()
+        previous_quantities = self._quantities
 
         for row in self._rows.values():
             self._rows_layout.removeWidget(row)
@@ -210,3 +258,52 @@ class CartList(QScrollArea):
             self._rows[product_id] = row
 
         self.verticalScrollBar().setValue(scroll_value)
+
+        # Animatsiyalar: yangi qator chiqadi, miqdori o'zgargani yonadi.
+        # Mantiq (yuqorida) animatsiyaga bog'liq emas.
+        if motion.is_enabled():
+            for product_id, row in self._rows.items():
+                if product_id not in previous_quantities:
+                    self._animate_in(row)
+                elif previous_quantities[product_id] != items[product_id]["quantity"]:
+                    row.flash()
+
+        self._quantities = {
+            product_id: item["quantity"] for product_id, item in items.items()
+        }
+
+    def _animate_in(self, row):
+        """Yangi qator: balandligi 0 dan o'sadi va xiralikdan chiqadi."""
+
+        effect = QGraphicsOpacityEffect(row)
+        effect.setOpacity(0.0)
+        row.setGraphicsEffect(effect)
+        row.setMinimumHeight(0)
+        row.setMaximumHeight(0)
+
+        group = QParallelAnimationGroup(row)
+
+        height = QPropertyAnimation(row, b"maximumHeight", group)
+        height.setStartValue(0)
+        height.setEndValue(_ROW_HEIGHT)
+
+        fade = QPropertyAnimation(effect, b"opacity", group)
+        fade.setStartValue(0.0)
+        fade.setEndValue(1.0)
+
+        for animation in (height, fade):
+            animation.setDuration(motion.DURATION_ROW_MS)
+            animation.setEasingCurve(QEasingCurve.OutCubic)
+
+        # Yangi qator ro'yxat oxirida o'sayotganda ko'rinib turishi uchun.
+        height.valueChanged.connect(
+            lambda _value: self.verticalScrollBar().setValue(
+                self.verticalScrollBar().maximum()
+            )
+        )
+        group.finished.connect(lambda: self._finish_animate_in(row))
+        group.start()
+
+    def _finish_animate_in(self, row):
+        row.setGraphicsEffect(None)
+        row.setFixedHeight(_ROW_HEIGHT)

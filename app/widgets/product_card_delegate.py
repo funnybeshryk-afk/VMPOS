@@ -15,7 +15,7 @@ from app.utils.icons import load_icon
 from app.utils.paths import resolve_data_path
 from app.utils.units import is_weight_unit
 from app.widgets.badge import resolve_stock_status
-from app.widgets.product_list_model import CartQtyRole, ProductRole
+from app.widgets.product_list_model import CartQtyRole, FlashRole, ProductRole
 
 CARD_SIZE = QSize(244, 322)
 
@@ -110,6 +110,18 @@ class ProductCardDelegate(QStyledItemDelegate):
             _CARD_RADIUS,
             _CARD_RADIUS,
         )
+
+        # Korzinaga yangi qo'shilganda qisqa izumrud "vspishka".
+        flash = index.data(FlashRole) or 0.0
+
+        if flash > 0:
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor(5, 150, 105, int(70 * flash)))
+            painter.drawRoundedRect(
+                QRectF(card_rect).adjusted(0.5, 0.5, -0.5, -0.5),
+                _CARD_RADIUS,
+                _CARD_RADIUS,
+            )
 
         content_rect = card_rect.adjusted(
             _PADDING, _PADDING, -_PADDING, -_PADDING
