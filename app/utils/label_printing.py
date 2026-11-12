@@ -173,12 +173,12 @@ def paint_product_label(painter, rect, product):
         content_rect.width(),
         content_rect.bottom() - price_rect.bottom(),
     )
-    _paint_barcode(painter, barcode_rect, product.barcode)
+    paint_barcode(painter, barcode_rect, product.barcode)
 
     painter.restore()
 
 
-def _paint_barcode(painter, rect, code):
+def paint_barcode(painter, rect, code):
     """Code128 chiziqlarini to'g'ridan-to'g'ri to'rtburchaklar bilan
     chizadi — nima uchun oraliq SVG formatidan foydalanilmasligi
     barcode_render.get_barcode_modules() docstring'ida tushuntirilgan.

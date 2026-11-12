@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QFormLayout,
     QHBoxLayout,
     QLabel,
@@ -11,8 +12,10 @@ from PySide6.QtWidgets import (
 
 from app.services.backup_service import BackupService
 from app.services.product_service import ProductService
+from app.services.receipt_service import ReceiptPrintError, ReceiptService
 from app.services.settings_service import SettingsService
 from app.ui.backup_restore_dialog import BackupRestoreDialog
+from app.ui.receipt_preview_dialog import ReceiptPreviewDialog
 from app.ui.update_flow import UpdateFlow
 from app.utils import motion
 from app.widgets.danger_button import DangerButton
@@ -62,6 +65,40 @@ class SettingsPage(QWidget):
         self.fiscal_hint_label = QLabel()
         self.fiscal_hint_label.setObjectName("mutedText")
         self.fiscal_hint_label.setWordWrap(True)
+
+        # Chek printeri (FISKAL emas): oddiy tizim printeri orqali
+        # (termoprinter drayveri) yoki PDF.
+        receipt_title = QLabel("Chek printeri")
+        receipt_title.setObjectName("sectionTitle")
+
+        receipt_form = QFormLayout()
+
+        self.receipt_printer_combo = QComboBox()
+        self.receipt_paper_combo = QComboBox()
+        self.receipt_paper_combo.addItem("80 mm", "80")
+        self.receipt_paper_combo.addItem("58 mm", "58")
+        self.receipt_footer_edit = QLineEdit()
+        self.receipt_footer_edit.setPlaceholderText("Masalan: Xaridingiz uchun rahmat!")
+        self.receipt_auto_print_checkbox = QCheckBox(
+            "Savdodan keyin chekni avtomatik chop etish"
+        )
+        self.receipt_barcode_checkbox = QCheckBox(
+            "Chekda shtrix-kod (chek raqami) chiqarish"
+        )
+
+        receipt_form.addRow("Printer:", self.receipt_printer_combo)
+        receipt_form.addRow("Qog'oz kengligi:", self.receipt_paper_combo)
+        receipt_form.addRow("Pastki yozuv:", self.receipt_footer_edit)
+
+        self.test_receipt_view_button = SecondaryButton("Sinov chekini ko'rish")
+        self.test_receipt_view_button.clicked.connect(self.view_test_receipt)
+        self.test_receipt_print_button = SecondaryButton("Sinov chekini chop etish")
+        self.test_receipt_print_button.clicked.connect(self.print_test_receipt)
+
+        receipt_buttons = QHBoxLayout()
+        receipt_buttons.addWidget(self.test_receipt_view_button)
+        receipt_buttons.addWidget(self.test_receipt_print_button)
+        receipt_buttons.addStretch()
 
         # Sahifadagi yagona amal — saqlash, shuning uchun yagona
         # qora PrimaryButton.
@@ -130,6 +167,11 @@ class SettingsPage(QWidget):
         main_layout.addWidget(fiscal_title)
         main_layout.addLayout(fiscal_form)
         main_layout.addWidget(self.fiscal_hint_label)
+        main_layout.addWidget(receipt_title)
+        main_layout.addLayout(receipt_form)
+        main_layout.addWidget(self.receipt_auto_print_checkbox)
+        main_layout.addWidget(self.receipt_barcode_checkbox)
+        main_layout.addLayout(receipt_buttons)
         main_layout.addWidget(self.save_button)
         main_layout.addWidget(backup_title)
         main_layout.addLayout(backup_row)
@@ -161,6 +203,63 @@ class SettingsPage(QWidget):
         self.store_legal_name_edit.setText(fiscal["store_legal_name"])
         self.default_vat_edit.setText(f"{fiscal['default_vat_rate']:g}")
         self._refresh_fiscal_hint(fiscal)
+        self._load_receipt_settings()
+
+    def _load_receipt_settings(self):
+        receipt = ReceiptService.get_settings()
+
+        self.receipt_printer_combo.clear()
+        self.receipt_printer_combo.addItem("Tizim standarti", "")
+
+        names = ReceiptService.list_printers()
+
+        for name in names:
+            self.receipt_printer_combo.addItem(name, name)
+
+        saved = receipt["printer"]
+
+        if saved and saved not in names:
+            # Saqlangan printer hozir ulanmagan — tanlov yo'qolmasin.
+            self.receipt_printer_combo.addItem(f"{saved} (topilmadi)", saved)
+
+        self.receipt_printer_combo.setCurrentIndex(
+            max(0, self.receipt_printer_combo.findData(saved))
+        )
+        self.receipt_paper_combo.setCurrentIndex(
+            max(0, self.receipt_paper_combo.findData(receipt["paper_mm"]))
+        )
+        self.receipt_footer_edit.setText(receipt["footer"])
+        self.receipt_auto_print_checkbox.setChecked(receipt["auto_print"])
+        self.receipt_barcode_checkbox.setChecked(receipt["show_barcode"])
+
+    def _receipt_form_data(self):
+        return {
+            "printer": self.receipt_printer_combo.currentData() or "",
+            "paper_mm": self.receipt_paper_combo.currentData(),
+            "footer": self.receipt_footer_edit.text(),
+            "auto_print": self.receipt_auto_print_checkbox.isChecked(),
+            "show_barcode": self.receipt_barcode_checkbox.isChecked(),
+        }
+
+    def view_test_receipt(self):
+        # Ko'rish uchun avval joriy tanlovlarni saqlaymiz (qog'oz kengligi
+        # va yozuv ko'rinishga ta'sir qiladi).
+        try:
+            ReceiptService.save_settings(self._receipt_form_data())
+        except ValueError as error:
+            QMessageBox.warning(self, "Diqqat", str(error))
+            return
+
+        ReceiptPreviewDialog(ReceiptService.build_sample(), self).exec()
+
+    def print_test_receipt(self):
+        try:
+            ReceiptService.save_settings(self._receipt_form_data())
+            ReceiptService.print_test()
+        except ValueError as error:
+            QMessageBox.warning(self, "Diqqat", str(error))
+        except ReceiptPrintError as error:
+            QMessageBox.warning(self, "Chek chop etilmadi", str(error))
 
     def _refresh_fiscal_hint(self, fiscal):
         gaps = ProductService.get_fiscal_gaps()
@@ -195,6 +294,12 @@ class SettingsPage(QWidget):
                 "store_legal_name": self.store_legal_name_edit.text(),
                 "default_vat_rate": self.default_vat_edit.text(),
             })
+        except ValueError as error:
+            QMessageBox.warning(self, "Diqqat", str(error))
+            return
+
+        try:
+            ReceiptService.save_settings(self._receipt_form_data())
         except ValueError as error:
             QMessageBox.warning(self, "Diqqat", str(error))
             return

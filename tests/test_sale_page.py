@@ -268,3 +268,59 @@ def test_mixed_sale_goes_through_touch_dialog(selling_page, monkeypatch):
     sale = SaleService.get_all_sales()[0]
     assert (sale.cash_amount, sale.card_amount) == (5000, 5000)
     assert stock_of(sut) == 49
+
+
+# ---------- avtomatik chek chop etish ----------
+
+def test_auto_print_called_with_sale_id_when_enabled(selling_page, monkeypatch):
+    from app.services.receipt_service import ReceiptService
+    from app.services.sale_service import SaleService
+    from app.ui.payment_dialog import PaymentDialog
+
+    ReceiptService.save_settings({"paper_mm": "80", "auto_print": True})
+    printed = []
+    monkeypatch.setattr(ReceiptService, "print_sale", lambda sale_id, pdf_path=None: printed.append(sale_id))
+    monkeypatch.setattr(PaymentDialog, "exec", lambda self: self.ok_button.isEnabled())
+
+    selling_page.add_to_cart(ids(selling_page)["non"], 1)
+    selling_page.complete_sale("cash")
+
+    sale = SaleService.get_all_sales()[0]
+    assert printed == [sale.id]
+
+
+def test_auto_print_off_by_default(selling_page, monkeypatch):
+    from app.services.receipt_service import ReceiptService
+    from app.ui.payment_dialog import PaymentDialog
+
+    printed = []
+    monkeypatch.setattr(ReceiptService, "print_sale", lambda sale_id, pdf_path=None: printed.append(sale_id))
+    monkeypatch.setattr(PaymentDialog, "exec", lambda self: self.ok_button.isEnabled())
+
+    selling_page.add_to_cart(ids(selling_page)["non"], 1)
+    selling_page.complete_sale("cash")
+
+    assert printed == []
+
+
+def test_print_failure_does_not_undo_the_sale_and_warns(selling_page, monkeypatch):
+    from app.services.receipt_service import ReceiptPrintError, ReceiptService
+    from app.services.sale_service import SaleService
+    from app.ui.payment_dialog import PaymentDialog
+
+    ReceiptService.save_settings({"paper_mm": "80", "auto_print": True})
+
+    def broken(sale_id, pdf_path=None):
+        raise ReceiptPrintError("Printer o'chiq")
+
+    monkeypatch.setattr(ReceiptService, "print_sale", broken)
+    monkeypatch.setattr(PaymentDialog, "exec", lambda self: self.ok_button.isEnabled())
+    non = ids(selling_page)["non"]
+    selling_page.add_to_cart(non, 2)
+
+    selling_page.complete_sale("cash")
+
+    assert len(SaleService.get_all_sales()) == 1            # savdo saqlandi
+    assert stock_of(non) == 3
+    assert selling_page.cart == {}
+    assert any("Printer o'chiq" in str(w) for w in selling_page._warnings)

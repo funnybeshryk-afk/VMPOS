@@ -41,7 +41,7 @@ Fiskal holat: `none` (fiskallashtirilmagan) → `pending` (navbatda) →
 4. Qaysi **soliq rejimi** va fiskalizatsiya majburiymi — buxgalter/soliq.
 
 ## Keyingi qadamlar
-2. Chek chop etish (termoprinter, ESC/POS) — fiskal rekvizitlarsiz ham foydali.
+2. ~~Chek chop etish~~ — **tayyor** (fiskal rekvizitlarsiz, qarang: "Chek chop etish" pastda).
 3. "Fiskal provayder" abstraksiyasi: navbat, qayta urinish, takroriy
    yuborishdan himoya, holat ko'rsatish; tanlangan operator uchun bitta
    amalga oshirish (uning hujjati va test muhiti bo'yicha).
@@ -51,3 +51,24 @@ Fiskal holat: `none` (fiskallashtirilmagan) → `pending` (navbatda) →
 Sxema v2 bazasini eski dastur (≤ 1.2.0) OCHMAYDI (DatabaseTooNewError,
 ma'lumotga tegilmaydi) — foydalanuvchi avval dasturni yangilashi kerak.
 Shuning uchun bu o'zgarish yangi reliz bilan birga chiqadi.
+
+## Chek chop etish (fiskal EMAS)
+
+- Mazmun: `app/utils/receipt.py` (sof ma'lumot, Qt'siz), chizish/chop
+  etish: `app/utils/receipt_render.py`, sozlamalar va tuzish:
+  `app/services/receipt_service.py`.
+- Chek 203 dpi nuqtalariga mos rasm sifatida chiziladi (58 mm — 384, 80 mm
+  — 576 nuqta) va **tizimdagi oddiy printer drayveri** orqali chop etiladi
+  (ESC/POS qo'lda yuborilmaydi); shuningdek PDF.
+- Chekda: do'kon nomi/manzil/telefon, STIR (bo'lsa), chek raqami va sana,
+  qatorlar, JAMI, QQS (stavka bo'yicha), to'lov turi (naqd/karta/aralash/
+  nasiya), pastki yozuv, **"Fiskal chek emas"** (fiskal belgi `sent`
+  bo'lguncha), chek raqamining Code128 shtrix-kodi (qaytarishda qidirish).
+- Qaytarilgan cheklar "** Qaytarilgan **" deb belgilanadi.
+- Sozlamalar: printer, qog'oz (58/80), pastki yozuv, shtrix-kod, avtomatik
+  chop etish (standart — o'chiq). Chek tafsilotlarida "ko'rish" va
+  "qayta chop etish".
+- Chop etish xatosi savdoni bekor qilmaydi: savdo saqlangan, kassirga xabar
+  ko'rsatiladi.
+- Chekda KASSIR nomi yo'q (savdo jadvalida saqlanmaydi) — kerak bo'lsa
+  `sales.cashier_name` qo'shiladi.

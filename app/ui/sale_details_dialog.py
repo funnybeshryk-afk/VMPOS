@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import (
+    QMessageBox,
     QDialog,
     QHBoxLayout,
     QLabel,
@@ -6,7 +7,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from app.services.receipt_service import ReceiptPrintError, ReceiptService
 from app.services.sale_service import SaleService
+from app.ui.receipt_preview_dialog import ReceiptPreviewDialog
 from app.ui.return_dialog import ReturnDialog
 from app.utils.formatters import format_money, format_quantity
 from app.widgets.badge import (
@@ -65,6 +68,13 @@ class SaleDetailsDialog(QDialog):
         self.refund_button = DangerButton("Qaytarish")
         self.refund_button.clicked.connect(self.open_return_dialog)
 
+        # Chekni qayta chop etish / ko'rish (FISKAL emas).
+        self.view_receipt_button = SecondaryButton("Chekni ko'rish")
+        self.view_receipt_button.clicked.connect(self.view_receipt)
+
+        self.print_receipt_button = SecondaryButton("Chekni chop etish")
+        self.print_receipt_button.clicked.connect(self.print_receipt)
+
         close_button = SecondaryButton("Yopish")
         close_button.clicked.connect(self.accept)
 
@@ -72,6 +82,11 @@ class SaleDetailsDialog(QDialog):
         main_layout.addWidget(self.items_table)
         main_layout.addWidget(self.total_label)
         main_layout.addWidget(self.vat_label)
+        receipt_row = QHBoxLayout()
+        receipt_row.addWidget(self.view_receipt_button)
+        receipt_row.addWidget(self.print_receipt_button)
+
+        main_layout.addLayout(receipt_row)
         main_layout.addWidget(self.refund_button)
         main_layout.addWidget(close_button)
 
@@ -93,6 +108,16 @@ class SaleDetailsDialog(QDialog):
         self.refund_button.setDisabled(sale.status == "refunded")
 
         self.load_sale_items(sale.id)
+
+    def view_receipt(self):
+        receipt = ReceiptService.build_for_sale(self.sale.id)
+        ReceiptPreviewDialog(receipt, self).exec()
+
+    def print_receipt(self):
+        try:
+            ReceiptService.print_sale(self.sale.id)
+        except ReceiptPrintError as error:
+            QMessageBox.warning(self, "Chek chop etilmadi", str(error))
 
     @staticmethod
     def _vat_text(sale):

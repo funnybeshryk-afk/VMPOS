@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.services.customer_service import CustomerService
+from app.services.receipt_service import ReceiptPrintError, ReceiptService
 from app.services.product_service import ProductService
 from app.services.sale_service import SaleService
 from app.services.shift_service import ShiftService
@@ -838,6 +839,20 @@ class SalePage(QWidget):
         self.clear_cart()
         self.load_products()
         play_payment_sound()
+
+        # Avtomatik chek chop etish (Sozlamalar). Savdo allaqachon
+        # saqlangan: chop etish xatosi savdoga ta'sir qilmaydi, faqat
+        # kassirga ko'rsatiladi (qayta chop etish — chek tafsilotlaridan).
+        if ReceiptService.get_settings()["auto_print"]:
+            try:
+                ReceiptService.print_sale(sale.id)
+            except ReceiptPrintError as error:
+                QMessageBox.warning(
+                    self,
+                    "Chek chop etilmadi",
+                    f"{error}\n\nSavdo saqlandi. Chekni keyinroq "
+                    "Hisobotlar -> chek tafsilotlaridan chop etishingiz mumkin.",
+                )
 
         if payment_method == "debt":
             result_text = (
