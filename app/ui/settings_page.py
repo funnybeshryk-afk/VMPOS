@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.services.backup_service import BackupService
+from app.services.product_service import ProductService
 from app.services.settings_service import SettingsService
 from app.ui.backup_restore_dialog import BackupRestoreDialog
 from app.ui.update_flow import UpdateFlow
@@ -40,6 +41,27 @@ class SettingsPage(QWidget):
         form_layout.addRow("Do'kon nomi:", self.store_name_edit)
         form_layout.addRow("Telefon:", self.store_phone_edit)
         form_layout.addRow("Manzil:", self.store_address_edit)
+
+        # Soliq rekvizitlari — fiskalizatsiyaga tayyorgarlik (hozircha
+        # hech narsa soliq operatoriga yuborilmaydi).
+        fiscal_title = QLabel("Soliq rekvizitlari")
+        fiscal_title.setObjectName("sectionTitle")
+
+        fiscal_form = QFormLayout()
+
+        self.store_tin_edit = QLineEdit()
+        self.store_tin_edit.setPlaceholderText("9 yoki 14 xona")
+        self.store_legal_name_edit = QLineEdit()
+        self.default_vat_edit = QLineEdit()
+        self.default_vat_edit.setPlaceholderText("Masalan: 12 (QQS to'lovchisi bo'lmasa — 0)")
+
+        fiscal_form.addRow("STIR:", self.store_tin_edit)
+        fiscal_form.addRow("Yuridik nomi:", self.store_legal_name_edit)
+        fiscal_form.addRow("Standart QQS, %:", self.default_vat_edit)
+
+        self.fiscal_hint_label = QLabel()
+        self.fiscal_hint_label.setObjectName("mutedText")
+        self.fiscal_hint_label.setWordWrap(True)
 
         # Sahifadagi yagona amal — saqlash, shuning uchun yagona
         # qora PrimaryButton.
@@ -105,6 +127,9 @@ class SettingsPage(QWidget):
 
         main_layout.addWidget(title)
         main_layout.addLayout(form_layout)
+        main_layout.addWidget(fiscal_title)
+        main_layout.addLayout(fiscal_form)
+        main_layout.addWidget(self.fiscal_hint_label)
         main_layout.addWidget(self.save_button)
         main_layout.addWidget(backup_title)
         main_layout.addLayout(backup_row)
@@ -131,6 +156,26 @@ class SettingsPage(QWidget):
         self.store_phone_edit.setText(settings["store_phone"])
         self.store_address_edit.setText(settings["store_address"])
 
+        fiscal = SettingsService.get_fiscal_settings()
+        self.store_tin_edit.setText(fiscal["store_tin"])
+        self.store_legal_name_edit.setText(fiscal["store_legal_name"])
+        self.default_vat_edit.setText(f"{fiscal['default_vat_rate']:g}")
+        self._refresh_fiscal_hint(fiscal)
+
+    def _refresh_fiscal_hint(self, fiscal):
+        gaps = ProductService.get_fiscal_gaps()
+        mode = (
+            "o'chiq (soliq operatori hali ulanmagan)"
+            if fiscal["fiscal_mode"] == SettingsService.FISCAL_MODE_OFF
+            else fiscal["fiscal_mode"]
+        )
+
+        self.fiscal_hint_label.setText(
+            f"Fiskalizatsiya: {mode}. "
+            f"IKPU kodi yo'q: {gaps['missing_ikpu']} / {gaps['total']} "
+            f"mahsulot, qadoq kodi yo'q: {gaps['missing_package']}."
+        )
+
     def save_settings(self):
         store_name = self.store_name_edit.text().strip()
 
@@ -140,6 +185,18 @@ class SettingsPage(QWidget):
                 "Diqqat",
                 "Do'kon nomini kiriting.",
             )
+            return
+
+        # Soliq rekvizitlari avval tekshiriladi: xato bo'lsa hech narsa
+        # saqlanmaydi (yarim saqlash yo'q).
+        try:
+            SettingsService.save_fiscal_settings({
+                "store_tin": self.store_tin_edit.text(),
+                "store_legal_name": self.store_legal_name_edit.text(),
+                "default_vat_rate": self.default_vat_edit.text(),
+            })
+        except ValueError as error:
+            QMessageBox.warning(self, "Diqqat", str(error))
             return
 
         SettingsService.save_store_settings({

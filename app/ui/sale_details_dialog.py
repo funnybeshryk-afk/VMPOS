@@ -55,6 +55,10 @@ class SaleDetailsDialog(QDialog):
         self.total_label = QLabel()
         self.total_label.setObjectName("cartTotal")
 
+        # QQS va fiskal holat (bo'lsa) — chek jami ostida kichik qatorda.
+        self.vat_label = QLabel()
+        self.vat_label.setObjectName("mutedText")
+
         # Qaytarish — omborga tovar qaytadi va chekning moliyaviy
         # summasi kamayadi, orqaga qaytarib bo'lmaydi — shuning uchun
         # DangerButton. To'liq/qisman tanlov endi ReturnDialog ichida.
@@ -67,6 +71,7 @@ class SaleDetailsDialog(QDialog):
         main_layout.addLayout(header_layout)
         main_layout.addWidget(self.items_table)
         main_layout.addWidget(self.total_label)
+        main_layout.addWidget(self.vat_label)
         main_layout.addWidget(self.refund_button)
         main_layout.addWidget(close_button)
 
@@ -82,9 +87,30 @@ class SaleDetailsDialog(QDialog):
             f"Jami: {format_money(sale.total_amount)} so'm"
         )
 
+        self.vat_label.setText(self._vat_text(sale))
+        self.vat_label.setVisible(bool(self.vat_label.text()))
+
         self.refund_button.setDisabled(sale.status == "refunded")
 
         self.load_sale_items(sale.id)
+
+    @staticmethod
+    def _vat_text(sale):
+        parts = []
+
+        if (sale.vat_total or 0) > 0:
+            parts.append(f"QQS: {format_money(sale.vat_total)} so'm")
+
+        fiscal_text = {
+            "pending": "Fiskal: yuborilmoqda",
+            "sent": "Fiskal: yuborilgan",
+            "failed": "Fiskal: xato",
+        }.get(sale.fiscal_status)
+
+        if fiscal_text:
+            parts.append(fiscal_text)
+
+        return " · ".join(parts)
 
     def load_sale_items(self, sale_id):
         sale_items = SaleService.get_sale_items(sale_id)

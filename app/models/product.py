@@ -27,6 +27,14 @@ class Product(Base):
     # "assets/products/<uuid>.jpg") — rasm bo'lmasa None.
     image_path = Column(String(255))
 
+    # Fiskal ma'lumotlar. IKPU (MXIK) — mahsulot klassifikatori kodi,
+    # qadoq kodi — o'ram birligi; ikkalasi ham fiskal chekda talab
+    # qilinadi. vat_rate (%) bo'sh (None) bo'lsa — do'konning standart
+    # QQS stavkasi (Sozlamalar) qo'llanadi.
+    ikpu_code = Column(String(20))
+    package_code = Column(String(20))
+    vat_rate = Column(Float)
+
     # O'qish uchun ProductService.get_price_tiers() ishlatiladi
     # (session yopilgach lazy-load qilib bo'lmaydi) — bu relationship
     # faqat mahsulot o'chirilganda tegishli optom narxlar ham

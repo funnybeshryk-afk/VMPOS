@@ -4,9 +4,10 @@ from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.database.base import Base
+from app.models.fiscal import FiscalFieldsMixin
 
 
-class Sale(Base):
+class Sale(FiscalFieldsMixin, Base):
     __tablename__ = "sales"
 
     id = Column(Integer, primary_key=True)
@@ -61,5 +62,12 @@ class SaleItem(Base):
     # qaytarish operatsiyasida ustma-ust to'planadi. Qoldiq (yana
     # qancha qaytarish mumkin) = quantity - returned_quantity.
     returned_quantity = Column(Float, default=0, nullable=False)
+
+    # Sotuv paytidagi "surat" (mahsulot keyin o'zgarsa ham chek
+    # o'zgarmaydi): IKPU, qadoq kodi, QQS stavkasi va summasi.
+    ikpu_code = Column(String(20))
+    package_code = Column(String(20))
+    vat_rate = Column(Float, default=0, nullable=False)
+    vat_amount = Column(Float, default=0, nullable=False)
 
     sale = relationship("Sale", back_populates="items")

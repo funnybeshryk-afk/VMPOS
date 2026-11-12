@@ -4,6 +4,8 @@ from app.models.debt_payment import DebtPayment
 from app.models.product import Product
 from app.models.refund import Refund, RefundItem
 from app.models.sale import Sale, SaleItem
+from app.services.fiscal_service import FiscalService
+from app.utils.vat import vat_included
 
 _TOLERANCE = 0.001
 
@@ -60,11 +62,13 @@ class RefundService:
                 cashier_name=cashier_name,
                 cashier_user_id=cashier_user_id,
                 total_amount=0,
+                fiscal_status=FiscalService.initial_refund_status(sale),
             )
             session.add(refund)
             session.flush()
 
             total_refund = 0
+            vat_total = 0.0
 
             for entry in items:
                 quantity = entry["quantity"]
@@ -93,6 +97,11 @@ class RefundService:
                 line_total = sale_item.price * quantity
                 total_refund += line_total
 
+                # QQS — chekdagi (sotuv paytidagi) stavka bo'yicha,
+                # mahsulot stavkasi keyin o'zgargan bo'lsa ham.
+                vat_amount = vat_included(line_total, sale_item.vat_rate)
+                vat_total += vat_amount
+
                 sale_item.returned_quantity += quantity
 
                 product = session.get(Product, sale_item.product_id)
@@ -109,8 +118,11 @@ class RefundService:
                         unit_price=sale_item.price,
                         quantity=quantity,
                         line_total=line_total,
+                        vat_amount=vat_amount,
                     )
                 )
+
+            refund.vat_total = round(vat_total, 2)
 
             if total_refund <= 0:
                 raise ValueError(

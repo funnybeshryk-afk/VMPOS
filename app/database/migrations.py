@@ -138,6 +138,14 @@ def apply_migrations():
             "card_amount": (
                 "FLOAT NOT NULL DEFAULT 0"
             ),
+            "vat_total": "FLOAT NOT NULL DEFAULT 0",
+            "fiscal_status": "VARCHAR(20) NOT NULL DEFAULT 'none'",
+            "fiscal_receipt_id": "VARCHAR(64)",
+            "fiscal_sign": "VARCHAR(255)",
+            "fiscal_qr_url": "VARCHAR(512)",
+            "fiscal_at": "DATETIME",
+            "fiscal_error": "TEXT",
+            "fiscal_attempts": "INTEGER NOT NULL DEFAULT 0",
         },
         "stock_receipts": {
             "supplier_id": "INTEGER",
@@ -154,6 +162,9 @@ def apply_migrations():
         },
         "products": {
             "image_path": "VARCHAR(255)",
+            "ikpu_code": "VARCHAR(20)",
+            "package_code": "VARCHAR(20)",
+            "vat_rate": "FLOAT",
         },
         "debt_payments": {
             "type": "VARCHAR(20) NOT NULL DEFAULT 'payment'",
@@ -164,6 +175,23 @@ def apply_migrations():
         },
         "sale_items": {
             "returned_quantity": "FLOAT NOT NULL DEFAULT 0",
+            "ikpu_code": "VARCHAR(20)",
+            "package_code": "VARCHAR(20)",
+            "vat_rate": "FLOAT NOT NULL DEFAULT 0",
+            "vat_amount": "FLOAT NOT NULL DEFAULT 0",
+        },
+        "refunds": {
+            "vat_total": "FLOAT NOT NULL DEFAULT 0",
+            "fiscal_status": "VARCHAR(20) NOT NULL DEFAULT 'none'",
+            "fiscal_receipt_id": "VARCHAR(64)",
+            "fiscal_sign": "VARCHAR(255)",
+            "fiscal_qr_url": "VARCHAR(512)",
+            "fiscal_at": "DATETIME",
+            "fiscal_error": "TEXT",
+            "fiscal_attempts": "INTEGER NOT NULL DEFAULT 0",
+        },
+        "refund_items": {
+            "vat_amount": "FLOAT NOT NULL DEFAULT 0",
         },
     }
 

@@ -37,7 +37,7 @@ class ProductDialog(QDialog):
         super().__init__()
 
         self.setWindowTitle("Yangi mahsulot")
-        self.resize(450, 560)
+        self.resize(480, 680)
 
         layout = QFormLayout(self)
 
@@ -55,6 +55,15 @@ class ProductDialog(QDialog):
         self.quantity = QLineEdit()
         self.min_quantity = QLineEdit()
         self.description = QTextEdit()
+
+        # Fiskal ma'lumotlar (soliq chekida talab qilinadi).
+        self.ikpu_code = QLineEdit()
+        self.package_code = QLineEdit()
+        self.vat_rate = QLineEdit()
+
+        self.ikpu_code.setPlaceholderText("IKPU (MXIK) kodi — faqat raqamlar")
+        self.package_code.setPlaceholderText("Qadoq kodi — faqat raqamlar")
+        self.vat_rate.setPlaceholderText("Bo'sh = do'konning standart stavkasi")
 
         self.buy_price.setPlaceholderText("Masalan: 15 000,50")
         self.sell_price.setPlaceholderText("Masalan: 18 000")
@@ -75,6 +84,11 @@ class ProductDialog(QDialog):
                 format_quantity(product.min_quantity)
             )
             self.description.setPlainText(product.description or "")
+            self.ikpu_code.setText(product.ikpu_code or "")
+            self.package_code.setText(product.package_code or "")
+
+            if product.vat_rate is not None:
+                self.vat_rate.setText(f"{product.vat_rate:g}")
 
         layout.addRow("Shtrix kod", self.barcode)
         layout.addRow("Nomi", self.name)
@@ -84,6 +98,9 @@ class ProductDialog(QDialog):
         layout.addRow("Birlik", self.unit)
         layout.addRow("Qoldiq", self.quantity)
         layout.addRow("Minimal qoldiq", self.min_quantity)
+        layout.addRow("IKPU kodi", self.ikpu_code)
+        layout.addRow("Qadoq kodi", self.package_code)
+        layout.addRow("QQS stavkasi, %", self.vat_rate)
 
         # Optom narxlar — ixtiyoriy. Odatda mahsulotda bitta ham
         # qator yo'q, bu holda oddiy sotish narxi doim qo'llanadi.
@@ -298,6 +315,10 @@ class ProductDialog(QDialog):
                 self.min_quantity.text()
             ),
             "description": self.description.toPlainText(),
+            "ikpu_code": self.ikpu_code.text(),
+            "package_code": self.package_code.text(),
+            # Bo'sh -> None: do'konning standart QQS stavkasi qo'llanadi.
+            "vat_rate": self.vat_rate.text().strip() or None,
             "price_tiers": self.get_price_tiers_data(),
             "image_source_path": self._selected_image_source_path,
             "remove_image": self._remove_image,

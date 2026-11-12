@@ -5,8 +5,10 @@ from app.models.customer import Customer
 from app.models.debt_payment import DebtPayment
 from app.models.product import Product
 from app.models.sale import Sale, SaleItem
+from app.services.fiscal_service import FiscalService
 from app.services.product_service import ProductService
-
+from app.services.settings_service import SettingsService
+from app.utils.vat import effective_vat_rate, vat_included
 
 class SaleService:
 
@@ -145,15 +147,28 @@ class SaleService:
                 cash_amount=cash_amount,
                 card_amount=card_amount,
                 status="completed",
+                fiscal_status=FiscalService.initial_sale_status(),
             )
             session.add(sale)
             session.flush()
+
+            default_vat_rate = SettingsService.get_fiscal_settings()[
+                "default_vat_rate"
+            ]
+            vat_total = 0.0
 
             for product_id, item in cart.items():
                 product = products[product_id]
                 quantity = item["quantity"]
                 unit_price = unit_prices[product_id]
                 line_total = unit_price * quantity
+
+                # QQS "surat": stavka va summa sotuv paytida qotiriladi.
+                vat_rate = effective_vat_rate(
+                    product.vat_rate, default_vat_rate
+                )
+                vat_amount = vat_included(line_total, vat_rate)
+                vat_total += vat_amount
 
                 sale_item = SaleItem(
                     sale_id=sale.id,
@@ -162,10 +177,16 @@ class SaleService:
                     price=unit_price,
                     quantity=quantity,
                     line_total=line_total,
+                    ikpu_code=product.ikpu_code,
+                    package_code=product.package_code,
+                    vat_rate=vat_rate,
+                    vat_amount=vat_amount,
                 )
 
                 product.quantity -= quantity
                 session.add(sale_item)
+
+            sale.vat_total = round(vat_total, 2)
 
             if payment_method == "debt":
                 customer = session.get(Customer, customer_id)

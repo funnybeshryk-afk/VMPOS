@@ -4,9 +4,10 @@ from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.database.base import Base
+from app.models.fiscal import FiscalFieldsMixin
 
 
-class Refund(Base):
+class Refund(FiscalFieldsMixin, Base):
     """Bitta qaytarish operatsiyasi — bitta chekning bir yoki bir necha
     qatorini (to'liq yoki qisman) qamrab oladi.
 
@@ -52,5 +53,8 @@ class RefundItem(Base):
     unit_price = Column(Float, nullable=False)
     quantity = Column(Float, nullable=False)
     line_total = Column(Float, nullable=False)
+
+    # Chekdagi QQS stavkasi bo'yicha (sotuv paytidagi "surat").
+    vat_amount = Column(Float, default=0, nullable=False)
 
     refund = relationship("Refund", back_populates="items")

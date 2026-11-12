@@ -7,6 +7,11 @@ from app.models.price_tier import PriceTier
 from app.models.product import Product
 from app.models.stock_receipt import StockReceipt
 from app.models.supplier import Supplier
+from app.utils.vat import (
+    validate_ikpu,
+    validate_package_code,
+    validate_vat_rate,
+)
 from app.utils.paths import (
     get_product_images_dir,
     resolve_data_path,
@@ -61,6 +66,36 @@ class ProductService:
             barcode_number += 1
 
         return str(barcode_number)
+
+    @staticmethod
+    def _validate_fiscal(data):
+        """IKPU, qadoq kodi, QQS stavkasini tekshiradi (ValueError)."""
+
+        return {
+            "ikpu_code": validate_ikpu(data.get("ikpu_code")),
+            "package_code": validate_package_code(data.get("package_code")),
+            "vat_rate": validate_vat_rate(data.get("vat_rate")),
+        }
+
+    @staticmethod
+    def get_fiscal_gaps():
+        """Fiskalizatsiyaga tayyorgarlik: nechta mahsulotda IKPU / qadoq
+        kodi yo'q."""
+
+        session = SessionLocal()
+
+        try:
+            products = session.query(Product).all()
+
+            return {
+                "total": len(products),
+                "missing_ikpu": sum(1 for p in products if not p.ikpu_code),
+                "missing_package": sum(
+                    1 for p in products if not p.package_code
+                ),
+            }
+        finally:
+            session.close()
 
     @staticmethod
     def _validate_price_tiers(price_tiers):
@@ -124,6 +159,7 @@ class ProductService:
             price_tiers = ProductService._validate_price_tiers(
                 data.get("price_tiers") or []
             )
+            fiscal = ProductService._validate_fiscal(data)
 
             image_path = None
 
@@ -143,6 +179,9 @@ class ProductService:
                 min_quantity=data["min_quantity"],
                 description=data["description"],
                 image_path=image_path,
+                ikpu_code=fiscal["ikpu_code"] or None,
+                package_code=fiscal["package_code"] or None,
+                vat_rate=fiscal["vat_rate"],
             )
 
             session.add(product)
@@ -234,6 +273,14 @@ class ProductService:
             product.quantity = data["quantity"]
             product.min_quantity = data["min_quantity"]
             product.description = data["description"]
+
+            # Fiskal maydonlar faqat dialog yuborsa o'zgaradi (eski
+            # chaqiruvlar bu kalitlarni bermaydi — ular tegilmaydi).
+            if "ikpu_code" in data or "package_code" in data or "vat_rate" in data:
+                fiscal = ProductService._validate_fiscal(data)
+                product.ikpu_code = fiscal["ikpu_code"] or None
+                product.package_code = fiscal["package_code"] or None
+                product.vat_rate = fiscal["vat_rate"]
 
             # Rasm ustuni faqat foydalanuvchi uni bevosita o'zgartirsa
             # tegiladi — aks holda (na "olib tashlash" bosilgan, na
