@@ -1,57 +1,26 @@
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QDoubleSpinBox,
-    QFormLayout,
-    QLabel,
-)
+from app.ui.numeric_entry_dialog import NumericEntryDialog
+from app.utils.units import is_weight_unit
 
-from app.utils.formatters import format_money, format_quantity
+_WEIGHT_PRESETS = (("0,5", 0.5), ("1", 1), ("2", 2), ("5", 5))
 
 
-class QuantityEditDialog(QDialog):
-    def __init__(self, product, current_quantity, parent=None):
-        super().__init__(parent)
+class QuantityEditDialog(NumericEntryDialog):
+    """Korzinadagi miqdorni o'zgartirish — sensorli (raqamli blok)."""
 
-        self.setWindowTitle("Miqdorni o'zgartirish")
-        self.setMinimumWidth(320)
+    def __init__(self, product, current_quantity, parent=None, price_for=None):
+        weight = is_weight_unit(product.unit)
 
-        layout = QFormLayout(self)
-
-        product_name = QLabel(product.name)
-        price_label = QLabel(
-            f"{format_money(product.sell_price)} so'm"
+        super().__init__(
+            title="Miqdorni o'zgartirish",
+            product=product,
+            unit=(product.unit or "").strip() if weight else "ta",
+            allow_decimal=weight,
+            minimum=0.001 if weight else 1,
+            initial=current_quantity,
+            presets=_WEIGHT_PRESETS if weight else (),
+            price_for=price_for,
+            parent=parent,
         )
-
-        self.quantity_spinbox = QDoubleSpinBox()
-        self.quantity_spinbox.setMinimum(0.001)
-        self.quantity_spinbox.setMaximum(product.quantity)
-
-        unit = (product.unit or "").strip().lower()
-
-        if unit in {"kg", "кг"}:
-            self.quantity_spinbox.setDecimals(3)
-            self.quantity_spinbox.setSingleStep(0.1)
-            self.quantity_spinbox.setSuffix(" kg")
-        else:
-            self.quantity_spinbox.setDecimals(0)
-            self.quantity_spinbox.setMinimum(1)
-            self.quantity_spinbox.setSingleStep(1)
-
-        self.quantity_spinbox.setValue(current_quantity)
-
-        layout.addRow("Mahsulot:", product_name)
-        layout.addRow("Narxi:", price_label)
-        layout.addRow("Miqdor:", self.quantity_spinbox)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-        )
-
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-
-        layout.addRow(buttons)
 
     def get_quantity(self):
-        return self.quantity_spinbox.value()
+        return self.get_value()

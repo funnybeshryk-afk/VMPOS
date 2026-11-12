@@ -187,3 +187,84 @@ def test_rail_menu_accepts_old_and_new_entry_shapes(qapp):
     assert picked == ["settings"]
     assert menu._buttons_by_key["settings"].toolTip() == "Sozlamalar"
     assert menu._buttons_by_key["sale"].toolTip() == "Sotuv"
+
+
+# ---------- haqiqiy savdo: yangi sensorli dialoglar orqali oxirigacha ----------
+
+@pytest.fixture
+def selling_page(page, monkeypatch):
+    from app.services.shift_service import ShiftService
+
+    ShiftService.open_shift("Kassir", 0)
+    page.refresh_shift_panel()
+    monkeypatch.setattr(QMessageBox, "information", lambda *a, **k: None)
+    monkeypatch.setattr("app.ui.sale_page.play_payment_sound", lambda: None)
+    return page
+
+
+def stock_of(product_id):
+    return ProductService.get_product(product_id).quantity
+
+
+def test_cash_sale_with_note_chip_records_change_and_stock(selling_page, monkeypatch):
+    from app.services.sale_service import SaleService
+    from app.ui.payment_dialog import PaymentDialog
+
+    non = ids(selling_page)["non"]            # 4 000, qoldiq 5
+    selling_page.add_to_cart(non, 2)          # jami 8 000
+
+    def fake_exec(self):
+        self._add_note(20000)                 # mijoz 20 000 berdi
+        return self.ok_button.isEnabled()
+
+    monkeypatch.setattr(PaymentDialog, "exec", fake_exec)
+
+    selling_page.complete_sale("cash")
+
+    sale = SaleService.get_all_sales()[0]
+    assert sale.total_amount == 8000
+    assert sale.paid_amount == 20000
+    assert sale.change_amount == 12000
+    assert stock_of(non) == 3
+    assert selling_page.cart == {}
+
+
+def test_cash_sale_is_not_recorded_when_underpaid(selling_page, monkeypatch):
+    from app.services.sale_service import SaleService
+    from app.ui.payment_dialog import PaymentDialog
+
+    non = ids(selling_page)["non"]
+    selling_page.add_to_cart(non, 2)
+
+    def fake_exec(self):
+        self._edit("clear")
+        self._edit("digit", "5")              # 5 so'm — yetmaydi
+        return self.ok_button.isEnabled()     # tugma o'chiq -> False
+
+    monkeypatch.setattr(PaymentDialog, "exec", fake_exec)
+
+    selling_page.complete_sale("cash")
+
+    assert SaleService.get_all_sales() == []
+    assert stock_of(non) == 5
+    assert non in selling_page.cart
+
+
+def test_mixed_sale_goes_through_touch_dialog(selling_page, monkeypatch):
+    from app.services.sale_service import SaleService
+    from app.ui.mixed_payment_dialog import MixedPaymentDialog
+
+    sut = ids(selling_page)["sut"]
+    selling_page.add_to_cart(sut, 1)          # 10 000
+
+    def fake_exec(self):
+        self._split(0.5)                      # 5 000 naqd + 5 000 karta
+        return self.ok_button.isEnabled()
+
+    monkeypatch.setattr(MixedPaymentDialog, "exec", fake_exec)
+
+    selling_page.complete_sale("mixed")
+
+    sale = SaleService.get_all_sales()[0]
+    assert (sale.cash_amount, sale.card_amount) == (5000, 5000)
+    assert stock_of(sut) == 49

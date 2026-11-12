@@ -513,7 +513,13 @@ class SalePage(QWidget):
             return
 
         if self.is_weight_product(product):
-            dialog = WeightDialog(product, self)
+            dialog = WeightDialog(
+                product,
+                self,
+                price_for=lambda qty: self.resolve_cart_pricing(
+                    product, qty
+                )[0],
+            )
 
             if not dialog.exec():
                 return
@@ -625,10 +631,15 @@ class SalePage(QWidget):
 
         item = self.cart[product_id]
 
+        product = item["product"]
+
         dialog = QuantityEditDialog(
-            item["product"],
+            product,
             item["quantity"],
             self,
+            price_for=lambda qty: self.resolve_cart_pricing(
+                product, qty
+            )[0],
         )
 
         if not dialog.exec():

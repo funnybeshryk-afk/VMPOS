@@ -1126,6 +1126,10 @@ QFrame#totalBox {
     border-radius: 20px;
 }
 
+QFrame#totalBox QLabel {
+    background: transparent;
+}
+
 QLabel#cartTotalCaption {
     font-size: 17px;
     color: #a8a29e;
@@ -1181,4 +1185,139 @@ QPushButton#clearCartButton {
 QPushButton#clearCartButton:hover {
     color: #ffffff;
     background: transparent;
+}
+
+
+/* --------------------------------------------------------------------------
+   10. SENSORLI KIRITISH: raqamli blok, summa maydoni, dialog tugmalari
+
+   Klaviaturasiz ishlash uchun: miqdor, og'irlik, to'lov va nasiya
+   dialoglari shu qismlardan yig'iladi (app/widgets/numpad.py).
+   -------------------------------------------------------------------------- */
+
+QPushButton#padKey {
+    background: #ffffff;
+    color: #1c1917;
+    border: 1px solid #ece7df;
+    border-radius: 18px;
+    min-height: 64px;
+    padding: 0;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+QPushButton#padKey:hover {
+    border-color: #a8a29e;
+}
+
+QPushButton#padKey:pressed {
+    background: #ece7df;
+}
+
+QPushButton#padKey:disabled {
+    background: #faf8f4;
+    color: #a8a29e;
+}
+
+/* Tezkor tugmalar: "Aniq", "+50 000", "Hammasi" */
+
+QPushButton#padChip {
+    background: #d1fae5;
+    color: #065f46;
+    border: none;
+    border-radius: 16px;
+    min-height: 52px;
+    padding: 0 6px;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+QPushButton#padChip:hover {
+    background: #a7f3d0;
+}
+
+QPushButton#padChip:pressed {
+    background: #6ee7b7;
+}
+
+QPushButton#padChip:disabled {
+    background: #f3efe8;
+    color: #a8a29e;
+}
+
+QFrame#amountField {
+    background: #ffffff;
+    border: 2px solid #ece7df;
+    border-radius: 20px;
+}
+
+QFrame#amountField[active="true"] {
+    border-color: #059669;
+}
+
+QFrame#amountField[state="bad"] {
+    border-color: #dc2626;
+}
+
+QFrame#amountField QLabel {
+    background: transparent;
+}
+
+QLabel#amountCaption {
+    font-size: 14px;
+    color: #78716c;
+}
+
+QLabel#amountValue {
+    font-size: 42px;
+    font-weight: 800;
+    color: #1c1917;
+}
+
+QLabel#amountUnit {
+    font-size: 18px;
+    color: #78716c;
+    padding-bottom: 6px;
+}
+
+QLabel#entryProduct {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1c1917;
+}
+
+QLabel#entryHint {
+    font-size: 16px;
+    font-weight: 600;
+    color: #047857;
+}
+
+QLabel#entryHint[state="bad"] {
+    color: #dc2626;
+}
+
+QLabel#changeLabel {
+    font-size: 30px;
+    font-weight: 800;
+    color: #047857;
+}
+
+QLabel#changeLabel[state="bad"] {
+    color: #dc2626;
+}
+
+QPushButton#tabButton {
+    background: #ffffff;
+    border: 1px solid #ece7df;
+    border-radius: 22px;
+    min-height: 48px;
+    padding: 0 24px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+QPushButton#tabButton:checked {
+    background: #1c1917;
+    border-color: #1c1917;
+    color: #ffffff;
 }
