@@ -44,7 +44,7 @@ from app.widgets.shift_status_panel import ShiftStatusPanel
 from app.widgets.success_button import SuccessButton
 
 _SHIFT_REFRESH_INTERVAL_MS = 60_000
-_VIEW_TOGGLE_ICON_SIZE = 20
+_VIEW_TOGGLE_ICON_SIZE = 24
 _VIEW_TOGGLE_ICON_UNCHECKED = "#78716c"
 _VIEW_TOGGLE_ICON_CHECKED = "#ffffff"
 
@@ -58,11 +58,11 @@ class SalePage(QWidget):
         self.current_shift = None
 
         main_layout = QHBoxLayout(self)
-        main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(20)
+        main_layout.setContentsMargins(24, 24, 24, 24)
+        main_layout.setSpacing(22)
 
         left_layout = QVBoxLayout()
-        left_layout.setSpacing(14)
+        left_layout.setSpacing(16)
 
         self.search_edit = QLineEdit()
         self.search_edit.setObjectName("searchInput")
@@ -115,8 +115,10 @@ class SalePage(QWidget):
         left_layout.addWidget(self.category_bar)
         left_layout.addWidget(self.products_view_stack)
 
-        main_layout.addLayout(left_layout, 2)
-        main_layout.addWidget(self._build_cart_card(), 1)
+        # Katalog ~60%, korzina ~40% (keng korzina — yirik summa va
+        # barmoq uchun katta tugmalar).
+        main_layout.addLayout(left_layout, 3)
+        main_layout.addWidget(self._build_cart_card(), 2)
 
         self.setup_shortcuts()
         self.load_products()
@@ -138,46 +140,54 @@ class SalePage(QWidget):
         self._shift_refresh_timer.start(_SHIFT_REFRESH_INTERVAL_MS)
 
     def _build_cart_card(self):
-        """O'ng ustun: smena -> korzina -> jami -> to'lov, bitta oq
-        kartochkada (avval alohida plashka + jadval + 4 ta tugma edi)."""
+        """O'ng ustun: izumrud sarlavha -> smena -> korzina -> jami ->
+        to'lov, bitta oq kartochkada."""
 
         card = QFrame()
         card.setObjectName("cartCard")
-        card.setMinimumWidth(380)
+        card.setMinimumWidth(440)
 
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(18, 8, 18, 18)
-        layout.setSpacing(12)
+        layout.setContentsMargins(0, 0, 0, 16)
+        layout.setSpacing(10)
 
-        # Joriy smena — kassir kim ekanini va smena ochilganmi-yo'qmi
-        # ko'rsatadi. MainWindow buni Moliya sahifasiga o'tish
-        # tugmasiga ulaydi (openMoliyaRequested).
-        self.shift_panel = ShiftStatusPanel()
+        # Rangli sarlavha polosasi: "Korzina", mahsulotlar soni, Tozalash.
+        head = QFrame()
+        head.setObjectName("cartHead")
+        head.setFixedHeight(66)
 
         cart_title = QLabel("Korzina")
         cart_title.setObjectName("cartTitle")
 
         self.cart_count_label = QLabel("0")
         self.cart_count_label.setObjectName("cartCount")
-        self.cart_count_label.setFixedHeight(28)
-        self.cart_count_label.setMinimumWidth(28)
+        self.cart_count_label.setFixedHeight(30)
+        self.cart_count_label.setMinimumWidth(30)
         self.cart_count_label.setAlignment(Qt.AlignCenter)
 
-        # "Yangi savdo" (F5) — korzinani tozalaydi. Endi ikkinchi
-        # darajali, ixcham matnli tugma.
+        # "Yangi savdo" (F5) — korzinani tozalaydi.
         self.new_sale_button = QPushButton("Tozalash")
         self.new_sale_button.setObjectName("clearCartButton")
         self.new_sale_button.setCursor(Qt.PointingHandCursor)
         self.new_sale_button.setToolTip("Yangi savdo (F5)")
         self.new_sale_button.clicked.connect(self.clear_cart)
 
-        header_row = QHBoxLayout()
-        header_row.setContentsMargins(0, 4, 0, 0)
-        header_row.setSpacing(8)
-        header_row.addWidget(cart_title)
-        header_row.addWidget(self.cart_count_label)
-        header_row.addStretch()
-        header_row.addWidget(self.new_sale_button)
+        head_row = QHBoxLayout(head)
+        head_row.setContentsMargins(22, 0, 18, 0)
+        head_row.setSpacing(10)
+        head_row.addWidget(cart_title)
+        head_row.addWidget(self.cart_count_label)
+        head_row.addStretch()
+        head_row.addWidget(self.new_sale_button)
+
+        body = QVBoxLayout()
+        body.setContentsMargins(18, 0, 18, 0)
+        body.setSpacing(10)
+
+        # Joriy smena — kassir kim ekanini va smena ochilganmi-yo'qmi
+        # ko'rsatadi. MainWindow buni Moliya sahifasiga o'tish
+        # tugmasiga ulaydi (openMoliyaRequested).
+        self.shift_panel = ShiftStatusPanel()
 
         self.cart_list = CartList()
         self.cart_list.changeRequested.connect(self.change_quantity)
@@ -191,6 +201,11 @@ class SalePage(QWidget):
         self.cart_stack.addWidget(self.cart_list)
         self.cart_stack.addWidget(self.cart_empty_state)
 
+        # "Jami" — qora blok, ichida yorqin izumrud summa.
+        total_box = QFrame()
+        total_box.setObjectName("totalBox")
+        total_box.setFixedHeight(76)
+
         caption = QLabel("Jami")
         caption.setObjectName("cartTotalCaption")
 
@@ -199,8 +214,9 @@ class SalePage(QWidget):
         self.total_label.setTextFormat(Qt.RichText)
         self.total_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
 
-        total_row = QHBoxLayout()
-        total_row.addWidget(caption, 0, Qt.AlignBottom)
+        total_row = QHBoxLayout(total_box)
+        total_row.setContentsMargins(24, 0, 24, 0)
+        total_row.addWidget(caption)
         total_row.addStretch()
         total_row.addWidget(self.total_label)
 
@@ -215,9 +231,9 @@ class SalePage(QWidget):
             lambda: self.complete_sale("cash")
         )
         self.cash_payment_button.setIcon(
-            load_icon("layers", color="#ffffff", size=22)
+            load_icon("layers", color="#ffffff", size=24)
         )
-        self.cash_payment_button.setIconSize(QSize(22, 22))
+        self.cash_payment_button.setIconSize(QSize(24, 24))
 
         self.card_payment_button = self._make_alt_pay_button(
             "Karta", "credit-card", "card"
@@ -238,12 +254,14 @@ class SalePage(QWidget):
         alt_row.addWidget(self.mixed_payment_button)
         alt_row.addWidget(self.debt_payment_button)
 
-        layout.addWidget(self.shift_panel)
-        layout.addLayout(header_row)
-        layout.addWidget(self.cart_stack, 1)
-        layout.addLayout(total_row)
-        layout.addWidget(self.cash_payment_button)
-        layout.addLayout(alt_row)
+        body.addWidget(self.shift_panel)
+        body.addWidget(self.cart_stack, 1)
+        body.addWidget(total_box)
+        body.addWidget(self.cash_payment_button)
+        body.addLayout(alt_row)
+
+        layout.addWidget(head)
+        layout.addLayout(body, 1)
 
         return card
 
@@ -857,8 +875,8 @@ class SalePage(QWidget):
         total = self.calculate_cart_total()
         self.total_label.setText(
             f"{format_money(total)} "
-            "<span style='font-size:16px;font-weight:500;"
-            "color:#78716c'>so'm</span>"
+            "<span style='font-size:18px;font-weight:500;"
+            "color:#a8a29e'>so'm</span>"
         )
         self.cart_count_label.setText(str(len(self.cart)))
 

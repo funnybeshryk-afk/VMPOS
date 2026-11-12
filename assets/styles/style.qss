@@ -941,7 +941,7 @@ QToolButton#railItem {
     border: 2px solid transparent;
     border-radius: 16px;
     padding-top: 6px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -973,23 +973,30 @@ QToolButton#railAvatar:hover {
    barmoq uchun balandlik >= 44 px. */
 
 QLineEdit#searchInput {
-    min-height: 52px;
-    border-radius: 26px;
-    padding: 0 22px;
-    font-size: 15px;
+    min-height: 60px;
+    border-radius: 30px;
+    padding: 0 26px;
+    font-size: 17px;
 }
 
 QPushButton#viewToggleButton {
-    border-radius: 26px;
-    min-width: 52px;
-    min-height: 52px;
+    border-radius: 30px;
+    min-width: 60px;
+    min-height: 60px;
 }
 
 QPushButton#categoryTile {
-    min-height: 44px;
-    border-radius: 22px;
-    padding: 0 20px;
-    font-size: 14px;
+    min-height: 50px;
+    border-radius: 25px;
+    padding: 0 24px;
+    font-size: 16px;
+}
+
+/* Tanlangan kategoriya — izumrud (avval qora edi): "hozir shu ko'rsatilgan". */
+QPushButton#categoryTile:checked {
+    background: #059669;
+    border-color: #059669;
+    color: #ffffff;
 }
 
 /* 9.3 Korzina kartochkasi. */
@@ -1007,17 +1014,24 @@ QFrame#shiftBar {
     border-radius: 0;
 }
 
+QFrame#cartHead {
+    background: #059669;
+    border: none;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
 QLabel#cartTitle {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 800;
-    color: #1c1917;
+    color: #ffffff;
 }
 
 QLabel#cartCount {
-    background: #059669;
-    color: #ffffff;
-    border-radius: 14px;
-    font-size: 13px;
+    background: #ffffff;
+    color: #047857;
+    border-radius: 15px;
+    font-size: 15px;
     font-weight: 800;
 }
 
@@ -1043,31 +1057,31 @@ QFrame#cartRow QLabel {
 }
 
 QLabel#cartRowName {
-    font-size: 14px;
+    font-size: 17px;
     font-weight: 700;
     color: #1c1917;
 }
 
 QLabel#cartRowPrice {
-    font-size: 12px;
+    font-size: 14px;
     color: #78716c;
 }
 
 QLabel#cartRowTotal {
-    font-size: 15px;
+    font-size: 18px;
     font-weight: 800;
     color: #1c1917;
 }
 
 QPushButton#qtyMinus,
 QPushButton#qtyPlus {
-    min-width: 40px;
-    max-width: 40px;
-    min-height: 40px;
-    max-height: 40px;
+    min-width: 44px;
+    max-width: 44px;
+    min-height: 44px;
+    max-height: 44px;
     padding: 0;
-    border-radius: 20px;
-    font-size: 20px;
+    border-radius: 22px;
+    font-size: 22px;
     font-weight: 600;
 }
 
@@ -1090,10 +1104,10 @@ QPushButton#qtyPlus:hover {
 QPushButton#qtyValue {
     background: transparent;
     border: none;
-    min-height: 40px;
-    min-width: 44px;
+    min-height: 44px;
+    min-width: 48px;
     padding: 0 4px;
-    font-size: 16px;
+    font-size: 19px;
     font-weight: 800;
     color: #1c1917;
 }
@@ -1103,34 +1117,43 @@ QPushButton#qtyValue:hover {
     border-radius: 12px;
 }
 
+/* Jami — qora blok, yorqin izumrud summa (palitraga qo'shimcha ochiq
+   izumrud #34d399: faqat qora fonda o'qilishi uchun). */
+
+QFrame#totalBox {
+    background: #1c1917;
+    border: none;
+    border-radius: 20px;
+}
+
 QLabel#cartTotalCaption {
-    font-size: 16px;
-    color: #78716c;
+    font-size: 17px;
+    color: #a8a29e;
 }
 
 QLabel#cartTotalAmount {
-    font-size: 34px;
+    font-size: 38px;
     font-weight: 800;
-    color: #1c1917;
+    color: #34d399;
 }
 
 /* 9.4 To'lov tugmalari. Asosiysi — izumrud (pul qabul qilinadi),
    qolganlari — konturli. */
 
 QPushButton#successButton[sizeVariant="lg"] {
-    min-height: 64px;
-    font-size: 19px;
+    min-height: 68px;
+    font-size: 22px;
     font-weight: 800;
-    border-radius: 18px;
+    border-radius: 20px;
 }
 
 QPushButton#payAlt {
     background: #ffffff;
     color: #44403c;
-    min-height: 52px;
+    min-height: 54px;
     border: 2px solid #ece7df;
     border-radius: 16px;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     padding: 0 8px;
 }
@@ -1148,14 +1171,14 @@ QPushButton#payAlt:disabled {
 QPushButton#clearCartButton {
     background: transparent;
     border: none;
-    color: #78716c;
-    min-height: 32px;
+    color: #d1fae5;
+    min-height: 36px;
     padding: 0 10px;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
 }
 
 QPushButton#clearCartButton:hover {
-    color: #dc2626;
+    color: #ffffff;
     background: transparent;
 }

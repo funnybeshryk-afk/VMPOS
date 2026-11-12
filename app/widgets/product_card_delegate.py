@@ -17,15 +17,15 @@ from app.utils.units import is_weight_unit
 from app.widgets.badge import resolve_stock_status
 from app.widgets.product_list_model import CartQtyRole, ProductRole
 
-CARD_SIZE = QSize(216, 272)
+CARD_SIZE = QSize(244, 322)
 
 _CARD_MARGIN = 6
-_CARD_RADIUS = 20
-_PADDING = 12
-_PHOTO_HEIGHT = 112
-_PHOTO_RADIUS = 14
-_PLACEHOLDER_ICON_SIZE = 40
-_ADD_BUTTON_SIZE = 44
+_CARD_RADIUS = 22
+_PADDING = 14
+_PHOTO_HEIGHT = 150
+_PHOTO_RADIUS = 16
+_PLACEHOLDER_ICON_SIZE = 48
+_ADD_BUTTON_SIZE = 52
 
 # QListView virtuallashtirilgan bo'lishi uchun kartochka setIndexWidget()
 # orqali haqiqiy QWidget bilan emas, shu delegate ichida QPainter bilan
@@ -39,7 +39,7 @@ _COLOR_ACCENT = QColor("#059669")
 _COLOR_PHOTO_BG = QColor("#f6f3ee")
 _COLOR_INK = QColor("#1c1917")
 _COLOR_NAME = QColor("#1c1917")
-_COLOR_PRICE = QColor("#1c1917")
+_COLOR_PRICE = QColor("#047857")
 _COLOR_MUTED = QColor("#78716c")
 _COLOR_ON_DARK = QColor("#ffffff")
 _COLOR_PLACEHOLDER_ICON = "#a8a29e"
@@ -211,16 +211,16 @@ class ProductCardDelegate(QStyledItemDelegate):
         bg_color, text_color = _BADGE_COLORS[variant]
 
         font = QFont(painter.font())
-        font.setPointSize(8)
+        font.setPointSize(9)
         font.setBold(True)
 
         metrics = QFontMetrics(font)
-        badge_width = metrics.horizontalAdvance(text) + 20
-        badge_height = 22
+        badge_width = metrics.horizontalAdvance(text) + 24
+        badge_height = 26
 
         badge_rect = QRect(
-            photo_rect.right() - badge_width - 8,
-            photo_rect.top() + 8,
+            photo_rect.right() - badge_width - 10,
+            photo_rect.top() + 10,
             badge_width,
             badge_height,
         )
@@ -241,14 +241,14 @@ class ProductCardDelegate(QStyledItemDelegate):
             text = f"{format_quantity(quantity)} ta"
 
         font = QFont(painter.font())
-        font.setPointSize(9)
+        font.setPointSize(10)
         font.setBold(True)
 
         metrics = QFontMetrics(font)
-        width = metrics.horizontalAdvance(text) + 22
+        width = metrics.horizontalAdvance(text) + 26
 
         marker_rect = QRect(
-            photo_rect.left() + 8, photo_rect.top() + 8, width, 24
+            photo_rect.left() + 10, photo_rect.top() + 10, width, 28
         )
 
         self._paint_pill(
@@ -259,7 +259,7 @@ class ProductCardDelegate(QStyledItemDelegate):
         self, painter, option, product, content_rect, photo_rect
     ):
         name_font = QFont(option.font)
-        name_font.setPointSize(10)
+        name_font.setPointSize(12)
         name_font.setBold(True)
 
         # Narx va qoldiq qat'iy joyda turishi uchun nom 2 qator bilan
@@ -268,7 +268,7 @@ class ProductCardDelegate(QStyledItemDelegate):
             content_rect.left(),
             photo_rect.bottom() + 10,
             content_rect.width(),
-            38,
+            46,
         )
         painter.setFont(name_font)
         painter.setPen(_COLOR_NAME)
@@ -283,11 +283,11 @@ class ProductCardDelegate(QStyledItemDelegate):
         # Narx: raqam yirik, "so'm" kichik va xira — pul miqdori
         # birinchi o'qiladi.
         price_font = QFont(option.font)
-        price_font.setPointSize(13)
+        price_font.setPointSize(15)
         price_font.setBold(True)
 
         currency_font = QFont(option.font)
-        currency_font.setPointSize(9)
+        currency_font.setPointSize(10)
 
         price_text = format_money(product.sell_price)
         price_width = QFontMetrics(price_font).horizontalAdvance(price_text)
@@ -296,7 +296,7 @@ class ProductCardDelegate(QStyledItemDelegate):
             content_rect.left(),
             name_rect.bottom() + 2,
             content_rect.width(),
-            26,
+            32,
         )
         painter.setFont(price_font)
         painter.setPen(_COLOR_PRICE)
@@ -314,13 +314,13 @@ class ProductCardDelegate(QStyledItemDelegate):
 
         unit = (product.unit or "dona").strip() or "dona"
         stock_font = QFont(option.font)
-        stock_font.setPointSize(9)
+        stock_font.setPointSize(10)
 
         stock_rect = QRect(
             content_rect.left(),
-            content_rect.bottom() - 20,
+            content_rect.bottom() - 24,
             content_rect.width() - _ADD_BUTTON_SIZE - 8,
-            20,
+            24,
         )
         painter.setFont(stock_font)
         painter.setPen(_COLOR_MUTED)
@@ -347,7 +347,7 @@ class ProductCardDelegate(QStyledItemDelegate):
         painter.drawEllipse(button_rect)
 
         center = QPointF(button_rect.center()) + QPointF(0.5, 0.5)
-        arm = 8
+        arm = 10
 
         painter.setPen(QPen(_COLOR_ON_DARK, 2.6, Qt.SolidLine, Qt.RoundCap))
         painter.drawLine(

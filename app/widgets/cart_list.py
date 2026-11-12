@@ -14,7 +14,7 @@ from app.utils.formatters import format_money, format_quantity
 from app.utils.units import is_weight_unit
 from app.widgets.badge import StatusBadge
 
-_ROW_HEIGHT = 92
+_ROW_HEIGHT = 88
 
 class _ElidedLabel(QLabel):
     """Sig'maydigan matnni "…" bilan qisqartiradigan yorliq (to'liq
@@ -68,8 +68,8 @@ class _CartRow(QFrame):
         weight = is_weight_unit(product.unit)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(14, 8, 12, 8)
-        layout.setSpacing(4)
+        layout.setContentsMargins(16, 8, 14, 8)
+        layout.setSpacing(2)
 
         # 1-qator: nom (joyga qarab qisqaradi) va qator jami summasi.
         name_label = _ElidedLabel(product.name)

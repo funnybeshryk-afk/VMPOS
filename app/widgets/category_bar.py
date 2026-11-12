@@ -14,7 +14,7 @@ from app.utils.icons import load_checkable_icon
 
 _ALL_LABEL = "Barchasi"
 _ALL_ICON = "grid"
-_BAR_HEIGHT = 56
+_BAR_HEIGHT = 62
 
 _ICON_SIZE = 16
 _ICON_COLOR_UNCHECKED = "#44403c"

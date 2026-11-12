@@ -8,7 +8,7 @@ _SPACING = 6
 
 # Kartochka eni kengligi shu minimaldan boshlab ustunlarga bo'linadi:
 # qator har doim to'liq to'ladi (o'ng tomonda bo'sh joy qolmaydi).
-_MIN_CARD_WIDTH = 204
+_MIN_CARD_WIDTH = 232
 
 
 class ProductGrid(QListView):

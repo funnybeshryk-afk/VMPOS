@@ -5,7 +5,7 @@ from app.utils.icons import load_icon
 from app.widgets.badge import StatusBadge
 from app.widgets.secondary_button import SecondaryButton
 
-_PANEL_HEIGHT = 60
+_PANEL_HEIGHT = 48
 _ICON_SIZE = 20
 _ICON_COLOR = "#78716c"
 
