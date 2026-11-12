@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import QTimer
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 from app.database.migrations import DatabaseTooNewError, prepare_database
@@ -70,6 +71,8 @@ def _smoke_check():
     required = [
         base / "assets" / "styles" / "style.qss",
         base / "assets" / "logo.png",
+        base / "assets" / "logo.ico",
+        base / "assets" / "logo_mark.png",
         base / "assets" / "icons" / "feather" / "shopping-cart.svg",
     ]
 
@@ -127,6 +130,13 @@ def main():
     setup_logging()
 
     app = QApplication(sys.argv)
+
+    # Oyna/taskbar ikonkasi. Yig'ilgan .exe'da u PyInstaller --icon
+    # bilan ham o'rnatilgan, lekin `python main.py` va portativ
+    # ishga tushirishda ham to'g'ri chiqishi uchun kodda ham beramiz.
+    app.setWindowIcon(
+        QIcon(str(get_bundle_base_dir() / "assets" / "logo.ico"))
+    )
 
     if smoke_test:
         missing = _smoke_check()

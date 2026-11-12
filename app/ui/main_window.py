@@ -150,21 +150,18 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.status_bar)
 
     def _build_logo_row(self):
-        # Rels ichida logo — faqat belgi (savat+barglar), oq "badge"
-        # ichida (brend qoidasi: logotip rangli fonda emas, oq/neytral
-        # fonda turadi). To'liq nom "Vodiy Market" rels kengligiga
-        # sig'maydi va tooltip'da.
-        #
-        # Kesish to'rtburchagi rasmning haqiqiy piksel chegaralarini
-        # o'lchab aniqlangan (belgi x:208-1050, y:99-814); (180,80,900,750)
-        # pastki barglarni kesmaydi.
+        # Rels ichida logo — faqat belgi (V + barg), oq "badge" ichida
+        # (brend qoidasi: logotip oq/neytral fonda turadi). Belgi
+        # shaffof PNG (assets/logo_mark.png, packaging/make_icon.py
+        # chizadi): V qora, barg izumrud. To'liq nom "Vodiy Market"
+        # rels kengligiga sig'maydi va tooltip'da.
         logo_row = QWidget()
         logo_row.setObjectName("sidebarLogo")
 
         logo_row_layout = QVBoxLayout(logo_row)
         logo_row_layout.setContentsMargins(0, 16, 0, 8)
 
-        logo_path = get_bundle_base_dir() / "assets" / "logo.png"
+        logo_path = get_bundle_base_dir() / "assets" / "logo_mark.png"
 
         icon_label = QLabel()
         icon_label.setObjectName("railLogo")
@@ -172,10 +169,8 @@ class MainWindow(QMainWindow):
         icon_label.setAlignment(Qt.AlignCenter)
         icon_label.setToolTip("Vodiy Market")
         icon_label.setPixmap(
-            QPixmap(str(logo_path))
-            .copy(180, 80, 900, 750)
-            .scaled(
-                52, 52, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            QPixmap(str(logo_path)).scaled(
+                48, 48, Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
         )
 

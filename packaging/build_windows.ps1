@@ -11,6 +11,7 @@ python -m PyInstaller --noconfirm --clean --windowed --onedir `
     --add-data "assets\styles;assets\styles" `
     --add-data "assets\icons;assets\icons" `
     --add-data "assets\logo.png;assets" `
+    --add-data "assets\logo_mark.png;assets" `
     --add-data "assets\logo.ico;assets" `
     main.py
 
