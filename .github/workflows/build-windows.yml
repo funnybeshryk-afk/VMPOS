@@ -3,22 +3,50 @@ name: Build Windows (test)
 # Faqat QO'LDA ishga tushadi (Actions -> Run workflow) — har pushda
 # avtomatik yig'ilmaydi.
 #
-# Sinov yig'ma: .exe va o'rnatuvchini yig'adi va Actions ARTEFAKTI sifatida
-# beradi. Reliz YARATMAYDI va teg talab qilmaydi — shuning uchun o'rnatilgan
-# dasturlarning avto-yangilashiga ta'sir qilmaydi (u faqat GitHub Release'larni
-# o'qiydi). Haqiqiy reliz uchun — release.yml (teg v*).
+# Standart (publish o'chiq): .exe va o'rnatuvchini yig'adi va Actions
+# ARTEFAKTI sifatida beradi. Reliz YARATMAYDI — o'rnatilgan dasturlarning
+# avto-yangilashiga ta'sir qilmaydi (u faqat GitHub Release'larni o'qiydi).
+#
+# publish=true + version: shu yig'madan GitHub RELIZ ham yaratadi (teg
+# sessiyadan push qilib bo'lmaganda ishlatiladi). Tekshiruvlar: versiya
+# app/version.py'ga teng, bunday reliz hali yo'q, release-notes.md bor.
+# Haqiqiy reliz uchun muqobil yo'l — teg v* (release.yml).
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "RELIZ chiqarish (GitHub Release yaratadi — dasturdagi avto-yangilash uni ko'radi)"
+        type: boolean
+        default: false
+      version:
+        description: "Reliz versiyasi, masalan 1.2.0 (publish yoqilganda; app/version.py bilan bir xil bo'lishi shart)"
+        type: string
+        required: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Reliz parametrlarini tekshirish (faqat publish=true)
+        if: ${{ inputs.publish }}
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ($env:INPUT_VERSION -notmatch '^\d+\.\d+\.\d+$') { throw "version noto'g'ri: '$env:INPUT_VERSION' (kutilgan: 1.2.0)" }
+          $appVersion = (Select-String -Path app\version.py -Pattern '^APP_VERSION = "(.+)"').Matches[0].Groups[1].Value
+          if ($appVersion -ne $env:INPUT_VERSION) { throw "version ($env:INPUT_VERSION) app/version.py ($appVersion) bilan mos emas" }
+          if (-not (Test-Path release-notes.md)) { throw "release-notes.md topilmadi" }
+          gh release view "v$env:INPUT_VERSION" 2>$null
+          if ($LASTEXITCODE -eq 0) { throw "v$env:INPUT_VERSION reliz allaqachon mavjud" }
+          $global:LASTEXITCODE = 0
+          Write-Host "OK: v$env:INPUT_VERSION chiqariladi"
 
       - uses: actions/setup-python@v5
         with:
@@ -70,3 +98,22 @@ jobs:
           path: out/*
           retention-days: 14
           if-no-files-found: error
+
+      - name: SHA-256 yig'indisi (publish=true)
+        if: ${{ inputs.publish }}
+        run: |
+          $file = Get-ChildItem out\VMPOS-Setup-*.exe | Select-Object -First 1
+          $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower()
+          "$hash  $($file.Name)" | Out-File -Encoding ascii "$($file.FullName).sha256"
+          Write-Host "$hash  $($file.Name)"
+
+      - name: GitHub Reliz yaratish (publish=true)
+        if: ${{ inputs.publish }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          # PowerShell native buyruqqa "*" ni ochib bermaydi — fayllarni o'zimiz yig'amiz.
+          $files = @(Get-ChildItem out -File | Where-Object { $_.Name -like "VMPOS-Setup-*" } | ForEach-Object { $_.FullName })
+          if ($files.Count -ne 2) { throw "Kutilgan 2 fayl (exe + sha256), topildi: $($files.Count)" }
+          gh release create "v$env:INPUT_VERSION" @files --target "$env:GITHUB_SHA" --title "VMPOS v$env:INPUT_VERSION" --notes-file release-notes.md
