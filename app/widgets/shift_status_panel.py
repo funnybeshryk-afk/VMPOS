@@ -5,9 +5,9 @@ from app.utils.icons import load_icon
 from app.widgets.badge import StatusBadge
 from app.widgets.secondary_button import SecondaryButton
 
-_PANEL_HEIGHT = 56
+_PANEL_HEIGHT = 48
 _ICON_SIZE = 20
-_ICON_COLOR = "#64748b"
+_ICON_COLOR = "#78716c"
 
 
 class ShiftStatusPanel(QFrame):
@@ -27,11 +27,11 @@ class ShiftStatusPanel(QFrame):
     def __init__(self):
         super().__init__()
 
-        self.setObjectName("panel")
+        self.setObjectName("shiftBar")
         self.setFixedHeight(_PANEL_HEIGHT)
 
         outer_layout = QHBoxLayout(self)
-        outer_layout.setContentsMargins(16, 0, 16, 0)
+        outer_layout.setContentsMargins(4, 0, 4, 0)
 
         self._stack = QStackedWidget()
         outer_layout.addWidget(self._stack)
@@ -113,9 +113,8 @@ class ShiftStatusPanel(QFrame):
         opened_text = opened_at.strftime("%H:%M")
 
         self._cashier_name_label.setText(cashier_name)
-        self._shift_meta_label.setText(
-            f"· Smena #{shift_id} · {opened_text}"
-        )
+        self._shift_meta_label.setText(f"· Smena #{shift_id}")
+        self._shift_meta_label.setToolTip(f"Smena ochilgan: {opened_text}")
         self._clock_label.setText(now_text)
 
         self._stack.setCurrentWidget(self._shift_view)

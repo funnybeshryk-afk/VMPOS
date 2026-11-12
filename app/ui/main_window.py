@@ -1,11 +1,11 @@
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMainWindow,
-    QPushButton,
     QStackedWidget,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -26,16 +26,29 @@ from app.ui.users_page import UsersPage
 from app.ui.warehouse_page import WarehousePage
 from app.utils.icons import load_icon
 from app.utils.paths import get_bundle_base_dir
+from app.version import APP_VERSION
 from app.widgets.app_status_bar import AppStatusBar
 from app.widgets.sidebar_menu import SidebarMenu
-
-_SIDEBAR_PADDING = 16
 
 # (matn kaliti -> Feather ikonka nomi). Aniq muqobili yo'q joylarda
 # eng yaqin ma'nodagi ikonka tanlangan: Ombor — "archive" (ombor
 # qutisi), Moliya — "layers" (Sotuv'dagi naqd to'lov tugmasidagi
 # bilan bir xil — "pul uyumi", valyuta belgisiz), Foydalanuvchilar —
 # "user-check" (xodimni tasdiqlash/boshqarish).
+# Rels kengligi 96 px — uzun nomlar sig'maydi: rels yorlig'i qisqa,
+# to'liq nom (TEXT) tooltip sifatida ko'rsatiladi.
+_RAIL_LABELS = {
+    "sale": "Sotuv",
+    "products": "Mahsulot",
+    "warehouse": "Ombor",
+    "reports": "Hisobot",
+    "customers": "Mijoz",
+    "suppliers": "Ta'minot",
+    "finance": "Moliya",
+    "users": "Xodimlar",
+    "settings": "Sozlama",
+}
+
 _MENU_ICONS = {
     "sale": "shopping-cart",
     "products": "package",
@@ -53,7 +66,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("VMPOS v1.0.0")
+        self.setWindowTitle(f"VMPOS v{APP_VERSION}")
         self.resize(1200, 700)
 
         self._build_ui()
@@ -72,13 +85,10 @@ class MainWindow(QMainWindow):
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
 
-        # Sidebar — logo, menyu va profil bitta ustunda (#sidebar).
-        # Har uch bo'lim ham bir xil _SIDEBAR_PADDING'dan boshlanadi,
-        # shu sabab ular bitta tekis chetdagi yagona guruh sifatida
-        # ko'rinadi.
+        # Chap "rels" — logo, menyu va profil bitta ustunda (#sidebar).
         sidebar = QWidget()
         sidebar.setObjectName("sidebar")
-        sidebar.setFixedWidth(220)
+        sidebar.setFixedWidth(96)
 
         sidebar_layout = QVBoxLayout(sidebar)
         sidebar_layout.setContentsMargins(0, 0, 0, 0)
@@ -140,97 +150,57 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.status_bar)
 
     def _build_logo_row(self):
+        # Rels ichida logo — faqat belgi (V + barg), oq "badge" ichida
+        # (brend qoidasi: logotip oq/neytral fonda turadi). Belgi
+        # shaffof PNG (assets/logo_mark.png, packaging/make_icon.py
+        # chizadi): V qora, barg izumrud. To'liq nom "Vodiy Market"
+        # rels kengligiga sig'maydi va tooltip'da.
         logo_row = QWidget()
         logo_row.setObjectName("sidebarLogo")
 
-        logo_row_layout = QHBoxLayout(logo_row)
-        # O'ng chekka boshqalarga qaraganda torroq (8px) — 220px
-        # sidebar'ga kattalashtirilgan ikonka (67px) + "Vodiy Market"
-        # matni (18px qalin shriftda ~114px) sig'ishi uchun, aks
-        # holda matn o'ngdan kesilib qolar edi. Chap chekka esa
-        # _SIDEBAR_PADDING bilan menyu bilan bir xil — tekislik
-        # buzilmaydi.
-        logo_row_layout.setContentsMargins(
-            _SIDEBAR_PADDING, 18, 8, 18
-        )
-        logo_row_layout.setSpacing(8)
+        logo_row_layout = QVBoxLayout(logo_row)
+        logo_row_layout.setContentsMargins(0, 16, 0, 8)
 
-        # To'liq logotipda "Vodiy Market" yozuvi ham bor — bu yerda
-        # faqat belgi (yuqori doira+savat+barglar qismi) kesib
-        # olinadi, nomi esa alohida oddiy matn sifatida yoniga
-        # qo'yiladi, aks holda nom ikki marta takrorlanib qolardi.
-        # Kesish to'rtburchagi rasmning haqiqiy piksel chegaralarini
-        # o'lchab aniqlangan (belgi x:208-1050, y:99-814) — avvalgi
-        # qiymat (150,0,960,800) pastki barglarning uchini kesib
-        # tashlar edi, shu sabab ikonka siqilgan/obrezan ko'rinardi.
-        # Balandlik 56px'ga oshirilgan (36px avvalgi urinishda hali
-        # ham kichik ko'rinar edi) — kenglik nisbatiga ko'ra ~67px.
-        logo_path = get_bundle_base_dir() / "assets" / "logo.png"
+        logo_path = get_bundle_base_dir() / "assets" / "logo_mark.png"
 
         icon_label = QLabel()
+        icon_label.setObjectName("railLogo")
+        icon_label.setFixedSize(64, 64)
+        icon_label.setAlignment(Qt.AlignCenter)
+        icon_label.setToolTip("Vodiy Market")
         icon_label.setPixmap(
-            QPixmap(str(logo_path))
-            .copy(180, 80, 900, 750)
-            .scaledToHeight(56, Qt.SmoothTransformation)
+            QPixmap(str(logo_path)).scaled(
+                48, 48, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
         )
 
-        name_label = QLabel("Vodiy Market")
-        name_label.setObjectName("sidebarLogoText")
-
-        logo_row_layout.addWidget(icon_label)
-        logo_row_layout.addWidget(name_label)
-        logo_row_layout.addStretch()
+        logo_row_layout.addWidget(icon_label, 0, Qt.AlignHCenter)
 
         return logo_row
 
     def _build_user_panel(self):
-        # Ilovada parol talab qilmaydigan yengil "hozir kim
-        # ishlayapti" ko'rsatkichi — menyuni rolga qarab moslashtirish
-        # va Moliya'da kassirni oldindan belgilash uchun ishlatiladi.
+        # Rels pastidagi doira — joriy xodim bosh harfi. Bosilsa
+        # xodim almashtiriladi; ism va rol tooltip'da. Ilovada parol
+        # talab qilmaydigan yengil "hozir kim ishlayapti" ko'rsatkichi:
+        # menyuni rolga qarab moslashtirish va Moliya'da kassirni
+        # oldindan belgilash uchun ishlatiladi.
         user_panel = QWidget()
         user_panel.setObjectName("sidebarUserPanel")
 
-        user_panel_layout = QHBoxLayout(user_panel)
-        user_panel_layout.setContentsMargins(
-            _SIDEBAR_PADDING, 12, _SIDEBAR_PADDING, 12
-        )
-        user_panel_layout.setSpacing(10)
+        user_panel_layout = QVBoxLayout(user_panel)
+        user_panel_layout.setContentsMargins(0, 8, 0, 16)
 
-        self.user_avatar_label = QLabel()
-        self.user_avatar_label.setObjectName("sidebarUserAvatar")
-        self.user_avatar_label.setFixedSize(36, 36)
-        self.user_avatar_label.setAlignment(Qt.AlignCenter)
-
-        user_text_layout = QVBoxLayout()
-        user_text_layout.setSpacing(0)
-
-        self.current_user_name_label = QLabel()
-        self.current_user_name_label.setObjectName("sidebarUserName")
-
-        self.current_user_role_label = QLabel()
-        self.current_user_role_label.setObjectName("mutedText")
-
-        user_text_layout.addWidget(self.current_user_name_label)
-        user_text_layout.addWidget(self.current_user_role_label)
-
-        self.switch_user_button = QPushButton()
-        self.switch_user_button.setObjectName(
-            "sidebarSwitchUserButton"
-        )
-        self.switch_user_button.setIcon(
-            load_icon("log-out", color="#57534e", size=18)
-        )
-        self.switch_user_button.setIconSize(QSize(18, 18))
-        self.switch_user_button.setFixedSize(32, 32)
+        self.switch_user_button = QToolButton()
+        self.switch_user_button.setObjectName("railAvatar")
+        self.switch_user_button.setFixedSize(48, 48)
         self.switch_user_button.setCursor(Qt.PointingHandCursor)
-        self.switch_user_button.setToolTip("Almashtirish")
         self.switch_user_button.clicked.connect(
             self.switch_active_user
         )
 
-        user_panel_layout.addWidget(self.user_avatar_label)
-        user_panel_layout.addLayout(user_text_layout, 1)
-        user_panel_layout.addWidget(self.switch_user_button)
+        user_panel_layout.addWidget(
+            self.switch_user_button, 0, Qt.AlignHCenter
+        )
 
         return user_panel
 
@@ -284,7 +254,14 @@ class MainWindow(QMainWindow):
                 ):
                     continue
 
-                entries.append((key, TEXT[key], _MENU_ICONS[key]))
+                entries.append(
+                    (
+                        key,
+                        _RAIL_LABELS[key],
+                        _MENU_ICONS[key],
+                        TEXT[key],
+                    )
+                )
                 visible_keys.append(key)
 
             groups.append((group_title, entries))
@@ -293,22 +270,25 @@ class MainWindow(QMainWindow):
         self._visible_keys = visible_keys
 
         if current_user is None:
-            self.user_avatar_label.setText("")
-            self.current_user_name_label.setText(
-                "Foydalanuvchi tanlanmagan"
+            self.switch_user_button.setText("")
+            self.switch_user_button.setIcon(
+                load_icon("user", color="#ffffff", size=22)
             )
-            self.current_user_role_label.setText("")
+            self.switch_user_button.setToolTip(
+                "Foydalanuvchi tanlanmagan — bosing"
+            )
         else:
-            self.user_avatar_label.setText(
+            role_text = ROLE_LABELS.get(
+                current_user.role, current_user.role
+            )
+
+            self.switch_user_button.setIcon(QIcon())
+            self.switch_user_button.setText(
                 current_user.full_name[:1].upper()
             )
-            self.current_user_name_label.setText(
-                current_user.full_name
-            )
-            self.current_user_role_label.setText(
-                ROLE_LABELS.get(
-                    current_user.role, current_user.role
-                )
+            self.switch_user_button.setToolTip(
+                f"{current_user.full_name} · {role_text}\n"
+                "Almashtirish uchun bosing"
             )
 
         if not visible_keys:

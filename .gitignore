@@ -18,3 +18,6 @@ category_bar_preview*.png
 cb_only.png
 structure.txt
 structure_app.txt
+logs/
+backups/
+dist-installer/

@@ -137,6 +137,7 @@ class ReturnDialog(QDialog):
 
         self.date_edit = QDateEdit()
         self.date_edit.setCalendarPopup(True)
+        self.date_edit.setDisplayFormat("dd.MM.yyyy")
         self.date_edit.setDate(QDate.currentDate())
         self.date_edit.dateChanged.connect(self.search)
 

@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QDate, Qt
 from PySide6.QtWidgets import (
     QDateEdit,
     QHBoxLayout,
@@ -39,9 +39,11 @@ class ReportsPage(QWidget):
 
         self.date_edit = QDateEdit()
         self.date_edit.setCalendarPopup(True)
-        self.date_edit.setDate(
-            self.date_edit.calendarWidget().selectedDate()
-        )
+        self.date_edit.setDisplayFormat("dd.MM.yyyy")
+        # Bugungi sana. Avval calendarWidget().selectedDate() olinardi —
+        # u yangi yaratilgan kalendarda 01.01.2000 qaytaradi (Windows'da
+        # ham), natijada hisobot "2000-yil"ni ko'rsatib, bo'sh chiqardi.
+        self.date_edit.setDate(QDate.currentDate())
         self.date_edit.dateChanged.connect(self.load_sales)
 
         # Bu sahifadagi yagona qora PrimaryButton — filtrni

@@ -1,26 +1,29 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QDialogButtonBox,
-    QDialog,
-    QFormLayout,
+    QFrame,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
     QMessageBox,
+    QScroller,
     QVBoxLayout,
 )
 
 from app.services.customer_service import CustomerService
 from app.ui.customer_dialog import CustomerDialog
-from app.utils.formatters import format_money, parse_number
+from app.ui.touch_dialog import TouchDialog
+from app.utils.amount_buffer import AmountBuffer
+from app.utils.formatters import format_money
 from app.widgets.badge import StatusBadge, set_badge_variant
+from app.widgets.numpad import AmountField, NumPad
 from app.widgets.secondary_button import SecondaryButton
 
 _TOLERANCE = 0.01
 
 
-class CustomerPickerDialog(QDialog):
+class CustomerPickerDialog(TouchDialog):
     """Nasiya savdo uchun mavjud mijozlar bazasidan tanlov.
 
     UserPickerDialog bilan bir xil naqsh (ro'yxat + OK), lekin
@@ -38,25 +41,25 @@ class CustomerPickerDialog(QDialog):
     """
 
     def __init__(self, customers, total_amount, parent=None):
-        super().__init__(parent)
+        super().__init__("Mijozni tanlash", parent, min_width=900)
+        self.resize(940, 660)
 
         self._customers = list(customers)
         self.total_amount = total_amount
 
-        self.setWindowTitle("Mijozni tanlash")
-        self.setMinimumWidth(380)
-        self.resize(380, 520)
+        self._debt_buffer = AmountBuffer(allow_decimal=True, max_decimals=2)
+        self._debt_buffer.set_value(total_amount)
 
-        main_layout = QVBoxLayout(self)
+        outer = QHBoxLayout(self)
+        outer.setContentsMargins(22, 20, 22, 22)
+        outer.setSpacing(22)
+
+        # ---- chap: mijozlar ro'yxati (barmoq uchun katta qatorlar) ----
+        left = QVBoxLayout()
+        left.setSpacing(12)
 
         info_label = QLabel("Nasiya kimga yoziladi?")
-        info_label.setObjectName("sectionTitle")
-
-        total_label = QLabel(
-            f"Chek jamisi: {format_money(total_amount)} so'm"
-        )
-        total_label.setObjectName("cartTotal")
-        total_label.setAlignment(Qt.AlignCenter)
+        info_label.setObjectName("entryProduct")
 
         self.search_edit = QLineEdit()
         self.search_edit.setObjectName("searchInput")
@@ -66,53 +69,96 @@ class CustomerPickerDialog(QDialog):
         self.search_edit.textChanged.connect(self._apply_filter)
 
         self.customers_list = QListWidget()
-        self.customers_list.itemDoubleClicked.connect(self.accept)
-
-        self.add_customer_button = SecondaryButton(
-            "Yangi mijoz qo'shish"
+        self.customers_list.setStyleSheet(
+            "QListWidget::item { min-height: 64px; padding: 4px 12px; }"
         )
-        self.add_customer_button.clicked.connect(
-            self._add_new_customer
+        self.customers_list.itemDoubleClicked.connect(
+            lambda _item: self._try_accept()
         )
-
-        form_layout = QFormLayout()
-
-        self.debt_amount_edit = QLineEdit()
-        self.debt_amount_edit.setText(format_money(total_amount))
-        self.debt_amount_edit.setPlaceholderText(
-            "Masalan: 50 000"
-        )
-        self.debt_amount_edit.textChanged.connect(
-            self._update_cash_hint
+        QScroller.grabGesture(
+            self.customers_list.viewport(), QScroller.TouchGesture
         )
 
-        form_layout.addRow(
-            "Qarzga yoziladigan summa:", self.debt_amount_edit
+        # Yangi mijoz qo'shish ism/telefon yozishni talab qiladi —
+        # bu yerda jismoniy klaviatura kerak (kassir ish jarayonidan
+        # tashqari, kamdan-kam amal).
+        self.add_customer_button = SecondaryButton("Yangi mijoz qo'shish")
+        self.add_customer_button.clicked.connect(self._add_new_customer)
+
+        left.addWidget(info_label)
+        left.addWidget(self.search_edit)
+        left.addWidget(self.customers_list, 1)
+        left.addWidget(self.add_customer_button)
+
+        # ---- o'ng: qarz summasi + raqamli blok -----------------------
+        right = QVBoxLayout()
+        right.setSpacing(12)
+
+        total_box = QFrame()
+        total_box.setObjectName("totalBox")
+        total_box.setFixedHeight(76)
+
+        total_caption = QLabel("Chek jamisi")
+        total_caption.setObjectName("cartTotalCaption")
+
+        total_amount_label = QLabel(
+            f"{format_money(total_amount)} "
+            "<span style='font-size:16px;font-weight:500;"
+            "color:#a8a29e'>so'm</span>"
         )
+        total_amount_label.setObjectName("cartTotalAmount")
+        total_amount_label.setTextFormat(Qt.RichText)
+
+        total_row = QHBoxLayout(total_box)
+        total_row.setContentsMargins(20, 0, 20, 0)
+        total_row.addWidget(total_caption)
+        total_row.addStretch()
+        total_row.addWidget(total_amount_label)
+
+        self._debt_field = AmountField("Qarzga yoziladigan summa", "so'm")
+        self._debt_field.set_active(True)
+
+        chips = QHBoxLayout()
+        chips.setSpacing(8)
+        chips.addWidget(self.make_chip("Hammasi", lambda: self._set_debt(1)))
+        chips.addWidget(self.make_chip("Yarmi", lambda: self._set_debt(0.5)))
 
         self.cash_hint_badge = StatusBadge("", "neutral")
 
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-        )
-        buttons.accepted.connect(self._try_accept)
-        buttons.rejected.connect(self.reject)
+        pad = NumPad(left_key="000")
+        self.connect_numpad(pad)
 
-        main_layout.addWidget(info_label)
-        main_layout.addWidget(total_label)
-        main_layout.addWidget(self.search_edit)
-        main_layout.addWidget(self.customers_list)
-        main_layout.addWidget(self.add_customer_button)
-        main_layout.addLayout(form_layout)
-        main_layout.addWidget(
-            self.cash_hint_badge,
-            alignment=Qt.AlignCenter,
+        right.addWidget(total_box)
+        right.addWidget(self._debt_field)
+        right.addLayout(chips)
+        right.addWidget(
+            self.cash_hint_badge, alignment=Qt.AlignCenter
         )
-        main_layout.addWidget(buttons)
+        right.addWidget(pad)
+        right.addLayout(self.build_footer("Tasdiqlash"))
+
+        # Tasdiqlash — tekshiruv bilan (mijoz tanlanganmi, summa to'g'rimi).
+        self.ok_button.clicked.disconnect()
+        self.ok_button.clicked.connect(self._try_accept)
+
+        outer.addLayout(left, 1)
+        outer.addLayout(right, 1)
 
         self._populate(self._customers)
+        self.buffer_changed()
+
+    # ---- TouchDialog ---------------------------------------------
+
+    def active_buffer(self):
+        return self._debt_buffer
+
+    def buffer_changed(self):
+        self._debt_field.set_text(self._debt_buffer.display())
         self._update_cash_hint()
-        self.search_edit.setFocus()
+
+    def _set_debt(self, share):
+        self._debt_buffer.set_value(round(self.total_amount * share, 2))
+        self.buffer_changed()
 
     def _populate(self, customers, select_customer_id=None):
         self.customers_list.clear()
@@ -120,16 +166,22 @@ class CustomerPickerDialog(QDialog):
         selected_row = 0
 
         for row, customer in enumerate(customers):
-            label = customer.name
+            # Ikki qator: ism (yirik) va pastda telefon / qarz — uzun
+            # qator o'ngdan kesilib qolmasin.
+            details = []
 
             if customer.phone:
-                label += f" — {customer.phone}"
+                details.append(customer.phone)
 
             if customer.debt_amount > 0:
-                label += (
-                    f" (qarz: {format_money(customer.debt_amount)} "
-                    "so'm)"
+                details.append(
+                    f"qarz: {format_money(customer.debt_amount)} so'm"
                 )
+
+            label = customer.name
+
+            if details:
+                label += "\n" + " · ".join(details)
 
             item = QListWidgetItem(label)
             item.setData(Qt.UserRole, customer)
@@ -184,18 +236,16 @@ class CustomerPickerDialog(QDialog):
         )
 
     def _parse_debt_amount(self):
-        try:
-            return parse_number(self.debt_amount_edit.text())
-        except ValueError:
-            return 0
+        return self._debt_buffer.value()
 
     def _update_cash_hint(self):
         debt_amount = self._parse_debt_amount()
         cash_now = self.total_amount - debt_amount
 
-        if debt_amount <= 0 or debt_amount > (
-            self.total_amount + _TOLERANCE
-        ):
+        valid = 0 < debt_amount <= self.total_amount + _TOLERANCE
+        self._debt_field.set_state("ok" if valid else "bad")
+
+        if not valid:
             set_badge_variant(
                 self.cash_hint_badge,
                 "Summa 0 dan katta va chek jamisidan oshmasligi "

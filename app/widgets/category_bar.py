@@ -1,6 +1,8 @@
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import (
     QButtonGroup,
+    QFrame,
+    QScroller,
     QHBoxLayout,
     QPushButton,
     QScrollArea,
@@ -12,10 +14,10 @@ from app.utils.icons import load_checkable_icon
 
 _ALL_LABEL = "Barchasi"
 _ALL_ICON = "grid"
-_BAR_HEIGHT = 56
+_BAR_HEIGHT = 62
 
 _ICON_SIZE = 16
-_ICON_COLOR_UNCHECKED = "#334155"
+_ICON_COLOR_UNCHECKED = "#44403c"
 _ICON_COLOR_CHECKED = "#ffffff"
 
 
@@ -58,9 +60,20 @@ class CategoryBar(QWidget):
         self._scroll_area.setObjectName("categoryScrollArea")
         self._scroll_area.setWidgetResizable(True)
         self._scroll_area.setFixedHeight(_BAR_HEIGHT)
+        # Skroll-bar yo'q: sensorli ekranda barmoq bilan suriladi
+        # (TouchGesture), sichqonchada — g'ildirak bilan (wheelEvent).
+        # Ko'rinib turgan skroll-bar plitkalarni kesib, qator
+        # balandligini "yeb" qo'yardi.
+        self._scroll_area.setFrameShape(QFrame.NoFrame)
+        self._scroll_area.setAutoFillBackground(False)
+        self._scroll_area.viewport().setAutoFillBackground(False)
         self._scroll_area.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarAsNeeded
+            Qt.ScrollBarAlwaysOff
         )
+        QScroller.grabGesture(
+            self._scroll_area.viewport(), QScroller.TouchGesture
+        )
+        self._scroll_area.wheelEvent = self._scroll_horizontally
         self._scroll_area.setVerticalScrollBarPolicy(
             Qt.ScrollBarAlwaysOff
         )
@@ -88,6 +101,15 @@ class CategoryBar(QWidget):
 
         self.set_categories([])
 
+    def _scroll_horizontally(self, event):
+        """G'ildirak — gorizontal skroll (vertikal skroll bu yerda yo'q)."""
+
+        bar = self._scroll_area.horizontalScrollBar()
+        delta = event.angleDelta().y() or event.angleDelta().x()
+
+        bar.setValue(bar.value() - delta)
+        event.accept()
+
     def set_categories(self, categories):
         """Перестраивает плитки. "Barchasi" всегда первая и активная."""
 
@@ -97,6 +119,11 @@ class CategoryBar(QWidget):
 
             if widget is not None:
                 self._button_group.removeButton(widget)
+                # deleteLater() o'chirishni keyingi sikl iteratsiyasiga
+                # qoldiradi — shu paytgacha eski plitka (eski
+                # geometriya bilan) ko'rinib turardi.
+                widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
 
         all_tile = self._make_tile(_ALL_LABEL, None)

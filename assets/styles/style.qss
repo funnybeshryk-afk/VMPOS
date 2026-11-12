@@ -8,42 +8,46 @@
    числами. Чтобы тема не расползлась — весь список держим здесь, и
    ниже используем ТОЛЬКО эти значения.
 
-   Фон приложения      #f1f5f9
+   Фон приложения      #f6f3ee
    Поверхность (карточка, таблица, поле ввода)   #ffffff
-   Рамка обычная       #e2e8f0
-   Рамка контрастная   #cbd5e1
-   Разделитель         #eef2f7
+   Рамка обычная       #ece7df
+   Рамка контрастная   #ddd6cb
+   Разделитель         #f3efe8
 
    САЙДБАР (едва отличим от фона приложения — минимальный, но
-   ненулевой контраст: #cbd5e1 vs #f1f5f9 = 1.36:1)
-   Фон сайдбара        #cbd5e1   ("рамка контрастная" сверху)
-   Рамка сайдбара      #e2e8f0   ("рамка обычная")
+   ненулевой контраст: #ddd6cb vs #f6f3ee = 1.36:1)
+   Фон сайдбара        #ddd6cb   ("рамка контрастная" сверху)
+   Рамка сайдбара      #ece7df   ("рамка обычная")
    Заголовок группы / линия — бренд-цвета логотипа, см. §4.1
 
-   Текст основной      #0f172a
-   Текст вторичный     #475569
-   Текст приглушённый  #64748b
-   Текст неактивный    #94a3b8
+   Текст основной      #1c1917
+   Текст вторичный     #57534e
+   Текст приглушённый  #78716c
+   Текст неактивный    #a8a29e
 
    ГЛАВНОЕ ДЕЙСТВИЕ (чёрный, стиль Square/Shopify POS)
-                       #111827   hover #1f2937   pressed #030712
+                       #1c1917   hover #292524   pressed #0c0a09
 
-   НАВИГАЦИЯ / ФОКУС (синий) #2563eb
-   Синяя подложка      #e8effc   (активный пункт меню, фокус поля)
+   НАВИГАЦИЯ / ФОКУС / АКЦЕНТ (изумрудный) #059669
+   Изумрудная подложка      #e3f4ec   (активный пункт меню, фокус поля)
 
-   Успех (зелёный)     #15803d   hover #166534
+   Успех (зелёный)     #059669   hover #047857
    Опасность (красный) #dc2626   hover #b91c1c   рамка #fca5a5
    Предупреждение      #b45309   подложка #fef3c7
 
-   Бейдж «ок»          подложка #f0fdf4   текст #14532d   (см. §7, ratio 8.70:1)
+   Бейдж «ок»          подложка #d1fae5   текст #065f46   (см. §7, ratio 8.70:1)
    Бейдж «мало»        подложка #fef3c7   текст #92400e
    Бейдж «нет»         подложка #fee2e2   текст #991b1b
-   Бейдж нейтральный   подложка #f1f5f9   текст #1e293b
+   Бейдж нейтральный   подложка #f6f3ee   текст #292524
+
+   ПАЛИТРА ОБНОВЛЕНА (Sotuv redesign): тёплые нейтральные (stone) вместо
+   холодных (slate), акцент — изумрудный #059669. Тот же набор ролей,
+   изменились только значения.
 
    ПРАВИЛО ЦВЕТА
    -------------
    Чёрный — это цвет ДЕЙСТВИЯ («нажми меня»): главная кнопка страницы.
-   Синий — это цвет СОСТОЯНИЯ («ты здесь / это в фокусе»): активный
+   Изумрудный — это цвет СОСТОЯНИЯ («ты здесь / это в фокусе»): активный
    пункт меню, рамка поля при фокусе, подсветка выбранной строки
    таблицы. Это разные роли, поэтому один экран может показывать оба
    цвета одновременно, не превращаясь в разноцветный — глаз всегда
@@ -77,22 +81,22 @@
    -------------------------------------------------------------------------- */
 
 QWidget {
-    background: #f1f5f9;
-    color: #0f172a;
+    background: #f6f3ee;
+    color: #1c1917;
     font-family: "Segoe UI";
     font-size: 14px;
 }
 
 QMainWindow {
-    background: #f1f5f9;
+    background: #f6f3ee;
 }
 
 QDialog {
-    background: #f1f5f9;
+    background: #f6f3ee;
 }
 
 QToolTip {
-    background: #0f172a;
+    background: #1c1917;
     color: #ffffff;
     border: none;
     border-radius: 6px;
@@ -111,52 +115,52 @@ QToolTip {
 QLabel#pageTitle {
     font-size: 22px;
     font-weight: 700;
-    color: #0f172a;
+    color: #1c1917;
     background: transparent;
 }
 
 QLabel#pageSubtitle {
     font-size: 13px;
-    color: #64748b;
+    color: #78716c;
     background: transparent;
 }
 
 QLabel#sectionTitle {
     font-size: 15px;
     font-weight: 600;
-    color: #0f172a;
+    color: #1c1917;
     background: transparent;
 }
 
 QLabel#mutedText {
-    color: #64748b;
+    color: #78716c;
     background: transparent;
 }
 
 QLabel#productImagePreview {
     background: #ffffff;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #ddd6cb;
     border-radius: 8px;
-    color: #94a3b8;
+    color: #a8a29e;
     font-size: 11px;
 }
 
 QLabel#labelPreview {
     background: #ffffff;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #ddd6cb;
     border-radius: 8px;
 }
 
 QLabel#cartEmptyTitle {
     font-size: 15px;
     font-weight: 600;
-    color: #64748b;
+    color: #78716c;
     background: transparent;
 }
 
 QLabel#cartEmptySubtitle {
     font-size: 13px;
-    color: #94a3b8;
+    color: #a8a29e;
     background: transparent;
 }
 
@@ -166,7 +170,7 @@ QLabel#cartEmptySubtitle {
    тёмный блок в тон главной кнопке. */
 
 QLabel#cartTotal {
-    background: #111827;
+    background: #1c1917;
     color: #ffffff;
     border-radius: 10px;
     font-size: 24px;
@@ -185,13 +189,24 @@ QLabel#cartTotal {
 
 QFrame#card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #ece7df;
     border-radius: 12px;
+}
+
+/* Korzina kartochkasi ichidagi hamma narsa sukut bo'yicha shaffof (umumiy
+   QWidget qoidasi ochiq fon beradi, oq kartochkada u dog' bo'lib
+   ko'rinadi). "*" — eng past ustuvorlik (1,0,1): bir xil ustuvorlikda
+   keyin yozilgan qoida yutadi, shuning uchun bu blok tugma/qator
+   qoidalaridan OLDIN turishi shart (§5 va §9 dagi #-qoidalar uni
+   bekor qiladi). */
+
+QFrame#cartCard * {
+    background: transparent;
 }
 
 QFrame#panel {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #ece7df;
     border-radius: 12px;
 }
 
@@ -200,7 +215,7 @@ QFrame#panel {
 
 QFrame#statCard {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #ece7df;
     border-radius: 12px;
 }
 
@@ -211,13 +226,13 @@ QFrame#statCard QLabel {
 QLabel#statCaption {
     font-size: 12px;
     font-weight: 500;
-    color: #64748b;
+    color: #78716c;
 }
 
 QLabel#statValue {
     font-size: 20px;
     font-weight: 700;
-    color: #0f172a;
+    color: #1c1917;
 }
 
 /* Смысловые оттенки показателей: только цвет ЧИСЛА, не всей карточки. */
@@ -246,15 +261,15 @@ QPushButton#summaryCardToggle {
 }
 
 QPushButton#summaryCardToggle:hover {
-    background: #f1f5f9;
+    background: #f6f3ee;
 }
 
 QPushButton#summaryCardToggle:pressed {
-    background: #e2e8f0;
+    background: #ece7df;
 }
 
 QFrame#separator {
-    background: #e2e8f0;
+    background: #ece7df;
     border: none;
     max-height: 1px;
     min-height: 1px;
@@ -274,116 +289,23 @@ QFrame#separator {
    logo qatori + guruhlangan ikonkali menyu + profil — barchasi bitta
    #sidebar konteynerida, bitta fonda.
 
-   Fon — #cbd5e1 ("рамка контрастная", palitraga qarang): ish maydoni
-   fonidan (#f1f5f9) minimal, deyarli sezilmaydigan farq bilan
+   Fon — #ddd6cb ("рамка контрастная", palitraga qarang): ish maydoni
+   fonidan (#f6f3ee) minimal, deyarli sezilmaydigan farq bilan
    ajralib turadi (1.36:1) — atayin shunday, yorqin rang aksenti
    yo'q. (Iliq/qo'ng'ir tus — #d6d3d1/#a8a29e — bir bosqichda
    sinovdan o'tkazilgan va noto'g'ri chiqqan, shu sabab qaytarildi.) */
 
 QWidget#sidebar {
-    background: #cbd5e1;
-    border-right: 1px solid #e2e8f0;
-}
-
-QWidget#sidebarLogo {
-    background: transparent;
-}
-
-QLabel#sidebarLogoText {
-    font-size: 18px;
-    font-weight: 700;
-    color: #0f172a;
-    background: transparent;
-}
-
-QWidget#sidebarUserPanel {
-    background: transparent;
-}
-
-QLabel#sidebarUserAvatar {
-    background: #111827;
-    color: #ffffff;
-    border-radius: 18px;
-    font-size: 14px;
-    font-weight: 700;
-}
-
-QLabel#sidebarUserName {
-    font-size: 13px;
-    font-weight: 600;
-    color: #0f172a;
-    background: transparent;
-}
-
-QPushButton#sidebarSwitchUserButton {
-    background: transparent;
+    background: #1c1917;
     border: none;
-    border-radius: 8px;
-    padding: 0;
 }
 
-QPushButton#sidebarSwitchUserButton:hover {
-    background: #ffffff;
-}
+/* Chap "rels" (96 px): logo, ikonkali menyu, foydalanuvchi.
+   Tugmalar uchun qoidalar — pastdagi §9 (Sotuv redesign). */
 
-QPushButton#sidebarSwitchUserButton:pressed {
-    background: #e7e5e4;
-}
-
-QWidget#sidebarGroupHeader {
-    background: transparent;
-}
-
-/* #3b6d11 — logotipdagi yashil (§ palitra tepasida qayd etilgan
-   yagona brend-rang istisnosidan tashqari, atayin qo'shimcha
-   ishlatilgan joy: guruh sarlavhalari, sidebar navigatsiyasining
-   o'z ichidagi tuzilishi uchun). Chiziq — #dedcd3, sarlavha
-   matnidan keyin qolgan bo'sh joyni to'ldiradi (stretch=1). */
-
-QLabel#sidebarGroupTitle {
-    font-size: 11px;
-    font-weight: 700;
-    color: #3b6d11;
-    background: transparent;
-}
-
-QFrame#sidebarGroupLine {
-    background: #dedcd3;
-    border: none;
-    max-height: 1px;
-    min-height: 1px;
-}
-
-/* Menyu bandi — CategoryBar'dagi kabi checkable QPushButton.
-   Belgilangan (checked) band #111827 — PrimaryButton bilan bir xil
-   to'q fon + oq matn: avvalgi "oq kartochka + ko'k chiziq" o'rniga
-   aniq, adashtirmaydigan holat belgisi. */
-
-QPushButton#sidebarMenuItem {
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-    text-align: left;
-    padding-left: 8px;
-    min-height: 40px;
-    color: #44403c;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-QPushButton#sidebarMenuItem:hover {
-    background: #ffffff;
-    color: #0f172a;
-}
-
-QPushButton#sidebarMenuItem:checked {
-    background: #111827;
-    color: #ffffff;
-    font-weight: 600;
-}
 
 /* Quyidagi QListWidget qoidalari endi sidebar uchun emas (u endi
-   SidebarMenu — yuqoriga qarang), balki oddiy ro'yxatli dialoglar
+   SidebarMenu — rels), balki oddiy ro'yxatli dialoglar
    uchun (masalan UserPickerDialog — "hozir kim ishlayapti"). */
 
 QListWidget {
@@ -398,19 +320,19 @@ QListWidget::item {
     border-radius: 8px;
     padding-left: 12px;
     margin-bottom: 2px;
-    color: #475569;
+    color: #57534e;
     border-left: 3px solid transparent;
 }
 
 QListWidget::item:hover {
-    background: #f1f5f9;
-    color: #0f172a;
+    background: #f6f3ee;
+    color: #1c1917;
 }
 
 QListWidget::item:selected {
-    background: #e8effc;
-    color: #1d4ed8;
-    border-left: 3px solid #2563eb;
+    background: #e3f4ec;
+    color: #047857;
+    border-left: 3px solid #059669;
     font-weight: 600;
 }
 
@@ -424,8 +346,8 @@ QListWidget::item:selected {
 
 QPushButton {
     background: #ffffff;
-    color: #334155;
-    border: 1px solid #cbd5e1;
+    color: #44403c;
+    border: 1px solid #ddd6cb;
     border-radius: 8px;
     min-height: 38px;
     padding: 0 16px;
@@ -434,19 +356,19 @@ QPushButton {
 }
 
 QPushButton:hover {
-    background: #f8fafc;
-    border-color: #94a3b8;
-    color: #0f172a;
+    background: #faf8f4;
+    border-color: #a8a29e;
+    color: #1c1917;
 }
 
 QPushButton:pressed {
-    background: #f1f5f9;
+    background: #f6f3ee;
 }
 
 QPushButton:disabled {
-    background: #f1f5f9;
-    color: #94a3b8;
-    border-color: #e2e8f0;
+    background: #f6f3ee;
+    color: #a8a29e;
+    border-color: #ece7df;
 }
 
 /* 5.2 Главное действие.
@@ -460,55 +382,55 @@ QPushButton:disabled {
 
 QPushButton#primaryButton,
 QDialogButtonBox QPushButton:default {
-    background: #111827;
+    background: #1c1917;
     color: #ffffff;
-    border: 1px solid #111827;
+    border: 1px solid #1c1917;
     font-weight: 600;
 }
 
 QPushButton#primaryButton:hover,
 QDialogButtonBox QPushButton:default:hover {
-    background: #1f2937;
-    border-color: #1f2937;
+    background: #292524;
+    border-color: #292524;
     color: #ffffff;
 }
 
 QPushButton#primaryButton:pressed,
 QDialogButtonBox QPushButton:default:pressed {
-    background: #030712;
-    border-color: #030712;
+    background: #0c0a09;
+    border-color: #0c0a09;
 }
 
 QPushButton#primaryButton:disabled,
 QDialogButtonBox QPushButton:default:disabled {
-    background: #d1d5db;
-    border-color: #d1d5db;
-    color: #f9fafb;
+    background: #d6d0c7;
+    border-color: #d6d0c7;
+    color: #faf8f4;
 }
 
 /* 5.3 Успех — завершение продажи. Единственный зелёный в приложении. */
 
 QPushButton#successButton {
-    background: #15803d;
+    background: #059669;
     color: #ffffff;
-    border: 1px solid #15803d;
+    border: 1px solid #059669;
     font-weight: 600;
 }
 
 QPushButton#successButton:hover {
-    background: #166534;
-    border-color: #166534;
+    background: #047857;
+    border-color: #047857;
     color: #ffffff;
 }
 
 QPushButton#successButton:pressed {
-    background: #14532d;
-    border-color: #14532d;
+    background: #065f46;
+    border-color: #065f46;
 }
 
 QPushButton#successButton:disabled {
-    background: #bbf7d0;
-    border-color: #bbf7d0;
+    background: #a7d9c3;
+    border-color: #a7d9c3;
     color: #ffffff;
 }
 
@@ -537,27 +459,27 @@ QPushButton#dangerButton:pressed {
 }
 
 QPushButton#dangerButton:disabled {
-    background: #f1f5f9;
-    color: #94a3b8;
-    border-color: #e2e8f0;
+    background: #f6f3ee;
+    color: #a8a29e;
+    border-color: #ece7df;
 }
 
 /* 5.5 Призрачная кнопка — третьестепенное действие. */
 
 QPushButton#ghostButton {
     background: transparent;
-    color: #475569;
+    color: #57534e;
     border: 1px solid transparent;
     font-weight: 500;
 }
 
 QPushButton#ghostButton:hover {
-    background: #e2e8f0;
-    color: #0f172a;
+    background: #ece7df;
+    color: #1c1917;
 }
 
 QPushButton#ghostButton:pressed {
-    background: #cbd5e1;
+    background: #ddd6cb;
 }
 
 /* 5.6 Размер.
@@ -600,7 +522,7 @@ QPushButton[flush="left"] {
 }
 
 /* 5.7 Плитка категории (Sotuv). Выбранная категория — это состояние
-   "что сейчас показано", а не действие, поэтому синий, а не чёрный —
+   "что сейчас показано", а не действие, поэтому изумрудный, а не чёрный —
    та же роль, что у активного пункта бокового меню (см. §4). */
 
 /* Явный сплошной цвет фона страницы вместо "transparent" — так
@@ -611,14 +533,14 @@ QPushButton[flush="left"] {
 QScrollArea#categoryScrollArea,
 QWidget#categoryScrollViewport,
 QWidget#categoryBarContent {
-    background: #f1f5f9;
+    background: #f6f3ee;
     border: none;
 }
 
 QPushButton#categoryTile {
     background: #ffffff;
-    color: #334155;
-    border: 1px solid #cbd5e1;
+    color: #44403c;
+    border: 1px solid #ddd6cb;
     border-radius: 20px;
     min-height: 40px;
     padding: 0 18px;
@@ -627,14 +549,14 @@ QPushButton#categoryTile {
 }
 
 QPushButton#categoryTile:hover {
-    background: #f8fafc;
-    border-color: #94a3b8;
+    background: #faf8f4;
+    border-color: #a8a29e;
 }
 
 QPushButton#categoryTile:checked {
-    background: #111827;
+    background: #1c1917;
     color: #ffffff;
-    border-color: #111827;
+    border-color: #1c1917;
 }
 
 /* 5.8 Sotuv — katalog panjarasi (grid) va ko'rinish almashtirgichi.
@@ -651,7 +573,7 @@ QPushButton#categoryTile:checked {
 
 QListView#productGridView,
 QWidget#productGridViewport {
-    background: #f1f5f9;
+    background: #f6f3ee;
     border: none;
 }
 
@@ -660,7 +582,7 @@ QWidget#productGridViewport {
 
 QPushButton#viewToggleButton {
     background: #ffffff;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #ddd6cb;
     border-radius: 8px;
     min-width: 38px;
     min-height: 38px;
@@ -668,12 +590,12 @@ QPushButton#viewToggleButton {
 }
 
 QPushButton#viewToggleButton:hover {
-    border-color: #94a3b8;
+    border-color: #a8a29e;
 }
 
 QPushButton#viewToggleButton:checked {
-    background: #111827;
-    border-color: #111827;
+    background: #1c1917;
+    border-color: #1c1917;
 }
 
 
@@ -690,12 +612,12 @@ QDateEdit,
 QSpinBox,
 QDoubleSpinBox {
     background: #ffffff;
-    color: #0f172a;
-    border: 1px solid #cbd5e1;
+    color: #1c1917;
+    border: 1px solid #ddd6cb;
     border-radius: 8px;
     min-height: 38px;
     padding: 0 12px;
-    selection-background-color: #2563eb;
+    selection-background-color: #059669;
     selection-color: #ffffff;
 }
 
@@ -704,7 +626,7 @@ QComboBox:hover,
 QDateEdit:hover,
 QSpinBox:hover,
 QDoubleSpinBox:hover {
-    border-color: #94a3b8;
+    border-color: #a8a29e;
 }
 
 QLineEdit:focus,
@@ -713,7 +635,7 @@ QDateEdit:focus,
 QSpinBox:focus,
 QDoubleSpinBox:focus,
 QTextEdit:focus {
-    border-color: #2563eb;
+    border-color: #059669;
 }
 
 QLineEdit:disabled,
@@ -721,9 +643,9 @@ QComboBox:disabled,
 QDateEdit:disabled,
 QSpinBox:disabled,
 QDoubleSpinBox:disabled {
-    background: #f1f5f9;
-    color: #94a3b8;
-    border-color: #e2e8f0;
+    background: #f6f3ee;
+    color: #a8a29e;
+    border-color: #ece7df;
 }
 
 /* Поле поиска — то же поле, но с чуть большим внутренним отступом. */
@@ -735,11 +657,11 @@ QLineEdit#searchInput {
 
 QTextEdit {
     background: #ffffff;
-    color: #0f172a;
-    border: 1px solid #cbd5e1;
+    color: #1c1917;
+    border: 1px solid #ddd6cb;
     border-radius: 8px;
     padding: 8px 12px;
-    selection-background-color: #2563eb;
+    selection-background-color: #059669;
     selection-color: #ffffff;
 }
 
@@ -748,14 +670,27 @@ QComboBox::drop-down {
     width: 26px;
 }
 
+/* Sana maydoni: "dd.MM.yyyy" + o'ng tomonda strelka uchun joy. Avval
+   matn strelka ostiga kirib, "01.01.2000" kesilib qolardi. */
+
+QDateEdit {
+    min-width: 170px;
+    padding: 0 6px 0 12px;
+}
+
+QDateEdit::drop-down {
+    border: none;
+    width: 32px;
+}
+
 QComboBox QAbstractItemView {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #ece7df;
     border-radius: 8px;
     padding: 4px;
     outline: none;
-    selection-background-color: #e8effc;
-    selection-color: #1d4ed8;
+    selection-background-color: #e3f4ec;
+    selection-color: #047857;
 }
 
 QSpinBox::up-button,
@@ -770,14 +705,14 @@ QDoubleSpinBox::down-button {
 QRadioButton,
 QCheckBox {
     background: transparent;
-    color: #0f172a;
+    color: #1c1917;
     spacing: 8px;
     min-height: 26px;
 }
 
 QRadioButton:disabled,
 QCheckBox:disabled {
-    color: #94a3b8;
+    color: #a8a29e;
 }
 
 
@@ -793,13 +728,13 @@ QCheckBox:disabled {
 QTableView,
 QTableWidget {
     background: #ffffff;
-    alternate-background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
+    alternate-background-color: #faf8f4;
+    border: 1px solid #ece7df;
     border-radius: 10px;
-    gridline-color: #eef2f7;
+    gridline-color: #f3efe8;
     outline: none;
-    selection-background-color: #e8effc;
-    selection-color: #0f172a;
+    selection-background-color: #e3f4ec;
+    selection-color: #1c1917;
 }
 
 QTableView::item,
@@ -810,8 +745,8 @@ QTableWidget::item {
 
 QTableView::item:selected,
 QTableWidget::item:selected {
-    background: #e8effc;
-    color: #0f172a;
+    background: #e3f4ec;
+    color: #1c1917;
 }
 
 QHeaderView {
@@ -820,22 +755,22 @@ QHeaderView {
 
 QHeaderView::section {
     background: #ffffff;
-    color: #64748b;
+    color: #78716c;
     border: none;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #ece7df;
     padding: 10px;
     font-size: 12px;
     font-weight: 600;
 }
 
 QHeaderView::section:horizontal {
-    border-right: 1px solid #f1f5f9;
+    border-right: 1px solid #f6f3ee;
 }
 
 QTableCornerButton::section {
     background: #ffffff;
     border: none;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #ece7df;
 }
 
 /* Бейдж-статус (StatusBadge / badge_cell из app/widgets/badge.py).
@@ -875,8 +810,8 @@ QLabel#badgeNeutral {
    диапазона: текст 900, фон 50 — 8.70:1, с запасом выше AAA (7:1). */
 
 QLabel#badgeSuccess {
-    background: #f0fdf4;
-    color: #14532d;
+    background: #d1fae5;
+    color: #065f46;
 }
 
 QLabel#badgeDanger {
@@ -890,8 +825,8 @@ QLabel#badgeWarning {
 }
 
 QLabel#badgeNeutral {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: #f6f3ee;
+    color: #292524;
 }
 
 
@@ -906,13 +841,13 @@ QScrollBar:vertical {
 }
 
 QScrollBar::handle:vertical {
-    background: #cbd5e1;
+    background: #ddd6cb;
     border-radius: 4px;
     min-height: 30px;
 }
 
 QScrollBar::handle:vertical:hover {
-    background: #94a3b8;
+    background: #a8a29e;
 }
 
 QScrollBar:horizontal {
@@ -922,13 +857,13 @@ QScrollBar:horizontal {
 }
 
 QScrollBar::handle:horizontal {
-    background: #cbd5e1;
+    background: #ddd6cb;
     border-radius: 4px;
     min-width: 30px;
 }
 
 QScrollBar::handle:horizontal:hover {
-    background: #94a3b8;
+    background: #a8a29e;
 }
 
 QScrollBar::add-line,
@@ -955,7 +890,7 @@ QMessageBox {
 
 QMessageBox QLabel {
     background: transparent;
-    color: #0f172a;
+    color: #1c1917;
 }
 
 QDialogButtonBox {
@@ -973,11 +908,475 @@ QDialogButtonBox QPushButton {
 
 QWidget#statusBar {
     background: #ffffff;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #ece7df;
 }
 
 QLabel#statusBarHint {
-    color: #64748b;
+    color: #78716c;
     font-size: 12px;
     background: transparent;
+}
+
+
+/* --------------------------------------------------------------------------
+   9. SOTUV REDESIGN: chap rels, qidiruv, kategoriyalar, korzina, to'lov
+
+   Barcha qiymatlar yuqoridagi palitradan. Yangi ranglar kiritilmagan:
+   ichki "ink" (#1c1917) — asosiy harakat/holat, izumrud (#059669) —
+   akksent va "pul qabul qilindi".
+   -------------------------------------------------------------------------- */
+
+/* 9.1 Chap rels. Rels ichidagi hamma narsa shaffof (umumiy QWidget
+   qoidasi ochiq fon beradi, qora relsda esa u ko'rinib qolardi). */
+
+QWidget#sidebar QLabel,
+QWidget#sidebarLogo,
+QWidget#sidebarUserPanel,
+QWidget#railSeparatorBox {
+    background: transparent;
+}
+
+QWidget#sidebar QLabel#railLogo {
+    background: #ffffff;
+    border-radius: 16px;
+}
+
+QFrame#railSeparator {
+    background: #44403c;
+    border: none;
+    max-height: 1px;
+    min-height: 1px;
+}
+
+QToolButton#railItem {
+    background: transparent;
+    color: #a8a29e;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    padding-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QToolButton#railItem:hover {
+    background: #292524;
+    color: #ffffff;
+}
+
+QToolButton#railItem:checked {
+    background: #292524;
+    color: #ffffff;
+    border-color: #059669;
+}
+
+QToolButton#railAvatar {
+    background: #44403c;
+    color: #ffffff;
+    border: none;
+    border-radius: 24px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+QToolButton#railAvatar:hover {
+    background: #57534e;
+}
+
+/* 9.2 Qidiruv, ko'rinish almashtirgich, kategoriyalar: "pilyulya" shakli,
+   barmoq uchun balandlik >= 44 px. */
+
+QLineEdit#searchInput {
+    min-height: 60px;
+    border-radius: 30px;
+    padding: 0 26px;
+    font-size: 17px;
+}
+
+QPushButton#viewToggleButton {
+    border-radius: 30px;
+    min-width: 60px;
+    min-height: 60px;
+}
+
+QPushButton#categoryTile {
+    min-height: 50px;
+    border-radius: 25px;
+    padding: 0 24px;
+    font-size: 16px;
+}
+
+/* Tanlangan kategoriya — izumrud (avval qora edi): "hozir shu ko'rsatilgan". */
+QPushButton#categoryTile:checked {
+    background: #059669;
+    border-color: #059669;
+    color: #ffffff;
+}
+
+/* 9.3 Korzina kartochkasi. */
+
+QFrame#cartCard {
+    background: #ffffff;
+    border: 1px solid #ece7df;
+    border-radius: 20px;
+}
+
+QFrame#shiftBar {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #ece7df;
+    border-radius: 0;
+}
+
+QFrame#cartHead {
+    background: #059669;
+    border: none;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+QLabel#cartTitle {
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+QLabel#cartCount {
+    background: #ffffff;
+    color: #047857;
+    border-radius: 15px;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+QScrollArea#cartScroll,
+QWidget#cartScrollViewport,
+QWidget#cartListContent {
+    background: transparent;
+    border: none;
+}
+
+QFrame#cartRow {
+    background: #faf8f4;
+    border: 2px solid transparent;
+    border-radius: 14px;
+}
+
+QFrame#cartRow[selected="true"] {
+    border-color: #059669;
+}
+
+QFrame#cartRow QLabel {
+    background: transparent;
+}
+
+QLabel#cartRowName {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1c1917;
+}
+
+QLabel#cartRowPrice {
+    font-size: 14px;
+    color: #78716c;
+}
+
+QLabel#cartRowTotal {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1c1917;
+}
+
+QPushButton#qtyMinus,
+QPushButton#qtyPlus {
+    min-width: 44px;
+    max-width: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    padding: 0;
+    border-radius: 22px;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+QPushButton#qtyMinus {
+    background: #ffffff;
+    color: #1c1917;
+    border: 1px solid #ddd6cb;
+}
+
+QPushButton#qtyPlus {
+    background: #1c1917;
+    color: #ffffff;
+    border: none;
+}
+
+QPushButton#qtyPlus:hover {
+    background: #292524;
+}
+
+QPushButton#qtyValue {
+    background: transparent;
+    border: none;
+    min-height: 44px;
+    min-width: 48px;
+    padding: 0 4px;
+    font-size: 19px;
+    font-weight: 800;
+    color: #1c1917;
+}
+
+QPushButton#qtyValue:hover {
+    background: #ece7df;
+    border-radius: 12px;
+}
+
+/* Jami — qora blok, yorqin izumrud summa (palitraga qo'shimcha ochiq
+   izumrud #34d399: faqat qora fonda o'qilishi uchun). */
+
+QFrame#totalBox {
+    background: #1c1917;
+    border: none;
+    border-radius: 20px;
+}
+
+QFrame#totalBox QLabel {
+    background: transparent;
+}
+
+QLabel#cartTotalCaption {
+    font-size: 17px;
+    color: #a8a29e;
+}
+
+QLabel#cartTotalAmount {
+    font-size: 38px;
+    font-weight: 800;
+    color: #34d399;
+}
+
+/* 9.4 To'lov tugmalari. Asosiysi — izumrud (pul qabul qilinadi),
+   qolganlari — konturli. */
+
+QPushButton#successButton[sizeVariant="lg"] {
+    min-height: 68px;
+    font-size: 22px;
+    font-weight: 800;
+    border-radius: 20px;
+}
+
+QPushButton#payAlt {
+    background: #ffffff;
+    color: #44403c;
+    min-height: 54px;
+    border: 2px solid #ece7df;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 0 8px;
+}
+
+QPushButton#payAlt:hover {
+    border-color: #1c1917;
+}
+
+QPushButton#payAlt:disabled {
+    background: #faf8f4;
+    color: #a8a29e;
+    border-color: #ece7df;
+}
+
+QPushButton#clearCartButton {
+    background: transparent;
+    border: none;
+    color: #d1fae5;
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+QPushButton#clearCartButton:hover {
+    color: #ffffff;
+    background: transparent;
+}
+
+
+/* --------------------------------------------------------------------------
+   10. SENSORLI KIRITISH: raqamli blok, summa maydoni, dialog tugmalari
+
+   Klaviaturasiz ishlash uchun: miqdor, og'irlik, to'lov va nasiya
+   dialoglari shu qismlardan yig'iladi (app/widgets/numpad.py).
+   -------------------------------------------------------------------------- */
+
+QPushButton#padKey {
+    background: #ffffff;
+    color: #1c1917;
+    border: 1px solid #ece7df;
+    border-radius: 18px;
+    min-height: 64px;
+    padding: 0;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+QPushButton#padKey:hover {
+    border-color: #a8a29e;
+}
+
+QPushButton#padKey:pressed {
+    background: #ece7df;
+    padding-top: 3px;
+}
+
+QPushButton#padKey:disabled {
+    background: #faf8f4;
+    color: #a8a29e;
+}
+
+/* Tezkor tugmalar: "Aniq", "+50 000", "Hammasi" */
+
+QPushButton#padChip {
+    background: #d1fae5;
+    color: #065f46;
+    border: none;
+    border-radius: 16px;
+    min-height: 52px;
+    padding: 0 6px;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+QPushButton#padChip:hover {
+    background: #a7f3d0;
+}
+
+QPushButton#padChip:pressed {
+    background: #6ee7b7;
+    padding-top: 3px;
+}
+
+QPushButton#padChip:disabled {
+    background: #f3efe8;
+    color: #a8a29e;
+}
+
+QFrame#amountField {
+    background: #ffffff;
+    border: 2px solid #ece7df;
+    border-radius: 20px;
+}
+
+QFrame#amountField[active="true"] {
+    border-color: #059669;
+}
+
+QFrame#amountField[state="bad"] {
+    border-color: #dc2626;
+}
+
+QFrame#amountField QLabel {
+    background: transparent;
+}
+
+QLabel#amountCaption {
+    font-size: 14px;
+    color: #78716c;
+}
+
+QLabel#amountValue {
+    font-size: 42px;
+    font-weight: 800;
+    color: #1c1917;
+}
+
+QLabel#amountUnit {
+    font-size: 18px;
+    color: #78716c;
+    padding-bottom: 6px;
+}
+
+QLabel#entryProduct {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1c1917;
+}
+
+QLabel#entryHint {
+    font-size: 16px;
+    font-weight: 600;
+    color: #047857;
+}
+
+QLabel#entryHint[state="bad"] {
+    color: #dc2626;
+}
+
+QLabel#changeLabel {
+    font-size: 30px;
+    font-weight: 800;
+    color: #047857;
+}
+
+QLabel#changeLabel[state="bad"] {
+    color: #dc2626;
+}
+
+QPushButton#tabButton {
+    background: #ffffff;
+    border: 1px solid #ece7df;
+    border-radius: 22px;
+    min-height: 48px;
+    padding: 0 24px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+QPushButton#tabButton:checked {
+    background: #1c1917;
+    border-color: #1c1917;
+    color: #ffffff;
+}
+
+
+/* --------------------------------------------------------------------------
+   11. NAZORAT: bosilganda zudlik bilan javob (QSS animatsiya qila olmaydi)
+
+   Rang darhol o'zgaradi va matn 2-3 px "botadi" — barmoq ostida tugma
+   "bosilgandek" seziladi.
+   -------------------------------------------------------------------------- */
+
+QPushButton#qtyPlus:pressed {
+    background: #44403c;
+    padding-top: 3px;
+}
+
+QPushButton#qtyMinus:pressed {
+    background: #ece7df;
+    padding-top: 3px;
+}
+
+QPushButton#successButton[sizeVariant="lg"]:pressed {
+    background: #047857;
+    padding-top: 4px;
+}
+
+QPushButton#payAlt:pressed {
+    background: #ece7df;
+    padding-top: 3px;
+}
+
+QPushButton#categoryTile:pressed {
+    background: #ece7df;
+}
+
+QPushButton#categoryTile:checked:pressed {
+    background: #047857;
+}
+
+QToolButton#railItem:pressed {
+    background: #3a3532;
+}
+
+QPushButton#tabButton:pressed {
+    background: #ece7df;
 }

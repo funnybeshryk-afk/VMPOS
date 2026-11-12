@@ -20,10 +20,11 @@ from app.utils.formatters import (
     parse_number,
 )
 from app.utils.icons import load_icon
+from app.utils.paths import resolve_data_path
 from app.widgets.secondary_button import SecondaryButton
 
 _REMOVE_ICON_SIZE = 14
-_REMOVE_ICON_COLOR = "#64748b"
+_REMOVE_ICON_COLOR = "#78716c"
 
 _IMAGE_PREVIEW_SIZE = 72
 _IMAGE_FILE_FILTER = (
@@ -162,7 +163,9 @@ class ProductDialog(QDialog):
         row_layout.addStretch()
 
         if product and product.image_path:
-            self._update_image_preview(product.image_path)
+            self._update_image_preview(
+                str(resolve_data_path(product.image_path))
+            )
         else:
             self._show_empty_image_preview()
 
