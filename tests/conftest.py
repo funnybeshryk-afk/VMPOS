@@ -33,9 +33,29 @@ def clean_data_dir():
 
 @pytest.fixture(scope="session")
 def qapp():
+    import gc
+
+    from PySide6.QtCore import QEvent
     from PySide6.QtWidgets import QApplication
 
-    return QApplication.instance() or QApplication([])
+    app = QApplication.instance() or QApplication([])
+
+    yield app
+
+    # Toza yakun: testlar ochib qoldirgan oynalar/taymerlar/animatsiyalar
+    # QApplication yo'q qilinayotganda tirik qolsa, Qt interpreter yopilishida
+    # noto'g'ri tartibda o'chiradi va jarayon "Bus error"/exit code != 0 bilan
+    # tugaydi (testlar o'tgan bo'lsa ham CI qizil bo'ladi).
+    app.closeAllWindows()
+
+    for widget in app.topLevelWidgets():
+        widget.close()
+        widget.deleteLater()
+
+    app.processEvents()
+    app.sendPostedEvents(None, QEvent.DeferredDelete)
+    app.processEvents()
+    gc.collect()
 
 
 @pytest.fixture(autouse=True)
