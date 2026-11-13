@@ -1,4 +1,5 @@
-VMPOS 1.2.2 — yangilanish cheklangan tarmoqlarda ishlaydi:
-- Yangilanishni tekshirish endi GitHub API bloklangan yoki limiti tugagan bo'lsa ham github.com orqali ishlaydi (zaxira yo'l).
-- Xato bo'lsa dastur sababini aniq aytadi (DNS, firewall, proxy, SSL, vaqt tugashi) va "Tafsilotlar"da texnik ma'lumotni ko'rsatadi.
-- Yangi: Sozlamalar -> "Fayldan o'rnatish". Internet bo'lmagan kompyuterda yangilanishni flesh-disk yoki tarmoq papkasidagi VMPOS-Setup-X.Y.Z.exe (+ .sha256) fayli orqali o'rnatish mumkin; fayl SHA-256 bilan tekshiriladi.
+VMPOS 1.2.3 — shtrix-kod yorliqlari va skaner sinovi:
+- Yorliqdagi shtrix-kod endi ishonchliroq o'qiladi: chetlardagi bo'sh joy (tinch zona) kamida 10 modul, kod kengroq, chiziqlar printer pikseliga butun qilib tekislanadi.
+- Yorliq chop etish oynasida: tanlangan o'lchamda shtrix-kod juda zich bo'lsa ogohlantirish chiqadi (masalan, 13 raqamli kod 30x20 yorliqda). 40x30 yoki kattaroq oling.
+- Maslahat: shtrix-kodni ekrandan emas, qog'ozga chop etib skanerlang — ekranda kod juda mayda bo'lib qoladi.
+- Yangi: Sozlamalar -> Skaner -> "Skaner sinovi". Skaner nima yuborayotganini ko'rsatadi (matn, oxirgi Enter/Tab, tezlik).
