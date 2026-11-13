@@ -1,5 +1,4 @@
-VMPOS 1.2.0 — yangi interfeys, o'rnatuvchi va avto-yangilash:
-- Sotuv: yangi ko'rinish, katta tugmalar, sensorli kiritish (miqdor, og'irlik, to'lov, nasiya) va animatsiyalar.
-- Hisobotlar: sana endi bugungi kunga o'rnatiladi (avval 01.01.2000 chiqardi) va maydonga to'liq sig'adi.
-- Yangi ilova ikonkasi.
-- Endi dastur o'rnatuvchi (VMPOS-Setup) orqali o'rnatiladi va yangilanishlarni o'zi tekshiradi (Sozlamalar -> Yangilanishni tekshirish). Ma'lumotlar alohida saqlanadi va yangilashda yo'qolmaydi.
+VMPOS 1.2.1 — shtrix-kod skaneri tuzatildi:
+- Skaner endi kategoriya, mahsulot kartochkasi, korzina qatori yoki "+/–" tugmasi bosilgandan keyin ham ishlaydi (avval fokus qidiruv maydonidan ketib, skanerlash yo'qolardi).
+- Skanerlash va qidiruv ancha tezlashdi: katta ro'yxatda har bir raqam qotib qolmaydi (3000 mahsulotda ~17 s o'rniga ~0,03 s).
+- "Ro'yxat" ko'rinishida holat endi rangli matn bilan ko'rsatiladi.
