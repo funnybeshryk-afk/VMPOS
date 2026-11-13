@@ -101,6 +101,7 @@ class SidebarMenu(QWidget):
         button.setCheckable(True)
         button.setAutoRaise(True)
         button.setCursor(Qt.PointingHandCursor)
+        button.setFocusPolicy(Qt.NoFocus)
         button.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         button.setFixedSize(_ITEM_SIZE)
         button.setIcon(

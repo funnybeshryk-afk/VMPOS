@@ -64,6 +64,7 @@ class CategoryBar(QWidget):
         # (TouchGesture), sichqonchada — g'ildirak bilan (wheelEvent).
         # Ko'rinib turgan skroll-bar plitkalarni kesib, qator
         # balandligini "yeb" qo'yardi.
+        self._scroll_area.setFocusPolicy(Qt.NoFocus)
         self._scroll_area.setFrameShape(QFrame.NoFrame)
         self._scroll_area.setAutoFillBackground(False)
         self._scroll_area.viewport().setAutoFillBackground(False)
@@ -142,6 +143,7 @@ class CategoryBar(QWidget):
         tile.setObjectName("categoryTile")
         tile.setCheckable(True)
         tile.setCursor(Qt.PointingHandCursor)
+        tile.setFocusPolicy(Qt.NoFocus)
         tile.setIcon(
             load_checkable_icon(
                 _icon_for_tile(value),

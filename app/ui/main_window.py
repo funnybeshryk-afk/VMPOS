@@ -194,6 +194,7 @@ class MainWindow(QMainWindow):
         self.switch_user_button.setObjectName("railAvatar")
         self.switch_user_button.setFixedSize(48, 48)
         self.switch_user_button.setCursor(Qt.PointingHandCursor)
+        self.switch_user_button.setFocusPolicy(Qt.NoFocus)
         self.switch_user_button.clicked.connect(
             self.switch_active_user
         )

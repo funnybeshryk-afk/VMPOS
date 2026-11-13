@@ -117,6 +117,7 @@ class _CartRow(QFrame):
             minus = QPushButton("–")
             minus.setObjectName("qtyMinus")
             minus.setCursor(Qt.PointingHandCursor)
+            minus.setFocusPolicy(Qt.NoFocus)
             minus.clicked.connect(
                 lambda: self.changeRequested.emit(self._product_id, -1)
             )
@@ -130,6 +131,7 @@ class _CartRow(QFrame):
         self.quantity_button = QPushButton(quantity_text)
         self.quantity_button.setObjectName("qtyValue")
         self.quantity_button.setCursor(Qt.PointingHandCursor)
+        self.quantity_button.setFocusPolicy(Qt.NoFocus)
         self.quantity_button.setToolTip("Miqdorni kiritish")
         self.quantity_button.clicked.connect(
             lambda: self.editRequested.emit(self._product_id)
@@ -140,6 +142,7 @@ class _CartRow(QFrame):
             plus = QPushButton("+")
             plus.setObjectName("qtyPlus")
             plus.setCursor(Qt.PointingHandCursor)
+            plus.setFocusPolicy(Qt.NoFocus)
             plus.clicked.connect(
                 lambda: self.changeRequested.emit(self._product_id, 1)
             )
