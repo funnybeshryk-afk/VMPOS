@@ -19,9 +19,13 @@ import json
 import logging
 import re
 import shutil
+import socket
+import ssl
 import subprocess
 import sys
 import tempfile
+import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
@@ -33,6 +37,9 @@ logger = logging.getLogger(__name__)
 REPO = "funnybeshryk-afk/VMPOS"
 LATEST_RELEASE_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
 ALLOWED_DOWNLOAD_PREFIX = f"https://github.com/{REPO}/releases/download/"
+# API ishlamasa (bloklangan / limit) zaxira yo'l: github.com'ning o'zi oxirgi
+# tegga yo'naltiradi.
+LATEST_PAGE_URL = f"https://github.com/{REPO}/releases/latest"
 
 
 
@@ -55,7 +62,13 @@ _MAX_INSTALLER_BYTES = 500 * 1024 * 1024
 
 
 class UpdateError(Exception):
-    """Yangilash jarayonidagi kutilgan xato (foydalanuvchiga ko'rsatish mumkin)."""
+    """Yangilash jarayonidagi kutilgan xato (foydalanuvchiga ko'rsatish
+    mumkin). technical — qo'llab-quvvatlash uchun aniq sabab (logga ham
+    yoziladi, oynada "Tafsilotlar"da ko'rinadi)."""
+
+    def __init__(self, message, technical=""):
+        super().__init__(message)
+        self.technical = technical
 
 
 class UpdateCancelled(UpdateError):
@@ -113,6 +126,92 @@ def can_install():
     return sys.platform == "win32" and getattr(sys, "frozen", False)
 
 
+def explain_network_error(error):
+    """Tarmoq xatosini tushunarli sabab (foydalanuvchi uchun) va aniq
+    texnik matnga (qo'llab-quvvatlash uchun) ajratadi."""
+
+    technical = f"{type(error).__name__}: {error}"
+    reason = getattr(error, "reason", None)
+
+    if isinstance(error, urllib.error.HTTPError):
+        code = error.code
+        remaining = error.headers.get("X-RateLimit-Remaining") if error.headers else None
+
+        if code in (403, 429) and remaining == "0":
+            message = (
+                "GitHub so'rovlar limiti tugadi (bitta tarmoqdan juda ko'p "
+                "kompyuter so'ragan). Bir soatdan keyin urinib ko'ring."
+            )
+        elif code == 407:
+            message = "Proxy-server login/parol so'rayapti (407)."
+        elif code == 403:
+            message = (
+                "Kirish taqiqlangan (403): tarmoq (firewall/proxy) "
+                "github.com'ni bloklagan bo'lishi mumkin."
+            )
+        elif code == 404:
+            message = "Reliz topilmadi (404)."
+        elif code >= 500:
+            message = f"GitHub vaqtincha ishlamayapti (xato {code}). Keyinroq urinib ko'ring."
+        else:
+            message = f"Server xatosi: HTTP {code}."
+    elif isinstance(reason, ssl.SSLError) or isinstance(error, ssl.SSLError):
+        message = (
+            "Xavfsiz ulanish (SSL) xatosi. Kompyuter sanasi va vaqti "
+            "to'g'rimi? Antivirus yoki proxy sertifikatni almashtirayotgan "
+            "bo'lishi mumkin."
+        )
+    elif isinstance(reason, socket.gaierror):
+        message = (
+            "Manzil topilmadi (DNS): tarmoqda internet yo'q yoki "
+            "github.com bloklangan."
+        )
+    elif isinstance(reason, (socket.timeout, TimeoutError)) or isinstance(
+        error, (socket.timeout, TimeoutError)
+    ):
+        message = (
+            "Javob kelmadi (vaqt tugadi): tarmoq juda sekin yoki "
+            "github.com bloklangan."
+        )
+    elif isinstance(reason, OSError) or isinstance(error, OSError):
+        message = "Ulanish rad etildi (firewall yoki proxy to'sib qo'ygan bo'lishi mumkin)."
+    else:
+        message = "Serverga ulanib bo'lmadi."
+
+    return message, technical
+
+
+def _is_transient(error):
+    reason = getattr(error, "reason", error)
+
+    return isinstance(
+        reason, (socket.timeout, TimeoutError, ConnectionResetError)
+    )
+
+
+def _open(url, timeout, attempts=2):
+    """_request + bitta qayta urinish (vaqtinchalik uzilishlar uchun:
+    vaqt tugashi, ulanish uzilishi). HTTP xatolari (403/404...) qayta
+    urinilmaydi."""
+
+    for attempt in range(attempts):
+        try:
+            return _request(url, timeout)
+        except urllib.error.HTTPError:
+            raise
+        except Exception as error:
+            if attempt + 1 < attempts and _is_transient(error):
+                time.sleep(1)
+                continue
+            raise
+
+
+def _extract_hash(text):
+    match = re.search(r"\b([0-9a-fA-F]{64})\b", text)
+
+    return match.group(1).lower() if match else None
+
+
 def _request(url, timeout):
     request = urllib.request.Request(
         url,
@@ -126,12 +225,10 @@ def _request(url, timeout):
 
 
 def _read_hash_file(url):
-    with _request(url, _API_TIMEOUT) as response:
+    with _open(url, _API_TIMEOUT) as response:
         text = response.read(4096).decode("utf-8", "replace")
 
-    match = re.search(r"\b([0-9a-fA-F]{64})\b", text)
-
-    return match.group(1).lower() if match else None
+    return _extract_hash(text)
 
 
 def _extract_sha256(assets, installer_asset):
@@ -205,17 +302,145 @@ def parse_release(release, current_version=APP_VERSION):
     )
 
 
-def check_for_update(current_version=APP_VERSION):
-    """Yangi versiya bor bo'lsa UpdateInfo, yo'q bo'lsa None.
-    Tarmoq xatosida UpdateError ko'taradi."""
+def _check_via_redirect(current_version):
+    """Zaxira yo'l: API o'rniga github.com/.../releases/latest sahifasi
+    oxirgi relizning tegiga yo'naltiradi. Tarmoq ba'zan api.github.com'ni
+    to'sadi (yoki limit tugaydi), lekin github.com'ni ochiq qoldiradi.
+    Izoh (notes) bu yo'lda yo'q — yangilash esa xuddi shunday SHA-256
+    tekshiruvi bilan ishlaydi."""
+
+    with _open(LATEST_PAGE_URL, _API_TIMEOUT) as response:
+        final_url = response.geturl()
+
+    match = re.search(r"/releases/tag/([^/?#]+)$", final_url)
+
+    if match is None:
+        return None
+
+    tag = match.group(1)
+
+    if not is_newer(tag, current_version):
+        return None
+
+    version = tag.lstrip("vV")
+    name = f"VMPOS-Setup-{version}.exe"
+
+    if not INSTALLER_PATTERN.match(name):
+        return None
+
+    base = f"{ALLOWED_DOWNLOAD_PREFIX}{tag}/"
 
     try:
-        with _request(LATEST_RELEASE_URL, _API_TIMEOUT) as response:
-            release = json.loads(response.read(2 * 1024 * 1024))
-    except Exception as error:
-        raise UpdateError(f"Yangilanishni tekshirib bo'lmadi: {error}") from error
+        sha256 = _read_hash_file(base + name + ".sha256")
+    except urllib.error.HTTPError as error:
+        if error.code == 404:
+            # Bu relizda bizning o'rnatuvchimiz yo'q (eski usuldagi reliz).
+            logger.warning("Zaxira yo'l: %s relizida .sha256 yo'q", tag)
+            return None
+        raise
 
-    return parse_release(release, current_version)
+    if not sha256:
+        logger.warning("Zaxira yo'l: %s uchun SHA-256 topilmadi", tag)
+        return None
+
+    return UpdateInfo(
+        version=version,
+        notes="",
+        installer_name=name,
+        installer_url=base + name,
+        sha256=sha256,
+        size=0,
+    )
+
+
+def check_for_update(current_version=APP_VERSION):
+    """Yangi versiya bor bo'lsa UpdateInfo, yo'q bo'lsa None.
+
+    Avval GitHub API, u ishlamasa — github.com orqali zaxira yo'l.
+    Ikkalasi ham ishlamasa UpdateError (tushunarli sabab + texnik tafsilot)."""
+
+    try:
+        with _open(LATEST_RELEASE_URL, _API_TIMEOUT) as response:
+            release = json.loads(response.read(2 * 1024 * 1024))
+
+        return parse_release(release, current_version)
+
+    except Exception as api_error:
+        message, api_technical = explain_network_error(api_error)
+        logger.warning("API orqali tekshirib bo'lmadi: %s", api_technical)
+
+    try:
+        return _check_via_redirect(current_version)
+
+    except Exception as fallback_error:
+        _message, fallback_technical = explain_network_error(fallback_error)
+        logger.warning("Zaxira yo'l ham ishlamadi: %s", fallback_technical)
+
+        raise UpdateError(
+            f"Yangilanishni tekshirib bo'lmadi. {message}",
+            technical=(
+                f"GitHub API: {api_technical}\n"
+                f"github.com: {fallback_technical}"
+            ),
+        ) from fallback_error
+
+
+def verify_local_installer(path, current_version=APP_VERSION):
+    """Internetsiz yangilash: o'rnatuvchi fayl (VMPOS-Setup-X.Y.Z.exe) va
+    uning yonidagi .sha256 fayli. Hash MAJBURIY (fayl buzilmaganini va
+    aynan reliz ekanini tekshirish uchun); eski versiyaga qaytishga ruxsat
+    yo'q. Muvaffaqiyatda UpdateInfo qaytaradi."""
+
+    path = Path(path)
+    match = re.fullmatch(r"VMPOS-Setup-(\d+\.\d+\.\d+)\.exe", path.name)
+
+    if match is None:
+        raise UpdateError(
+            "Fayl nomi VMPOS-Setup-X.Y.Z.exe ko'rinishida bo'lishi kerak "
+            "(relizdan yuklab olingan nomni o'zgartirmang)."
+        )
+
+    version = match.group(1)
+
+    if not is_newer(version, current_version):
+        raise UpdateError(
+            f"Bu versiya (v{version}) o'rnatilganidan (v{current_version}) "
+            "yangi emas."
+        )
+
+    hash_path = path.with_name(path.name + ".sha256")
+
+    if not hash_path.is_file():
+        raise UpdateError(
+            f"Yoniga {hash_path.name} faylini ham qo'ying (relizdan ikkalasini "
+            "yuklab oling) — shunda fayl buzilmaganini tekshiramiz."
+        )
+
+    expected = _extract_hash(hash_path.read_text(encoding="utf-8", errors="replace"))
+
+    if not expected:
+        raise UpdateError(f"{hash_path.name} ichida SHA-256 topilmadi.")
+
+    digest = hashlib.sha256()
+
+    with open(path, "rb") as installer:
+        for chunk in iter(lambda: installer.read(_CHUNK_SIZE), b""):
+            digest.update(chunk)
+
+    if digest.hexdigest() != expected:
+        raise UpdateError(
+            "Fayl buzilgan yoki boshqa fayl (SHA-256 mos kelmadi). "
+            "Qayta yuklab oling."
+        )
+
+    return UpdateInfo(
+        version=version,
+        notes="",
+        installer_name=path.name,
+        installer_url=str(path),
+        sha256=expected,
+        size=path.stat().st_size,
+    )
 
 
 def download_installer(info, progress=None, is_cancelled=None):

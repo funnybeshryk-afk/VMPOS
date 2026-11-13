@@ -98,9 +98,16 @@ class SettingsPage(QWidget):
             lambda: self.update_flow.check(silent=False)
         )
 
+        # Internet cheklangan tarmoq uchun: o'rnatuvchini fayldan o'rnatish.
+        self.install_file_button = SecondaryButton("Fayldan o'rnatish")
+        self.install_file_button.clicked.connect(
+            lambda: self.update_flow.install_from_file()
+        )
+
         update_row = QHBoxLayout()
         update_row.addWidget(version_label)
         update_row.addWidget(self.check_update_button)
+        update_row.addWidget(self.install_file_button)
         update_row.addStretch()
 
         main_layout.addWidget(title)
