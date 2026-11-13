@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 from app.services.backup_service import BackupService
 from app.services.settings_service import SettingsService
 from app.ui.backup_restore_dialog import BackupRestoreDialog
+from app.ui.scanner_test_dialog import ScannerTestDialog
 from app.ui.update_flow import UpdateFlow
 from app.utils import motion
 from app.widgets.danger_button import DangerButton
@@ -72,6 +73,19 @@ class SettingsPage(QWidget):
         backup_row.addWidget(self.restore_backup_button)
         backup_row.addStretch()
 
+        # Skaner sinovi: skaner nima yuborayotganini ko'rsatadi.
+        scanner_title = QLabel("Skaner")
+        scanner_title.setObjectName("sectionTitle")
+
+        self.scanner_test_button = SecondaryButton("Skaner sinovi")
+        self.scanner_test_button.clicked.connect(
+            lambda: ScannerTestDialog(self).exec()
+        )
+
+        scanner_row = QHBoxLayout()
+        scanner_row.addWidget(self.scanner_test_button)
+        scanner_row.addStretch()
+
         interface_title = QLabel("Interfeys")
         interface_title.setObjectName("sectionTitle")
 
@@ -115,6 +129,8 @@ class SettingsPage(QWidget):
         main_layout.addWidget(self.save_button)
         main_layout.addWidget(backup_title)
         main_layout.addLayout(backup_row)
+        main_layout.addWidget(scanner_title)
+        main_layout.addLayout(scanner_row)
         main_layout.addWidget(interface_title)
         main_layout.addWidget(self.animations_checkbox)
         main_layout.addWidget(update_title)

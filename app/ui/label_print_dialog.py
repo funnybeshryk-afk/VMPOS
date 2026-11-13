@@ -20,6 +20,7 @@ from app.utils.label_printing import (
     LABEL_SIZE_PRESETS,
     SHEET_HEIGHT_MM,
     SHEET_WIDTH_MM,
+    barcode_is_too_dense,
     build_label_entries,
     compute_grid_layout,
     paginate_entries,
@@ -132,6 +133,23 @@ class LabelPrintDialog(QDialog):
         self.preview_caption.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.preview_caption)
 
+        # Shtrix-kod bu o'lchamda juda mayda bo'lsa — ogohlantirish (skaner
+        # o'qimaydi). Pastda doimiy maslahat: ekrandan emas, qog'ozdan skanerlang.
+        self.density_warning = QLabel()
+        self.density_warning.setObjectName("entryHint")
+        self.density_warning.setProperty("state", "bad")
+        self.density_warning.setWordWrap(True)
+        self.density_warning.hide()
+        main_layout.addWidget(self.density_warning)
+
+        scan_tip = QLabel(
+            "Maslahat: shtrix-kodni ekrandan emas, qog'ozga chop etib "
+            "skanerlang (ekranda chiziqlar juda mayda bo'lib qoladi)."
+        )
+        scan_tip.setObjectName("mutedText")
+        scan_tip.setWordWrap(True)
+        main_layout.addWidget(scan_tip)
+
         button_row = QHBoxLayout()
 
         self.export_pdf_button = SecondaryButton(
@@ -217,6 +235,7 @@ class LabelPrintDialog(QDialog):
     def update_preview(self):
         entries = self._collect_entries()
         width_mm, height_mm = self.get_label_size_mm()
+        self._update_density_warning(entries, width_mm)
         cols, rows = compute_grid_layout(width_mm, height_mm)
 
         pixmap = QPixmap(
@@ -252,6 +271,25 @@ class LabelPrintDialog(QDialog):
             )
 
         self.preview_label.setPixmap(pixmap)
+
+    def _update_density_warning(self, entries, width_mm):
+        dense = {
+            product.id
+            for product in entries
+            if barcode_is_too_dense(product.barcode, width_mm)
+        }
+
+        if not dense:
+            self.density_warning.hide()
+            return
+
+        self.density_warning.setText(
+            f"Diqqat: {len(dense)} ta mahsulotning shtrix-kodi bu o'lchamda "
+            "juda zich (eng tor chiziq 0,25 mm dan kichik) — skaner "
+            "o'qimasligi mumkin. Kattaroq yorliq tanlang (masalan 40 x 30 "
+            "yoki 58 x 40 mm)."
+        )
+        self.density_warning.show()
 
     def _collect_entries(self):
         products_with_copies = [
