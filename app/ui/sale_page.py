@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from PySide6.QtCore import QSize, Qt, QTimer
-from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtGui import QBrush, QColor, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QButtonGroup,
     QFrame,
@@ -26,6 +26,7 @@ from app.ui.customer_picker_dialog import CustomerPickerDialog
 from app.ui.mixed_payment_dialog import MixedPaymentDialog
 from app.ui.payment_dialog import PaymentDialog
 from app.ui.quantity_edit_dialog import QuantityEditDialog
+from app.ui.scan_capture import ScanCapture
 from app.ui.weight_dialog import WeightDialog
 from app.utils.formatters import format_money, format_quantity
 from app.utils.icons import load_checkable_icon, load_icon
@@ -35,7 +36,7 @@ from app.utils.sounds import (
     play_error_sound,
     play_payment_sound,
 )
-from app.widgets.badge import stock_status_badge
+from app.widgets.badge import resolve_stock_status
 from app.widgets.category_bar import CategoryBar
 from app.widgets.animated_number import AnimatedNumber
 from app.widgets.cart_list import CartList
@@ -56,6 +57,7 @@ class SalePage(QWidget):
         super().__init__()
 
         self.cart = {}
+        self._shown_products = []
         self.selected_category = None
         self.current_shift = None
 
@@ -109,6 +111,12 @@ class SalePage(QWidget):
             self.on_product_double_clicked
         )
 
+        # Sensorli tugmalar/ro'yxatlar klaviatura fokusini OLMASIN: fokus
+        # doim qidiruv maydonida qoladi — skaner (klaviatura sifatida
+        # yozadi) tap'dan keyin ham ishlashi uchun.
+        self.product_grid.setFocusPolicy(Qt.NoFocus)
+        self.products_table.setFocusPolicy(Qt.NoFocus)
+
         self.products_view_stack = QStackedWidget()
         self.products_view_stack.addWidget(self.product_grid)
         self.products_view_stack.addWidget(self.products_table)
@@ -123,6 +131,11 @@ class SalePage(QWidget):
         main_layout.addWidget(self._build_cart_card(), 2)
 
         self.setup_shortcuts()
+
+        # Qo'shimcha himoya: fokus boshqa vidjetga tushib qolgan bo'lsa ham
+        # (yopilgan dialog va h.k.) skaner raqamlari qidiruv maydoniga o'tadi.
+        self._scan_capture = ScanCapture(self, self.search_edit)
+
         self.load_products()
         self.update_cart_table()
 
@@ -171,6 +184,7 @@ class SalePage(QWidget):
         self.new_sale_button = QPushButton("Tozalash")
         self.new_sale_button.setObjectName("clearCartButton")
         self.new_sale_button.setCursor(Qt.PointingHandCursor)
+        self.new_sale_button.setFocusPolicy(Qt.NoFocus)
         self.new_sale_button.setToolTip("Yangi savdo (F5)")
         self.new_sale_button.clicked.connect(self.clear_cart)
 
@@ -192,6 +206,7 @@ class SalePage(QWidget):
         self.shift_panel = ShiftStatusPanel()
 
         self.cart_list = CartList()
+        self.cart_list.setFocusPolicy(Qt.NoFocus)
         self.cart_list.changeRequested.connect(self.change_quantity)
         self.cart_list.editRequested.connect(self.edit_quantity)
 
@@ -233,6 +248,7 @@ class SalePage(QWidget):
             "Naqd pul bilan to'lash",
             large=True,
         )
+        self.cash_payment_button.setFocusPolicy(Qt.NoFocus)
         self.cash_payment_button.clicked.connect(
             lambda: self.complete_sale("cash")
         )
@@ -282,6 +298,7 @@ class SalePage(QWidget):
     def _make_alt_pay_button(self, text, icon_name, method):
         button = SecondaryButton(text)
         button.setObjectName("payAlt")
+        button.setFocusPolicy(Qt.NoFocus)
         button.clicked.connect(lambda: self.complete_sale(method))
         button.setIcon(load_icon(icon_name, color="#44403c", size=18))
         button.setIconSize(QSize(18, 18))
@@ -323,6 +340,7 @@ class SalePage(QWidget):
         button.setObjectName("viewToggleButton")
         button.setCheckable(True)
         button.setCursor(Qt.PointingHandCursor)
+        button.setFocusPolicy(Qt.NoFocus)
         button.setToolTip(tooltip)
         button.setIcon(
             load_checkable_icon(
@@ -345,6 +363,7 @@ class SalePage(QWidget):
             self.products_view_stack.setCurrentWidget(
                 self.products_table
             )
+            self._populate_table(self._shown_products)
         else:
             self.products_view_stack.setCurrentWidget(
                 self.product_grid
@@ -427,34 +446,55 @@ class SalePage(QWidget):
 
     def populate_products(self, products):
         self.product_grid.set_products(products)
-        self.products_table.setRowCount(len(products))
+        self._shown_products = list(products)
 
-        for row, product in enumerate(products):
-            barcode_item = QTableWidgetItem(product.barcode)
-            barcode_item.setData(Qt.UserRole, product.id)
+        # "Ro'yxat" jadvali FAQAT ko'rinib turganda to'ldiriladi. Avval u
+        # har bir harf bosilganda (skaner 13 raqamni bir zumda yuboradi)
+        # yashirin holda ham to'liq qayta qurilar edi — 1000 mahsulotda
+        # ~0,5 s, ya'ni skaner "ishlamayotgandek" qotib qolardi.
+        if self.products_view_stack.currentWidget() is self.products_table:
+            self._populate_table(self._shown_products)
 
-            self.products_table.setItem(row, 0, barcode_item)
-            self.products_table.setItem(
-                row, 1, QTableWidgetItem(product.name)
-            )
-            self.products_table.setItem(
-                row,
-                2,
-                QTableWidgetItem(format_money(product.sell_price)),
-            )
-            self.products_table.setItem(
-                row,
-                3,
-                QTableWidgetItem(format_quantity(product.quantity)),
-            )
-            self.products_table.setCellWidget(
-                row,
-                4,
-                stock_status_badge(
-                    product.quantity,
-                    product.min_quantity,
-                ),
-            )
+    # Qoldiq holati matn rangi (jadvaldagi har qator uchun alohida vidjet
+    # o'rniga — vidjet yaratish juda sekin edi).
+    _STATUS_COLORS = {
+        "success": "#065f46",
+        "warning": "#92400e",
+        "danger": "#991b1b",
+        "neutral": "#44403c",
+    }
+
+    def _populate_table(self, products):
+        table = self.products_table
+        table.setUpdatesEnabled(False)
+
+        try:
+            table.setRowCount(len(products))
+
+            for row, product in enumerate(products):
+                barcode_item = QTableWidgetItem(product.barcode)
+                barcode_item.setData(Qt.UserRole, product.id)
+
+                status_text, variant = resolve_stock_status(
+                    product.quantity, product.min_quantity
+                )
+                status_item = QTableWidgetItem(status_text)
+                status_item.setForeground(
+                    QBrush(QColor(self._STATUS_COLORS.get(variant, "#44403c")))
+                )
+                status_item.setTextAlignment(Qt.AlignCenter)
+
+                table.setItem(row, 0, barcode_item)
+                table.setItem(row, 1, QTableWidgetItem(product.name))
+                table.setItem(
+                    row, 2, QTableWidgetItem(format_money(product.sell_price))
+                )
+                table.setItem(
+                    row, 3, QTableWidgetItem(format_quantity(product.quantity))
+                )
+                table.setItem(row, 4, status_item)
+        finally:
+            table.setUpdatesEnabled(True)
 
     def search_products(self, text):
         text = text.strip().lower()

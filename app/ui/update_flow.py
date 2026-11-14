@@ -8,7 +8,12 @@ yopamiz: savdo o'rtasida kutilmaganda yopilish hech qachon bo'lmaydi.
 import logging
 
 from PySide6.QtCore import QObject, Qt, QThread, Signal
-from PySide6.QtWidgets import QApplication, QMessageBox, QProgressDialog
+from PySide6.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QMessageBox,
+    QProgressDialog,
+)
 
 from app.services import update_service
 from app.services.backup_service import KIND_PREUPDATE, BackupService
@@ -20,16 +25,16 @@ logger = logging.getLogger(__name__)
 
 class _CheckWorker(QThread):
     found = Signal(object)  # UpdateInfo | None
-    failed = Signal(str)
+    failed = Signal(str, str)  # tushunarli sabab, texnik tafsilot
 
     def run(self):
         try:
             self.found.emit(update_service.check_for_update())
         except UpdateError as error:
-            self.failed.emit(str(error))
+            self.failed.emit(str(error), error.technical)
         except Exception as error:  # kutilmagan xato ham oqimni o'ldirmasin
             logger.exception("Yangilanishni tekshirishda xato")
-            self.failed.emit(str(error))
+            self.failed.emit("Yangilanishni tekshirib bo'lmadi.", repr(error))
 
 
 class _DownloadWorker(QThread):
@@ -97,17 +102,24 @@ class UpdateFlow(QObject):
         self._check_worker = worker
         worker.start()
 
-    def _on_check_failed(self, message):
+    def _on_check_failed(self, message, technical):
         self._busy = False
-        logger.warning("Yangilanishni tekshirib bo'lmadi: %s", message)
+        logger.warning("Yangilanishni tekshirib bo'lmadi: %s | %s", message, technical)
 
-        if not self._silent:
-            QMessageBox.warning(
-                self._dialog_parent(),
-                "Yangilanish",
-                "Yangilanishni tekshirib bo'lmadi.\n"
-                "Internet ulanishini tekshiring va qayta urinib ko'ring.",
-            )
+        if self._silent:
+            return
+
+        box = QMessageBox(self._dialog_parent())
+        box.setIcon(QMessageBox.Warning)
+        box.setWindowTitle("Yangilanish")
+        box.setText(message)
+        box.setInformativeText(
+            "Bu kompyuterda internet cheklangan bo'lsa: boshqa kompyuterdan "
+            "yangilanish faylini (VMPOS-Setup-X.Y.Z.exe va .sha256) yuklab "
+            "olib, \"Fayldan o'rnatish\" tugmasi orqali o'rnating."
+        )
+        box.setDetailedText(technical)
+        box.exec()
 
     def _on_found(self, info):
         self._busy = False
@@ -122,6 +134,51 @@ class UpdateFlow(QObject):
             return
 
         self._offer(info)
+
+    # ---- fayldan o'rnatish (internetsiz) -----------------------------
+
+    def install_from_file(self):
+        """Internet cheklangan tarmoq uchun: o'rnatuvchi (va .sha256) boshqa
+        kompyuterdan/flesh-diskdan olinadi. Hash tekshiruvi majburiy."""
+
+        parent = self._dialog_parent()
+
+        if not update_service.can_install():
+            QMessageBox.information(
+                parent,
+                "Yangilanish",
+                "Fayldan o'rnatish faqat o'rnatilgan dasturda (Windows) ishlaydi.",
+            )
+            return
+
+        path, _filter = QFileDialog.getOpenFileName(
+            parent,
+            "Yangilanish faylini tanlang",
+            "",
+            "VMPOS o'rnatuvchi (VMPOS-Setup-*.exe)",
+        )
+
+        if not path:
+            return
+
+        try:
+            info = update_service.verify_local_installer(path)
+        except UpdateError as error:
+            QMessageBox.warning(parent, "Yangilanish", str(error))
+            return
+
+        answer = QMessageBox.question(
+            parent,
+            "Yangilanish",
+            f"VMPOS v{info.version} o'rnatiladi (hozir v{APP_VERSION}).\n\n"
+            "Joriy savdoni yakunlang. Ma'lumotlaringiz saqlanadi va "
+            "avtomatik zaxiralanadi.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+
+        if answer == QMessageBox.Yes:
+            self._on_downloaded(info.installer_url)
 
     # ---- taklif --------------------------------------------------
 

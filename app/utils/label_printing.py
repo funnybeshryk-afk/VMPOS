@@ -1,3 +1,5 @@
+import math
+
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPainterPath
 
@@ -20,6 +22,35 @@ SHEET_WIDTH_MM = 210.0
 SHEET_HEIGHT_MM = 297.0
 SHEET_MARGIN_MM = 5.0
 LABEL_GAP_MM = 2.0
+
+# Shtrix-kod: Code128 standarti "tinch zona"ni (chap va o'ngda bo'sh joy)
+# kamida 10 modul talab qiladi — kamroq bo'lsa qattiq skanerlar o'qimaydi.
+QUIET_MODULES = 10
+# Skanerlar ishonchli o'qiydigan eng kichik modul (bir tor chiziq) kengligi.
+MIN_MODULE_MM = 0.25
+# Shtrix-kod yorliq kengligining shu ulushigacha (har tomondan) chetga
+# yaqinlashadi: umumiy 6% ichki chetdan ko'ra ko'proq joy beradi.
+_BARCODE_SIDE_MARGIN_RATIO = 0.02
+
+
+def barcode_module_mm(code, label_width_mm):
+    """Berilgan yorliq kengligida bitta modul (eng tor chiziq) necha mm
+    bo'lishini hisoblaydi. None — kodni shtrix-kodga aylantirib bo'lmadi."""
+
+    modules = get_barcode_modules(code)
+
+    if not modules:
+        return None
+
+    usable = label_width_mm * (1 - 2 * _BARCODE_SIDE_MARGIN_RATIO)
+
+    return usable / (len(modules) + 2 * QUIET_MODULES)
+
+
+def barcode_is_too_dense(code, label_width_mm):
+    module = barcode_module_mm(code, label_width_mm)
+
+    return module is not None and module < MIN_MODULE_MM
 
 
 def compute_grid_layout(label_width_mm, label_height_mm):
@@ -167,10 +198,11 @@ def paint_product_label(painter, rect, product):
         f"{format_money(product.sell_price)} so'm",
     )
 
+    side_margin = rect.width() * _BARCODE_SIDE_MARGIN_RATIO
     barcode_rect = QRectF(
-        content_rect.left(),
+        rect.left() + side_margin,
         price_rect.bottom(),
-        content_rect.width(),
+        rect.width() - 2 * side_margin,
         content_rect.bottom() - price_rect.bottom(),
     )
     paint_barcode(painter, barcode_rect, product.barcode)
@@ -191,18 +223,30 @@ def paint_barcode(painter, rect, code):
 
     text_height = rect.height() * 0.22
 
-    # Tinch zona (quiet zone) — chiziqlarning ikkala yonida bo'sh
-    # joy, skanerlar barcode boshi/oxirini shu orqali aniqlaydi.
-    # .build() faqat xom modul ketma-ketligini beradi (yozuvchisiz
-    # chaqirilgani uchun), shuning uchun bu yerda o'zimiz qo'shamiz.
-    quiet_zone = rect.width() * 0.05
+    # Tinch zona: avval chiziqlar kengligining 5% edi (~6,8 modul), endi
+    # chap va o'ngda KAMIDA QUIET_MODULES modul bo'sh joy qoldiriladi:
+    # modul kengligi mavjud kenglikdan (modullar + 2 ta tinch zona)ga
+    # bo'lib topiladi.
+    total_modules = len(modules) + 2 * QUIET_MODULES
+
+    # Modul kengligi BUTUN qurilma pikseliga yaxlitlanadi (printerda —
+    # nuqtaga): kasr kenglikda chiziqlar 2 va 3 nuqta bo'lib notekis
+    # chiqib, termoprinterda skanerni adashtirardi.
+    scale = painter.worldTransform().m11() or 1.0
+    module_device = rect.width() * scale / total_modules
+
+    if module_device >= 1:
+        module_device = math.floor(module_device)
+
+    module_width = module_device / scale
+    bars_width = module_width * len(modules)
+
     bars_rect = QRectF(
-        rect.left() + quiet_zone,
+        rect.left() + (rect.width() - bars_width) / 2,
         rect.top(),
-        rect.width() - 2 * quiet_zone,
+        bars_width,
         rect.height() - text_height,
     )
-    module_width = bars_rect.width() / len(modules)
 
     # Antialiasing qo'shni modullar orasida noaniq, oq "tirqish"
     # chiziqlarni hosil qilishi mumkin (har bir to'rtburchak alohida

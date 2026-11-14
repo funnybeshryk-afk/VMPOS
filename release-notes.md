@@ -1,5 +1,5 @@
-VMPOS 1.2.0 — yangi interfeys, o'rnatuvchi va avto-yangilash:
-- Sotuv: yangi ko'rinish, katta tugmalar, sensorli kiritish (miqdor, og'irlik, to'lov, nasiya) va animatsiyalar.
-- Hisobotlar: sana endi bugungi kunga o'rnatiladi (avval 01.01.2000 chiqardi) va maydonga to'liq sig'adi.
-- Yangi ilova ikonkasi.
-- Endi dastur o'rnatuvchi (VMPOS-Setup) orqali o'rnatiladi va yangilanishlarni o'zi tekshiradi (Sozlamalar -> Yangilanishni tekshirish). Ma'lumotlar alohida saqlanadi va yangilashda yo'qolmaydi.
+VMPOS 1.2.3 — shtrix-kod yorliqlari va skaner sinovi:
+- Yorliqdagi shtrix-kod endi ishonchliroq o'qiladi: chetlardagi bo'sh joy (tinch zona) kamida 10 modul, kod kengroq, chiziqlar printer pikseliga butun qilib tekislanadi.
+- Yorliq chop etish oynasida: tanlangan o'lchamda shtrix-kod juda zich bo'lsa ogohlantirish chiqadi (masalan, 13 raqamli kod 30x20 yorliqda). 40x30 yoki kattaroq oling.
+- Maslahat: shtrix-kodni ekrandan emas, qog'ozga chop etib skanerlang — ekranda kod juda mayda bo'lib qoladi.
+- Yangi: Sozlamalar -> Skaner -> "Skaner sinovi". Skaner nima yuborayotganini ko'rsatadi (matn, oxirgi Enter/Tab, tezlik).
