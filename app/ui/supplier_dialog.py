@@ -5,13 +5,14 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QTextEdit,
 )
+from app.i18n import tr
 
 
 class SupplierDialog(QDialog):
     def __init__(self, supplier=None, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Yetkazib beruvchi")
+        self.setWindowTitle(tr("Yetkazib beruvchi"))
         self.setMinimumWidth(380)
 
         layout = QFormLayout(self)
@@ -29,10 +30,10 @@ class SupplierDialog(QDialog):
                 supplier.description or ""
             )
 
-        layout.addRow("Nomi:", self.name_edit)
-        layout.addRow("Telefon:", self.phone_edit)
-        layout.addRow("Manzil:", self.address_edit)
-        layout.addRow("Izoh:", self.description_edit)
+        layout.addRow(tr("Nomi:"), self.name_edit)
+        layout.addRow(tr("Telefon:"), self.phone_edit)
+        layout.addRow(tr("Manzil:"), self.address_edit)
+        layout.addRow(tr("Izoh:"), self.description_edit)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.Save | QDialogButtonBox.Cancel

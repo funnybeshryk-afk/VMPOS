@@ -4,6 +4,7 @@ from app.services.refund_service import RefundService
 from app.utils.formatters import format_money
 from app.widgets.data_table import DataTable
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 
 class RefundHistoryDialog(QDialog):
@@ -14,7 +15,7 @@ class RefundHistoryDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Qaytarishlar tarixi")
+        self.setWindowTitle(tr("Qaytarishlar tarixi"))
         self.resize(650, 400)
 
         main_layout = QVBoxLayout(self)
@@ -22,14 +23,14 @@ class RefundHistoryDialog(QDialog):
         self.refunds_table = DataTable()
         self.refunds_table.setColumnCount(4)
         self.refunds_table.setHorizontalHeaderLabels([
-            "Sana",
-            "Chek raqami",
-            "Kassir",
-            "Summa",
+            tr("Sana"),
+            tr("Chek raqami"),
+            tr("Kassir"),
+            tr("Summa"),
         ])
         self.refunds_table.pin_column_width(1)
 
-        close_button = SecondaryButton("Yopish")
+        close_button = SecondaryButton(tr("Yopish"))
         close_button.clicked.connect(self.accept)
 
         main_layout.addWidget(self.refunds_table)
@@ -62,6 +63,6 @@ class RefundHistoryDialog(QDialog):
                 row,
                 3,
                 QTableWidgetItem(
-                    f"{format_money(refund.total_amount)} so'm"
+                    tr("{0} so'm").format(format_money(refund.total_amount))
                 ),
             )

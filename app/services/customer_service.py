@@ -1,6 +1,7 @@
 from app.database.database import SessionLocal
 from app.models.customer import Customer
 from app.models.debt_payment import DebtPayment
+from app.i18n import tr
 
 
 class CustomerService:
@@ -99,7 +100,7 @@ class CustomerService:
     @staticmethod
     def pay_debt(customer_id, amount):
         if amount <= 0:
-            raise ValueError("To'lov summasi noldan katta bo'lishi kerak.")
+            raise ValueError(tr("To'lov summasi noldan katta bo'lishi kerak."))
 
         session = SessionLocal()
 
@@ -107,14 +108,14 @@ class CustomerService:
             customer = session.get(Customer, customer_id)
 
             if customer is None:
-                raise ValueError("Mijoz topilmadi.")
+                raise ValueError(tr("Mijoz topilmadi."))
 
             if customer.debt_amount <= 0:
-                raise ValueError("Mijozda qarz yo'q.")
+                raise ValueError(tr("Mijozda qarz yo'q."))
 
             if amount > customer.debt_amount:
                 raise ValueError(
-                    "To'lov summasi qarzdan katta bo'lishi mumkin emas."
+                    tr("To'lov summasi qarzdan katta bo'lishi mumkin emas.")
                 )
 
             customer.debt_amount -= amount

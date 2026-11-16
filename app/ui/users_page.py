@@ -16,6 +16,7 @@ from app.widgets.danger_button import DangerButton
 from app.widgets.data_table import DataTable
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 
 class UsersPage(QWidget):
@@ -26,18 +27,18 @@ class UsersPage(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
 
-        title = QLabel("Foydalanuvchilar")
+        title = QLabel(tr("Foydalanuvchilar"))
         title.setObjectName("pageTitle")
 
         buttons_layout = QHBoxLayout()
 
-        self.add_button = PrimaryButton("Qo'shish")
+        self.add_button = PrimaryButton(tr("Qo'shish"))
         self.add_button.clicked.connect(self.add_user)
 
-        self.edit_button = SecondaryButton("Tahrirlash")
+        self.edit_button = SecondaryButton(tr("Tahrirlash"))
         self.edit_button.clicked.connect(self.edit_user)
 
-        self.delete_button = DangerButton("O'chirish")
+        self.delete_button = DangerButton(tr("O'chirish"))
         self.delete_button.clicked.connect(self.delete_user)
 
         buttons_layout.addWidget(self.add_button)
@@ -48,8 +49,8 @@ class UsersPage(QWidget):
         self.users_table = DataTable()
         self.users_table.setColumnCount(2)
         self.users_table.setHorizontalHeaderLabels([
-            "F.I.Sh.",
-            "Rol",
+            tr("F.I.Sh."),
+            tr("Rol"),
         ])
         self.users_table.pin_column_width(1)
 
@@ -75,9 +76,9 @@ class UsersPage(QWidget):
             self.users_table.setItem(row, 0, name_item)
 
             if user.role == ROLE_ADMIN:
-                role_badge = badge_cell("Administrator", "success")
+                role_badge = badge_cell(tr("Administrator"), "success")
             else:
-                role_badge = badge_cell("Kassir", "neutral")
+                role_badge = badge_cell(tr("Kassir"), "neutral")
 
             self.users_table.setCellWidget(row, 1, role_badge)
 
@@ -105,7 +106,7 @@ class UsersPage(QWidget):
         try:
             UserService.create_user(data)
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
             return
 
         self.load_users()
@@ -116,8 +117,8 @@ class UsersPage(QWidget):
         if user_id is None:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Tahrirlash uchun foydalanuvchini tanlang.",
+                tr("Diqqat"),
+                tr("Tahrirlash uchun foydalanuvchini tanlang."),
             )
             return
 
@@ -136,7 +137,7 @@ class UsersPage(QWidget):
         try:
             UserService.update_user(user_id, data)
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
             return
 
         self.load_users()
@@ -147,8 +148,8 @@ class UsersPage(QWidget):
         if user_id is None:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "O'chirish uchun foydalanuvchini tanlang.",
+                tr("Diqqat"),
+                tr("O'chirish uchun foydalanuvchini tanlang."),
             )
             return
 
@@ -159,8 +160,8 @@ class UsersPage(QWidget):
 
         reply = QMessageBox.question(
             self,
-            "Tasdiqlash",
-            f'"{user.full_name}" o‘chirmoqchimisiz?',
+            tr("Tasdiqlash"),
+            tr("\"{0}\" o‘chirmoqchimisiz?").format(user.full_name),
             QMessageBox.Yes | QMessageBox.No,
         )
 
@@ -170,7 +171,7 @@ class UsersPage(QWidget):
         try:
             UserService.delete_user(user_id)
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
             return
 
         self.load_users()

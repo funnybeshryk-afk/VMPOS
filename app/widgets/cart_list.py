@@ -22,8 +22,9 @@ from PySide6.QtWidgets import (
 
 from app.utils import motion
 from app.utils.formatters import format_money, format_quantity
-from app.utils.units import is_weight_unit
+from app.utils.units import is_weight_unit, unit_label
 from app.widgets.badge import StatusBadge
+from app.i18n import tr
 
 _ROW_HEIGHT = 88
 
@@ -101,7 +102,7 @@ class _CartRow(QFrame):
         top_row.addWidget(total_label)
 
         # 2-qator: birlik narxi (+ "Optom") va miqdor stepperi.
-        price_label = QLabel(f"{format_money(unit_price)} so'm")
+        price_label = QLabel(tr("{0} so'm").format(format_money(unit_price)))
         price_label.setObjectName("cartRowPrice")
 
         bottom_row = QHBoxLayout()
@@ -109,7 +110,7 @@ class _CartRow(QFrame):
         bottom_row.addWidget(price_label)
 
         if item["is_wholesale"]:
-            bottom_row.addWidget(StatusBadge("Optom", "success"))
+            bottom_row.addWidget(StatusBadge(tr("Optom"), "success"))
 
         bottom_row.addStretch()
 
@@ -126,13 +127,13 @@ class _CartRow(QFrame):
         quantity_text = format_quantity(quantity)
 
         if weight:
-            quantity_text += f" {product.unit.strip()}"
+            quantity_text += f" {unit_label(product.unit)}"
 
         self.quantity_button = QPushButton(quantity_text)
         self.quantity_button.setObjectName("qtyValue")
         self.quantity_button.setCursor(Qt.PointingHandCursor)
         self.quantity_button.setFocusPolicy(Qt.NoFocus)
-        self.quantity_button.setToolTip("Miqdorni kiritish")
+        self.quantity_button.setToolTip(tr("Miqdorni kiritish"))
         self.quantity_button.clicked.connect(
             lambda: self.editRequested.emit(self._product_id)
         )

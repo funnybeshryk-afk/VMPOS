@@ -11,8 +11,9 @@ from PySide6.QtWidgets import (
 
 from app.utils.category_icons import icon_for_category
 from app.utils.icons import load_checkable_icon
+from app.i18n import tr
 
-_ALL_LABEL = "Barchasi"
+_ALL_LABEL = tr("Barchasi")
 _ALL_ICON = "grid"
 _BAR_HEIGHT = 62
 

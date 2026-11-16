@@ -12,6 +12,7 @@ import threading
 from logging.handlers import RotatingFileHandler
 
 from app.utils.paths import get_logs_dir
+from app.i18n import tr
 
 _LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
 
@@ -54,7 +55,7 @@ def _handle_uncaught(exc_type, exc_value, exc_traceback):
         return
 
     logging.getLogger("uncaught").critical(
-        "Kutilmagan xato", exc_info=(exc_type, exc_value, exc_traceback)
+        tr("Kutilmagan xato"), exc_info=(exc_type, exc_value, exc_traceback)
     )
     _show_error_dialog()
 
@@ -86,11 +87,8 @@ def _show_error_dialog():
     try:
         QMessageBox.critical(
             None,
-            "Xatolik",
-            "Dasturda kutilmagan xatolik yuz berdi.\n\n"
-            "Ma'lumotlar saqlangan. Agar xato takrorlansa, dasturni "
-            "qayta oching va quyidagi log faylini yuboring:\n"
-            f"{get_log_path()}",
+            tr("Xatolik"),
+            tr("Dasturda kutilmagan xatolik yuz berdi.\n\nMa'lumotlar saqlangan. Agar xato takrorlansa, dasturni qayta oching va quyidagi log faylini yuboring:\n{0}").format(get_log_path()),
         )
     finally:
         _showing_error_dialog = False

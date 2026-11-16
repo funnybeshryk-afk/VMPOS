@@ -18,6 +18,7 @@ from app.widgets.data_table import DataTable
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.secondary_button import SecondaryButton
 from app.widgets.summary_card import SummaryCard
+from app.i18n import tr
 
 
 class ReportsPage(QWidget):
@@ -30,12 +31,12 @@ class ReportsPage(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
 
-        title = QLabel("Hisobotlar")
+        title = QLabel(tr("Hisobotlar"))
         title.setObjectName("pageTitle")
 
         filter_layout = QHBoxLayout()
 
-        date_label = QLabel("Sana:")
+        date_label = QLabel(tr("Sana:"))
 
         self.date_edit = QDateEdit()
         self.date_edit.setCalendarPopup(True)
@@ -48,14 +49,14 @@ class ReportsPage(QWidget):
 
         # Bu sahifadagi yagona qora PrimaryButton — filtrni
         # yangilaydi, eng ko'p bosiladigan amal.
-        self.refresh_button = PrimaryButton("Yangilash")
+        self.refresh_button = PrimaryButton(tr("Yangilash"))
         self.refresh_button.clicked.connect(self.load_sales)
 
-        self.return_button = SecondaryButton("Qaytarish")
+        self.return_button = SecondaryButton(tr("Qaytarish"))
         self.return_button.clicked.connect(self.open_return_dialog)
 
         self.refund_history_button = SecondaryButton(
-            "Qaytarishlar tarixi"
+            tr("Qaytarishlar tarixi")
         )
         self.refund_history_button.clicked.connect(
             self.open_refund_history
@@ -70,10 +71,10 @@ class ReportsPage(QWidget):
 
         summary_layout = QHBoxLayout()
 
-        self.sales_count_card = SummaryCard("Cheklar")
-        self.today_total_card = SummaryCard("Savdo")
-        self.cash_total_card = SummaryCard("Naqd pul")
-        self.card_total_card = SummaryCard("Karta")
+        self.sales_count_card = SummaryCard(tr("Cheklar"))
+        self.today_total_card = SummaryCard(tr("Savdo"))
+        self.cash_total_card = SummaryCard(tr("Naqd pul"))
+        self.card_total_card = SummaryCard(tr("Karta"))
 
         summary_layout.addWidget(self.sales_count_card)
         summary_layout.addWidget(self.today_total_card)
@@ -83,10 +84,10 @@ class ReportsPage(QWidget):
         self.sales_table = DataTable()
         self.sales_table.setColumnCount(4)
         self.sales_table.setHorizontalHeaderLabels([
-            "Chek raqami",
-            "Sana",
-            "Jami",
-            "Holat",
+            tr("Chek raqami"),
+            tr("Sana"),
+            tr("Jami"),
+            tr("Holat"),
         ])
         self.sales_table.pin_column_width(3)
         self.sales_table.cellDoubleClicked.connect(
@@ -114,13 +115,13 @@ class ReportsPage(QWidget):
 
         self.sales_count_card.set_value(summary["sales_count"])
         self.today_total_card.set_value(
-            f"{format_money(summary['total_amount'])} so'm"
+            tr("{0} so'm").format(format_money(summary['total_amount']))
         )
         self.cash_total_card.set_value(
-            f"{format_money(summary['cash_total'])} so'm"
+            tr("{0} so'm").format(format_money(summary['cash_total']))
         )
         self.card_total_card.set_value(
-            f"{format_money(summary['card_total'])} so'm"
+            tr("{0} so'm").format(format_money(summary['card_total']))
         )
 
         self.sales_table.setRowCount(len(sales))
@@ -146,7 +147,7 @@ class ReportsPage(QWidget):
                 row,
                 2,
                 QTableWidgetItem(
-                    f"{format_money(sale.total_amount)} so'm"
+                    tr("{0} so'm").format(format_money(sale.total_amount))
                 ),
             )
             self.sales_table.setCellWidget(row, 3, status_badge)

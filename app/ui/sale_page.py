@@ -44,6 +44,7 @@ from app.widgets.product_grid import ProductGrid
 from app.widgets.secondary_button import SecondaryButton
 from app.widgets.shift_status_panel import ShiftStatusPanel
 from app.widgets.success_button import SuccessButton
+from app.i18n import tr
 
 _SHIFT_REFRESH_INTERVAL_MS = 60_000
 _VIEW_TOGGLE_ICON_SIZE = 24
@@ -70,7 +71,7 @@ class SalePage(QWidget):
         self.search_edit = QLineEdit()
         self.search_edit.setObjectName("searchInput")
         self.search_edit.setPlaceholderText(
-            "Shtrix-kod yoki nomi bo'yicha qidirish..."
+            tr("Shtrix-kod yoki nomi bo'yicha qidirish...")
         )
         self.search_edit.textChanged.connect(self.search_products)
         self.search_edit.returnPressed.connect(
@@ -99,11 +100,11 @@ class SalePage(QWidget):
         self.products_table = DataTable()
         self.products_table.setColumnCount(5)
         self.products_table.setHorizontalHeaderLabels([
-            "Shtrix-kod",
-            "Mahsulot",
-            "Narxi",
-            "Qoldiq",
-            "Holat",
+            tr("Shtrix-kod"),
+            tr("Mahsulot"),
+            tr("Narxi"),
+            tr("Qoldiq"),
+            tr("Holat"),
         ])
         self.products_table.pin_column_width(4)
         self.products_table.cellDoubleClicked.connect(
@@ -170,7 +171,7 @@ class SalePage(QWidget):
         head.setObjectName("cartHead")
         head.setFixedHeight(66)
 
-        cart_title = QLabel("Korzina")
+        cart_title = QLabel(tr("Korzina"))
         cart_title.setObjectName("cartTitle")
 
         self.cart_count_label = QLabel("0")
@@ -180,11 +181,11 @@ class SalePage(QWidget):
         self.cart_count_label.setAlignment(Qt.AlignCenter)
 
         # "Yangi savdo" (F5) — korzinani tozalaydi.
-        self.new_sale_button = QPushButton("Tozalash")
+        self.new_sale_button = QPushButton(tr("Tozalash"))
         self.new_sale_button.setObjectName("clearCartButton")
         self.new_sale_button.setCursor(Qt.PointingHandCursor)
         self.new_sale_button.setFocusPolicy(Qt.NoFocus)
-        self.new_sale_button.setToolTip("Yangi savdo (F5)")
+        self.new_sale_button.setToolTip(tr("Yangi savdo (F5)"))
         self.new_sale_button.clicked.connect(self.clear_cart)
 
         head_row = QHBoxLayout(head)
@@ -222,7 +223,7 @@ class SalePage(QWidget):
         total_box.setObjectName("totalBox")
         total_box.setFixedHeight(76)
 
-        caption = QLabel("Jami")
+        caption = QLabel(tr("Jami"))
         caption.setObjectName("cartTotalCaption")
 
         self.total_label = QLabel()
@@ -244,7 +245,7 @@ class SalePage(QWidget):
         # yagona izumrud katta tugma ("pul qabul qilindi"). Karta,
         # aralash va nasiya — kamroq ishlatiladi: konturli, bir qatorda.
         self.cash_payment_button = SuccessButton(
-            "Naqd pul bilan to'lash",
+            tr("Naqd pul bilan to'lash"),
             large=True,
         )
         self.cash_payment_button.setFocusPolicy(Qt.NoFocus)
@@ -257,16 +258,16 @@ class SalePage(QWidget):
         self.cash_payment_button.setIconSize(QSize(24, 24))
 
         self.card_payment_button = self._make_alt_pay_button(
-            "Karta", "credit-card", "card"
+            tr("Karta"), "credit-card", "card"
         )
         self.mixed_payment_button = self._make_alt_pay_button(
-            "Aralash", "shuffle", "mixed"
+            tr("Aralash"), "shuffle", "mixed"
         )
         # Nasiya — pul kassaga tushmaydi, mijoz qarziga yoziladi,
         # shuning uchun majburiy mijoz tanlovi bilan (complete_sale
         # ichida).
         self.debt_payment_button = self._make_alt_pay_button(
-            "Nasiya", "clock", "debt"
+            tr("Nasiya"), "clock", "debt"
         )
 
         alt_row = QHBoxLayout()
@@ -291,7 +292,7 @@ class SalePage(QWidget):
         return (
             f"{format_money(value)} "
             "<span style='font-size:18px;font-weight:500;"
-            "color:#a8a29e'>so'm</span>"
+            f"color:#a8a29e'>{tr("so'm")}</span>"
         )
 
     def _make_alt_pay_button(self, text, icon_name, method):
@@ -315,7 +316,7 @@ class SalePage(QWidget):
         self._view_toggle_group.setExclusive(True)
 
         self.grid_view_button = self._make_view_toggle_button(
-            "grid", "Katakcha ko'rinishi"
+            "grid", tr("Katakcha ko'rinishi")
         )
         self.grid_view_button.setChecked(True)
         self.grid_view_button.clicked.connect(
@@ -323,7 +324,7 @@ class SalePage(QWidget):
         )
 
         self.list_view_button = self._make_view_toggle_button(
-            "list", "Ro'yxat ko'rinishi"
+            "list", tr("Ro'yxat ko'rinishi")
         )
         self.list_view_button.clicked.connect(
             lambda: self.set_view_mode("list")
@@ -536,8 +537,8 @@ class SalePage(QWidget):
 
         QMessageBox.warning(
             self,
-            "Diqqat",
-            "Mahsulot topilmadi.",
+            tr("Diqqat"),
+            tr("Mahsulot topilmadi."),
         )
         self.search_edit.selectAll()
 
@@ -560,8 +561,8 @@ class SalePage(QWidget):
 
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                f"Qoldiq yo'q: {product.name}",
+                tr("Diqqat"),
+                tr("Qoldiq yo'q: {0}").format(product.name),
             )
             return
 
@@ -607,8 +608,8 @@ class SalePage(QWidget):
 
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                f"Qoldiq yetarli emas: {product.name}",
+                tr("Diqqat"),
+                tr("Qoldiq yetarli emas: {0}").format(product.name),
             )
             return
 
@@ -672,8 +673,8 @@ class SalePage(QWidget):
 
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                f"Qoldiq yetarli emas: {product.name}",
+                tr("Diqqat"),
+                tr("Qoldiq yetarli emas: {0}").format(product.name),
             )
             return
 
@@ -771,17 +772,17 @@ class SalePage(QWidget):
         if self.current_shift is None:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Sotish uchun avval Moliya bo'limida smenani "
-                "oching.",
+                tr("Diqqat"),
+                tr("Sotish uchun avval Moliya bo'limida smenani "
+                "oching."),
             )
             return
 
         if not self.cart:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Korzina bo'sh.",
+                tr("Diqqat"),
+                tr("Korzina bo'sh."),
             )
             return
 
@@ -860,7 +861,7 @@ class SalePage(QWidget):
 
             QMessageBox.warning(
                 self,
-                "Diqqat",
+                tr("Diqqat"),
                 str(error),
             )
             return
@@ -870,8 +871,8 @@ class SalePage(QWidget):
 
             QMessageBox.critical(
                 self,
-                "Xatolik",
-                "Savdoni saqlashda xatolik yuz berdi.",
+                tr("Xatolik"),
+                tr("Savdoni saqlashda xatolik yuz berdi."),
             )
             return
 
@@ -881,20 +882,16 @@ class SalePage(QWidget):
 
         if payment_method == "debt":
             result_text = (
-                f"Savdo #{sale.id} muvaffaqiyatli saqlandi.\n"
-                f"Qarzga yozildi: {format_money(debt_amount)} so'm\n"
-                f"Hoziroq naqd qabul qilindi: "
-                f"{format_money(sale.paid_amount)} so'm"
+                tr("Savdo #{0} muvaffaqiyatli saqlandi.\nQarzga yozildi: {1} so'm\nHoziroq naqd qabul qilindi: {2} so'm").format(sale.id, format_money(debt_amount), format_money(sale.paid_amount))
             )
         else:
             result_text = (
-                f"Savdo #{sale.id} muvaffaqiyatli saqlandi.\n"
-                f"Qaytim: {format_money(sale.change_amount)} so'm"
+                tr("Savdo #{0} muvaffaqiyatli saqlandi.\nQaytim: {1} so'm").format(sale.id, format_money(sale.change_amount))
             )
 
         QMessageBox.information(
             self,
-            "Muvaffaqiyatli",
+            tr("Muvaffaqiyatli"),
             result_text,
         )
 
@@ -913,11 +910,11 @@ class SalePage(QWidget):
         )
         icon_label.setAlignment(Qt.AlignCenter)
 
-        title_label = QLabel("Savat bo'sh")
+        title_label = QLabel(tr("Savat bo'sh"))
         title_label.setObjectName("cartEmptyTitle")
         title_label.setAlignment(Qt.AlignCenter)
 
-        subtitle_label = QLabel("Mahsulot tanlang")
+        subtitle_label = QLabel(tr("Mahsulot tanlang"))
         subtitle_label.setObjectName("cartEmptySubtitle")
         subtitle_label.setAlignment(Qt.AlignCenter)
 

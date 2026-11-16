@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QStackedWidget, QWidg
 from app.utils.icons import load_icon
 from app.widgets.badge import StatusBadge
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 _PANEL_HEIGHT = 48
 _ICON_SIZE = 20
@@ -92,12 +93,12 @@ class ShiftStatusPanel(QFrame):
         # Tushuntirish matni qatorga sig'maydi — undov (tooltip)
         # sifatida qoldiriladi, ixcham polosa esa faqat holat va
         # amalni ko'rsatadi.
-        status_badge = StatusBadge("Smena ochilmagan", "warning")
+        status_badge = StatusBadge(tr("Smena ochilmagan"), "warning")
         status_badge.setToolTip(
-            "Sotish uchun avval Moliya bo'limida smenani oching"
+            tr("Sotish uchun avval Moliya bo'limida smenani oching")
         )
 
-        open_moliya_button = SecondaryButton("Moliyaga o'tish")
+        open_moliya_button = SecondaryButton(tr("Moliyaga o'tish"))
         open_moliya_button.clicked.connect(
             self.openMoliyaRequested.emit
         )
@@ -113,8 +114,8 @@ class ShiftStatusPanel(QFrame):
         opened_text = opened_at.strftime("%H:%M")
 
         self._cashier_name_label.setText(cashier_name)
-        self._shift_meta_label.setText(f"· Smena #{shift_id}")
-        self._shift_meta_label.setToolTip(f"Smena ochilgan: {opened_text}")
+        self._shift_meta_label.setText(tr("· Smena #{0}").format(shift_id))
+        self._shift_meta_label.setToolTip(tr("Smena ochilgan: {0}").format(opened_text))
         self._clock_label.setText(now_text)
 
         self._stack.setCurrentWidget(self._shift_view)

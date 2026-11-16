@@ -17,6 +17,7 @@ from app.widgets.danger_button import DangerButton
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.secondary_button import SecondaryButton
 from app.widgets.summary_card import SummaryCard
+from app.i18n import tr
 
 
 class ProductsPage(QWidget):
@@ -27,17 +28,17 @@ class ProductsPage(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
 
-        title = QLabel("Mahsulotlar")
+        title = QLabel(tr("Mahsulotlar"))
         title.setObjectName("pageTitle")
 
         summary_layout = QHBoxLayout()
 
-        self.total_products_card = SummaryCard("Jami mahsulotlar")
-        self.categories_card = SummaryCard("Kategoriyalar")
-        self.low_stock_card = SummaryCard("Kam qolgan", "warning")
-        self.out_of_stock_card = SummaryCard("Tugagan", "danger")
+        self.total_products_card = SummaryCard(tr("Jami mahsulotlar"))
+        self.categories_card = SummaryCard(tr("Kategoriyalar"))
+        self.low_stock_card = SummaryCard(tr("Kam qolgan"), "warning")
+        self.out_of_stock_card = SummaryCard(tr("Tugagan"), "danger")
         self.stock_value_card = SummaryCard(
-            "Ombor qiymati", maskable=True, mask_text="•••••• so'm"
+            tr(tr("Ombor qiymati")), maskable=True, mask_text=tr("•••••• so'm")
         )
 
         summary_layout.addWidget(self.total_products_card)
@@ -50,21 +51,21 @@ class ProductsPage(QWidget):
 
         self.search = QLineEdit()
         self.search.setObjectName("searchInput")
-        self.search.setPlaceholderText("Qidirish...")
+        self.search.setPlaceholderText(tr("Qidirish..."))
 
         # "Qo'shish" — bu sahifadagi eng ko'p bosiladigan amal,
         # shuning uchun yagona qora PrimaryButton shu yerda.
         # Tahrirlash — ikkinchi darajali, SecondaryButton.
-        add_btn = PrimaryButton("Qo'shish")
+        add_btn = PrimaryButton(tr("Qo'shish"))
         add_btn.clicked.connect(self.open_add_dialog)
 
-        edit_btn = SecondaryButton("Tahrirlash")
+        edit_btn = SecondaryButton(tr("Tahrirlash"))
         edit_btn.clicked.connect(self.edit_product)
 
-        delete_btn = DangerButton("O'chirish")
+        delete_btn = DangerButton(tr("O'chirish"))
         delete_btn.clicked.connect(self.delete_product)
 
-        labels_btn = SecondaryButton("Narx yorliqlari")
+        labels_btn = SecondaryButton(tr("Narx yorliqlari"))
         labels_btn.clicked.connect(self.open_label_print_dialog)
 
         top_layout.addWidget(self.search)
@@ -124,7 +125,7 @@ class ProductsPage(QWidget):
         self.low_stock_card.set_value(low_stock_count)
         self.out_of_stock_card.set_value(out_of_stock_count)
         self.stock_value_card.set_value(
-            f"{format_money(stock_value)} so'm"
+            tr("{0} so'm").format(format_money(stock_value))
         )
 
     def open_add_dialog(self):
@@ -140,7 +141,7 @@ class ProductsPage(QWidget):
             except ValueError as error:
                 QMessageBox.warning(
                     self,
-                    "Diqqat",
+                    tr("Diqqat"),
                     str(error),
                 )
                 return
@@ -150,9 +151,8 @@ class ProductsPage(QWidget):
             if barcode_was_empty:
                 QMessageBox.information(
                     self,
-                    "Mahsulot saqlandi",
-                    "Avtomatik shtrix-kod berildi:\n"
-                    f"{product.barcode}",
+                    tr("Mahsulot saqlandi"),
+                    tr("Avtomatik shtrix-kod berildi:\n{0}").format(product.barcode),
                 )
 
     def edit_product(self):
@@ -161,8 +161,8 @@ class ProductsPage(QWidget):
         if current_row < 0:
             QMessageBox.information(
                 self,
-                "Diqqat",
-                "Tahrirlash uchun mahsulotni tanlang.",
+                tr("Diqqat"),
+                tr("Tahrirlash uchun mahsulotni tanlang."),
             )
             return
 
@@ -182,7 +182,7 @@ class ProductsPage(QWidget):
             except ValueError as error:
                 QMessageBox.warning(
                     self,
-                    "Diqqat",
+                    tr("Diqqat"),
                     str(error),
                 )
                 return
@@ -195,8 +195,8 @@ class ProductsPage(QWidget):
         if current_row < 0:
             QMessageBox.information(
                 self,
-                "Diqqat",
-                "O'chirish uchun mahsulotni tanlang.",
+                tr("Diqqat"),
+                tr("O'chirish uchun mahsulotni tanlang."),
             )
             return
 
@@ -205,8 +205,8 @@ class ProductsPage(QWidget):
 
         reply = QMessageBox.question(
             self,
-            "Tasdiqlash",
-            f'"{product_name}" o‘chirmoqchimisiz?',
+            tr("Tasdiqlash"),
+            tr("\"{0}\" o‘chirmoqchimisiz?").format(product_name),
             QMessageBox.Yes | QMessageBox.No,
         )
 
@@ -220,8 +220,8 @@ class ProductsPage(QWidget):
         if not selected_products:
             QMessageBox.information(
                 self,
-                "Diqqat",
-                "Narx yorlig'i uchun mahsulot(lar)ni tanlang.",
+                tr("Diqqat"),
+                tr("Narx yorlig'i uchun mahsulot(lar)ni tanlang."),
             )
             return
 

@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QWidget,
 )
+from app.i18n import tr
 
 _VARIANT_OBJECT_NAMES = {
     "success": "badgeSuccess",
@@ -89,12 +90,12 @@ def resolve_stock_status(quantity, min_quantity):
     """
 
     if quantity <= 0:
-        return "Tugagan", "danger"
+        return tr("Tugagan"), "danger"
 
     if min_quantity and quantity <= min_quantity:
-        return "Kam qoldi", "warning"
+        return tr("Kam qoldi"), "warning"
 
-    return "Yetarli", "success"
+    return tr("Yetarli"), "success"
 
 
 def stock_status_badge(quantity, min_quantity):
@@ -103,11 +104,12 @@ def stock_status_badge(quantity, min_quantity):
     return badge_cell(text, variant)
 
 
-_SALE_STATUS_LABELS = {
-    "completed": ("Yakunlangan", "success"),
-    "partially_refunded": ("Qisman qaytarilgan", "warning"),
-    "refunded": ("To'liq qaytarilgan", "danger"),
-}
+def _sale_status_labels():
+    return {
+        "completed": (tr("Yakunlangan"), "success"),
+        "partially_refunded": (tr("Qisman qaytarilgan"), "warning"),
+        "refunded": (tr("To'liq qaytarilgan"), "danger"),
+    }
 
 
 def resolve_sale_status(status):
@@ -116,4 +118,4 @@ def resolve_sale_status(status):
     uchun bitta joyda.
     """
 
-    return _SALE_STATUS_LABELS.get(status, (status, "neutral"))
+    return _sale_status_labels().get(status, (status, "neutral"))

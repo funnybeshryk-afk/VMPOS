@@ -1,14 +1,15 @@
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from app.widgets.badge import StatusBadge
+from app.i18n import tr
 
 _HOTKEYS = [
-    ("F2", "Qidiruv"),
-    ("F5", "Bekor qilish"),
-    ("F4", "To'lov"),
+    ("F2", tr("Qidiruv")),
+    ("F5", tr("Bekor qilish")),
+    ("F4", tr("To'lov")),
 ]
 
-_DEVICES = ["Skaner", "Tarozi", "Printer"]
+_DEVICES = [tr("Skaner"), tr("Tarozi"), tr("Printer")]
 
 
 class AppStatusBar(QWidget):
@@ -54,7 +55,7 @@ class AppStatusBar(QWidget):
         name_label = QLabel(device_name)
         name_label.setObjectName("statusBarHint")
 
-        status_badge = StatusBadge("Ulanmagan", "neutral")
+        status_badge = StatusBadge(tr("Ulanmagan"), "neutral")
 
         container_layout.addWidget(name_label)
         container_layout.addWidget(status_badge)

@@ -7,13 +7,14 @@ from PySide6.QtWidgets import (
 )
 
 from app.models.user import ROLE_ADMIN, ROLE_CASHIER, ROLE_LABELS
+from app.i18n import tr
 
 
 class UserDialog(QDialog):
     def __init__(self, user=None, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Foydalanuvchi")
+        self.setWindowTitle(tr("Foydalanuvchi"))
         self.setMinimumWidth(320)
 
         layout = QFormLayout(self)
@@ -35,8 +36,8 @@ class UserDialog(QDialog):
         if user:
             self.full_name_edit.setText(user.full_name or "")
 
-        layout.addRow("F.I.Sh.:", self.full_name_edit)
-        layout.addRow("Rol:", self.role_combo)
+        layout.addRow(tr("F.I.Sh.:"), self.full_name_edit)
+        layout.addRow(tr("Rol:"), self.role_combo)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.Save | QDialogButtonBox.Cancel

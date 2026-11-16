@@ -9,13 +9,14 @@ from PySide6.QtWidgets import (
 
 from app.models.user import ROLE_LABELS
 from app.utils.formatters import parse_number
+from app.i18n import tr
 
 
 class ShiftOpenDialog(QDialog):
     def __init__(self, users, parent=None, selected_user_id=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Smenani ochish")
+        self.setWindowTitle(tr("Smenani ochish"))
         self.setMinimumWidth(320)
 
         main_layout = QVBoxLayout(self)
@@ -40,12 +41,12 @@ class ShiftOpenDialog(QDialog):
         self.opening_cash_edit = QLineEdit()
         self.opening_cash_edit.setText("0")
         self.opening_cash_edit.setPlaceholderText(
-            "Masalan: 100 000"
+            tr("Masalan: 100 000")
         )
 
-        form_layout.addRow("Kassir:", self.cashier_combo)
+        form_layout.addRow(tr("Kassir:"), self.cashier_combo)
         form_layout.addRow(
-            "Boshlang'ich summa:", self.opening_cash_edit
+            tr("Boshlang'ich summa:"), self.opening_cash_edit
         )
 
         buttons = QDialogButtonBox(

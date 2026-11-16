@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QFormLayout,
     QHBoxLayout,
     QLabel,
@@ -19,6 +20,7 @@ from app.widgets.danger_button import DangerButton
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.secondary_button import SecondaryButton
 from app.version import APP_VERSION
+from app.i18n import get_language, save_language, tr
 
 
 class SettingsPage(QWidget):
@@ -29,7 +31,7 @@ class SettingsPage(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
 
-        title = QLabel("Sozlamalar")
+        title = QLabel(tr("Sozlamalar"))
         title.setObjectName("pageTitle")
 
         form_layout = QFormLayout()
@@ -38,16 +40,26 @@ class SettingsPage(QWidget):
         self.store_phone_edit = QLineEdit()
         self.store_address_edit = QLineEdit()
 
-        form_layout.addRow("Do'kon nomi:", self.store_name_edit)
-        form_layout.addRow("Telefon:", self.store_phone_edit)
-        form_layout.addRow("Manzil:", self.store_address_edit)
+        form_layout.addRow(tr("Do'kon nomi:"), self.store_name_edit)
+        form_layout.addRow(tr("Telefon:"), self.store_phone_edit)
+        form_layout.addRow(tr("Manzil:"), self.store_address_edit)
+
+        # Til: o'zgartirish qayta ishga tushirgandan keyin kuchga kiradi.
+        self.language_combo = QComboBox()
+        self.language_combo.addItem("O'zbekcha", "uz")
+        self.language_combo.addItem("Русский", "ru")
+        self.language_combo.setCurrentIndex(
+            max(0, self.language_combo.findData(get_language()))
+        )
+        self.language_combo.currentIndexChanged.connect(self.change_language)
+        form_layout.addRow(tr("Til:"), self.language_combo)
 
         # Sahifadagi yagona amal — saqlash, shuning uchun yagona
         # qora PrimaryButton.
-        self.save_button = PrimaryButton("Saqlash")
+        self.save_button = PrimaryButton(tr("Saqlash"))
         self.save_button.clicked.connect(self.save_settings)
 
-        backup_title = QLabel("Ma'lumotlar bazasi")
+        backup_title = QLabel(tr("Ma'lumotlar bazasi"))
         backup_title.setObjectName("sectionTitle")
 
         # Yaratish — xavfsiz, qaytariladigan amal (SecondaryButton).
@@ -55,14 +67,14 @@ class SettingsPage(QWidget):
         # uchun DangerButton, xuddi boshqa qaytarib bo'lmaydigan
         # amallar kabi (masalan mahsulotni o'chirish).
         self.create_backup_button = SecondaryButton(
-            "Zaxira nusxa yaratish"
+            tr("Zaxira nusxa yaratish")
         )
         self.create_backup_button.clicked.connect(
             self.create_backup
         )
 
         self.restore_backup_button = DangerButton(
-            "Zaxiradan tiklash"
+            tr("Zaxiradan tiklash")
         )
         self.restore_backup_button.clicked.connect(
             self.open_restore_dialog
@@ -74,10 +86,10 @@ class SettingsPage(QWidget):
         backup_row.addStretch()
 
         # Skaner sinovi: skaner nima yuborayotganini ko'rsatadi.
-        scanner_title = QLabel("Skaner")
+        scanner_title = QLabel(tr("Skaner"))
         scanner_title.setObjectName("sectionTitle")
 
-        self.scanner_test_button = SecondaryButton("Skaner sinovi")
+        self.scanner_test_button = SecondaryButton(tr("Skaner sinovi"))
         self.scanner_test_button.clicked.connect(
             lambda: ScannerTestDialog(self).exec()
         )
@@ -86,26 +98,26 @@ class SettingsPage(QWidget):
         scanner_row.addWidget(self.scanner_test_button)
         scanner_row.addStretch()
 
-        interface_title = QLabel("Interfeys")
+        interface_title = QLabel(tr("Interfeys"))
         interface_title.setObjectName("sectionTitle")
 
         # Qisqa animatsiyalar (jami summa, qator chiqishi, kartochka
         # "vspishka"si). Sekin kompyuterlarda o'chirib qo'yish mumkin —
         # natija o'zgarmaydi, faqat silliqlik yo'qoladi.
         self.animations_checkbox = QCheckBox(
-            "Animatsiyalar (sekin kompyuterda o'chiring)"
+            tr("Animatsiyalar (sekin kompyuterda o'chiring)")
         )
         self.animations_checkbox.setChecked(motion.is_enabled())
         self.animations_checkbox.toggled.connect(motion.save_enabled)
 
-        update_title = QLabel("Dastur versiyasi")
+        update_title = QLabel(tr("Dastur versiyasi"))
         update_title.setObjectName("sectionTitle")
 
-        version_label = QLabel(f"VMPOS v{APP_VERSION}")
+        version_label = QLabel(tr("VMPOS v{0}").format(APP_VERSION))
         version_label.setObjectName("mutedText")
 
         self.check_update_button = SecondaryButton(
-            "Yangilanishni tekshirish"
+            tr("Yangilanishni tekshirish")
         )
         self.update_flow = UpdateFlow(self)
         self.check_update_button.clicked.connect(
@@ -113,7 +125,7 @@ class SettingsPage(QWidget):
         )
 
         # Internet cheklangan tarmoq uchun: o'rnatuvchini fayldan o'rnatish.
-        self.install_file_button = SecondaryButton("Fayldan o'rnatish")
+        self.install_file_button = SecondaryButton(tr("Fayldan o'rnatish"))
         self.install_file_button.clicked.connect(
             lambda: self.update_flow.install_from_file()
         )
@@ -160,8 +172,8 @@ class SettingsPage(QWidget):
         if not store_name:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Do'kon nomini kiriting.",
+                tr("Diqqat"),
+                tr("Do'kon nomini kiriting."),
             )
             return
 
@@ -173,30 +185,46 @@ class SettingsPage(QWidget):
 
         QMessageBox.information(
             self,
-            "Muvaffaqiyatli",
-            "Sozlamalar saqlandi.",
+            tr("Muvaffaqiyatli"),
+            tr("Sozlamalar saqlandi."),
         )
+
+    def change_language(self):
+        code = self.language_combo.currentData()
+
+        if code == get_language():
+            return
+
+        save_language(code)
+
+        # Xabar YANGI tilda ko'rsatiladi (hozirgi til hali eski).
+        message = {
+            "uz": "Til o'zgartirildi. O'zgarish dasturni qayta ochgandan keyin kuchga kiradi.",
+            "ru": "Язык изменён. Изменение вступит в силу после перезапуска программы.",
+        }[code]
+
+        QMessageBox.information(self, tr("Til"), message)
 
     def create_backup(self):
         try:
             backup_path = BackupService.create_backup()
 
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
             return
 
         except Exception:
             QMessageBox.critical(
                 self,
-                "Xatolik",
-                "Zaxira nusxa yaratishda xatolik yuz berdi.",
+                tr("Xatolik"),
+                tr("Zaxira nusxa yaratishda xatolik yuz berdi."),
             )
             return
 
         QMessageBox.information(
             self,
-            "Muvaffaqiyatli",
-            f"Zaxira nusxa yaratildi: {backup_path.name}",
+            tr("Muvaffaqiyatli"),
+            tr("Zaxira nusxa yaratildi: {0}").format(backup_path.name),
         )
 
     def open_restore_dialog(self):

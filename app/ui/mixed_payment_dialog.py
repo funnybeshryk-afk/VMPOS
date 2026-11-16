@@ -5,6 +5,7 @@ from app.ui.touch_dialog import TouchDialog
 from app.utils.amount_buffer import AmountBuffer
 from app.utils.formatters import format_money
 from app.widgets.numpad import AmountField, NumPad
+from app.i18n import tr
 
 _TOLERANCE = 0.01
 
@@ -23,7 +24,7 @@ class MixedPaymentDialog(TouchDialog):
     """
 
     def __init__(self, total_amount, parent=None):
-        super().__init__("Aralash to'lov", parent, min_width=540)
+        super().__init__(tr("Aralash to'lov"), parent, min_width=540)
 
         self.total_amount = total_amount
 
@@ -45,8 +46,8 @@ class MixedPaymentDialog(TouchDialog):
         layout.addWidget(self._build_total_box())
 
         self._fields = {
-            "cash": AmountField("Naqd pul", "so'm"),
-            "card": AmountField("Karta", "so'm"),
+            "cash": AmountField(tr("Naqd pul"), tr("so'm")),
+            "card": AmountField(tr("Karta"), tr("so'm")),
         }
 
         for key, field in self._fields.items():
@@ -59,16 +60,16 @@ class MixedPaymentDialog(TouchDialog):
 
         chips = QHBoxLayout()
         chips.setSpacing(8)
-        chips.addWidget(self.make_chip("Hammasi naqd", lambda: self._split(1)))
+        chips.addWidget(self.make_chip(tr("Hammasi naqd"), lambda: self._split(1)))
         chips.addWidget(self.make_chip("50 / 50", lambda: self._split(0.5)))
-        chips.addWidget(self.make_chip("Hammasi karta", lambda: self._split(0)))
+        chips.addWidget(self.make_chip(tr("Hammasi karta"), lambda: self._split(0)))
         layout.addLayout(chips)
 
         pad = NumPad(left_key="000")
         self.connect_numpad(pad)
         layout.addWidget(pad)
 
-        layout.addLayout(self.build_footer("Tasdiqlash"))
+        layout.addLayout(self.build_footer(tr("Tasdiqlash")))
 
         self._refresh()
 
@@ -77,13 +78,11 @@ class MixedPaymentDialog(TouchDialog):
         box.setObjectName("totalBox")
         box.setFixedHeight(84)
 
-        caption = QLabel("Jami")
+        caption = QLabel(tr("Jami"))
         caption.setObjectName("cartTotalCaption")
 
         amount = QLabel(
-            f"{format_money(self.total_amount)} "
-            "<span style='font-size:18px;font-weight:500;"
-            "color:#a8a29e'>so'm</span>"
+            tr("{0} <span style='font-size:18px;font-weight:500;color:#a8a29e'>so'm</span>").format(format_money(self.total_amount))
         )
         amount.setObjectName("cartTotalAmount")
         amount.setTextFormat(Qt.RichText)
@@ -125,13 +124,13 @@ class MixedPaymentDialog(TouchDialog):
             field.set_active(key == self._active)
 
         if abs(remaining) <= _TOLERANCE:
-            self._hint.setText("Summalar jamga mos")
+            self._hint.setText(tr("Summalar jamga mos"))
             state = "ok"
         elif remaining > 0:
-            self._hint.setText(f"Yetishmayapti: {format_money(remaining)} so'm")
+            self._hint.setText(tr("Yetishmayapti: {0} so'm").format(format_money(remaining)))
             state = "bad"
         else:
-            self._hint.setText(f"Ortiqcha: {format_money(-remaining)} so'm")
+            self._hint.setText(tr("Ortiqcha: {0} so'm").format(format_money(-remaining)))
             state = "bad"
 
         self._hint.setProperty("state", state)

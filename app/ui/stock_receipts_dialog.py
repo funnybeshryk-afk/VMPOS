@@ -4,13 +4,14 @@ from app.services.product_service import ProductService
 from app.utils.formatters import format_quantity
 from app.widgets.data_table import DataTable
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 
 class StockReceiptsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Qabul tarixi")
+        self.setWindowTitle(tr("Qabul tarixi"))
         self.resize(750, 400)
 
         main_layout = QVBoxLayout(self)
@@ -18,13 +19,13 @@ class StockReceiptsDialog(QDialog):
         self.receipts_table = DataTable()
         self.receipts_table.setColumnCount(4)
         self.receipts_table.setHorizontalHeaderLabels([
-            "Sana",
-            "Mahsulot",
-            "Yetkazib beruvchi",
-            "Miqdor",
+            tr("Sana"),
+            tr("Mahsulot"),
+            tr("Yetkazib beruvchi"),
+            tr("Miqdor"),
         ])
 
-        close_button = SecondaryButton("Yopish")
+        close_button = SecondaryButton(tr("Yopish"))
         close_button.clicked.connect(self.accept)
 
         main_layout.addWidget(self.receipts_table)
@@ -56,7 +57,7 @@ class StockReceiptsDialog(QDialog):
                 row,
                 2,
                 QTableWidgetItem(
-                    receipt.supplier_name or "Ko'rsatilmagan"
+                    receipt.supplier_name or tr("Ko'rsatilmagan")
                 ),
             )
             self.receipts_table.setItem(

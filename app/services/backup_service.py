@@ -7,6 +7,7 @@ from pathlib import Path
 from app.database.database import DATABASE_PATH, engine
 from app.utils.paths import get_backup_dir
 from app.version import SCHEMA_VERSION
+from app.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,7 @@ class BackupService:
         """
 
         if not _DB_PATH.exists():
-            raise ValueError("Baza fayli topilmadi.")
+            raise ValueError(tr("Baza fayli topilmadi."))
 
         backup_dir = _backup_dir()
         backup_dir.mkdir(parents=True, exist_ok=True)
@@ -223,14 +224,14 @@ class BackupService:
         backup_path = Path(backup_path)
 
         if not backup_path.exists():
-            raise ValueError("Tanlangan zaxira fayli topilmadi.")
+            raise ValueError(tr("Tanlangan zaxira fayli topilmadi."))
 
         # Yangiroq dastur yaratgan zaxirani eski dastur tiklasa, baza
         # tuzilmasi mos kelmay qoladi — bunga yo'l qo'ymaymiz.
         if BackupService.read_schema_version(backup_path) > SCHEMA_VERSION:
             raise ValueError(
-                "Bu zaxira dasturning yangiroq versiyasida yaratilgan. "
-                "Avval dasturni yangilang."
+                tr("Bu zaxira dasturning yangiroq versiyasida yaratilgan. "
+                "Avval dasturni yangilang.")
             )
 
         if _DB_PATH.exists():

@@ -13,9 +13,10 @@ from app.utils.category_icons import icon_for_category
 from app.utils.formatters import format_money, format_quantity
 from app.utils.icons import load_icon
 from app.utils.paths import resolve_data_path
-from app.utils.units import is_weight_unit
+from app.utils.units import is_weight_unit, unit_label
 from app.widgets.badge import resolve_stock_status
 from app.widgets.product_list_model import CartQtyRole, FlashRole, ProductRole
+from app.i18n import tr
 
 CARD_SIZE = QSize(244, 322)
 
@@ -248,9 +249,9 @@ class ProductCardDelegate(QStyledItemDelegate):
         unit = (product.unit or "").strip()
 
         if is_weight_unit(unit):
-            text = f"{format_quantity(quantity)} {unit}"
+            text = f"{format_quantity(quantity)} {unit_label(unit)}"
         else:
-            text = f"{format_quantity(quantity)} ta"
+            text = f"{format_quantity(quantity)} {unit_label('ta')}"
 
         font = QFont(painter.font())
         font.setPointSize(10)
@@ -321,7 +322,7 @@ class ProductCardDelegate(QStyledItemDelegate):
         painter.drawText(
             price_rect.adjusted(price_width + 5, 0, 0, 0),
             Qt.AlignLeft | Qt.AlignVCenter,
-            "so'm",
+            tr("so'm"),
         )
 
         unit = (product.unit or "dona").strip() or "dona"
@@ -339,7 +340,7 @@ class ProductCardDelegate(QStyledItemDelegate):
         painter.drawText(
             stock_rect,
             Qt.AlignLeft | Qt.AlignVCenter,
-            f"{format_quantity(product.quantity)} {unit}",
+            f"{format_quantity(product.quantity)} {unit_label(unit)}",
         )
 
     def _paint_add_button(self, painter, content_rect):

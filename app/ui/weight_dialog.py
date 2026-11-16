@@ -1,4 +1,5 @@
 from app.ui.numeric_entry_dialog import NumericEntryDialog
+from app.i18n import tr
 
 _PRESETS = (("0,5", 0.5), ("1", 1), ("2", 2), ("5", 5))
 
@@ -9,7 +10,7 @@ class WeightDialog(NumericEntryDialog):
 
     def __init__(self, product, parent=None, price_for=None):
         super().__init__(
-            title="Og'irlikni kiriting",
+            title=tr("Og'irlikni kiriting"),
             product=product,
             unit="kg",
             allow_decimal=True,
@@ -17,7 +18,7 @@ class WeightDialog(NumericEntryDialog):
             initial=1,
             presets=_PRESETS,
             price_for=price_for,
-            price_caption="so'm / kg",
+            price_caption=tr("so'm / kg"),
             parent=parent,
         )
 

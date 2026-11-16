@@ -21,6 +21,7 @@ from app.widgets.data_table import DataTable
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.success_button import SuccessButton
 from app.widgets.summary_card import SummaryCard
+from app.i18n import tr
 
 
 class FinancePage(QWidget):
@@ -34,7 +35,7 @@ class FinancePage(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
 
-        title = QLabel("Moliya")
+        title = QLabel(tr("Moliya"))
         title.setObjectName("pageTitle")
 
         # Joriy smena paneli — kassir va ochiq smenaning joriy tushumi
@@ -51,13 +52,13 @@ class FinancePage(QWidget):
         self.shift_status_label = QLabel()
         self.shift_status_label.setObjectName("sectionTitle")
 
-        self.open_shift_button = PrimaryButton("Smenani ochish")
+        self.open_shift_button = PrimaryButton(tr("Smenani ochish"))
         self.open_shift_button.clicked.connect(self.open_shift)
 
         # Smenani yopish — kassadagi pulni sanab, tasdiqlash degani,
         # xuddi Sotuv sahifasidagi to'lov tugmasi kabi — shuning uchun
         # yagona yashil SuccessButton shu yerda ham qo'llanadi.
-        self.close_shift_button = SuccessButton("Smenani yopish")
+        self.close_shift_button = SuccessButton(tr("Smenani yopish"))
         self.close_shift_button.clicked.connect(self.close_shift)
 
         shift_header_layout.addWidget(self.shift_status_label)
@@ -67,10 +68,10 @@ class FinancePage(QWidget):
 
         shift_summary_layout = QHBoxLayout()
 
-        self.sales_count_card = SummaryCard("Cheklar")
-        self.total_amount_card = SummaryCard("Savdo")
-        self.cash_total_card = SummaryCard("Naqd pul")
-        self.card_total_card = SummaryCard("Karta")
+        self.sales_count_card = SummaryCard(tr("Cheklar"))
+        self.total_amount_card = SummaryCard(tr("Savdo"))
+        self.cash_total_card = SummaryCard(tr("Naqd pul"))
+        self.card_total_card = SummaryCard(tr("Karta"))
 
         shift_summary_layout.addWidget(self.sales_count_card)
         shift_summary_layout.addWidget(self.total_amount_card)
@@ -80,19 +81,19 @@ class FinancePage(QWidget):
         shift_panel_layout.addLayout(shift_header_layout)
         shift_panel_layout.addLayout(shift_summary_layout)
 
-        history_title = QLabel("Smenalar tarixi")
+        history_title = QLabel(tr("Smenalar tarixi"))
         history_title.setObjectName("sectionTitle")
 
         self.shifts_table = DataTable()
         self.shifts_table.setColumnCount(7)
         self.shifts_table.setHorizontalHeaderLabels([
-            "Ochilgan",
-            "Yopilgan",
-            "Kassir",
-            "Cheklar",
-            "Savdo summasi",
-            "Farq",
-            "Holat",
+            tr("Ochilgan"),
+            tr("Yopilgan"),
+            tr("Kassir"),
+            tr("Cheklar"),
+            tr("Savdo summasi"),
+            tr("Farq"),
+            tr("Holat"),
         ])
         self.shifts_table.pin_column_width(6)
         self.shifts_table.cellDoubleClicked.connect(
@@ -128,15 +129,15 @@ class FinancePage(QWidget):
             )
 
             if shift.status == "open":
-                status_badge = badge_cell("Ochiq", "success")
+                status_badge = badge_cell(tr("Ochiq"), "success")
                 sales_count_text = "—"
                 total_amount_text = "—"
                 difference_text = "—"
             else:
-                status_badge = badge_cell("Yopiq", "neutral")
+                status_badge = badge_cell(tr("Yopiq"), "neutral")
                 sales_count_text = str(shift.sales_count)
                 total_amount_text = (
-                    f"{format_money(shift.total_amount)} so'm"
+                    tr("{0} so'm").format(format_money(shift.total_amount))
                 )
                 difference_text = self._format_difference(
                     shift.cash_difference
@@ -165,7 +166,7 @@ class FinancePage(QWidget):
 
     def update_shift_panel(self):
         if self.current_shift is None:
-            self.shift_status_label.setText("Smena ochilmagan")
+            self.shift_status_label.setText(tr("Smena ochilmagan"))
             self.open_shift_button.setVisible(True)
             self.close_shift_button.setVisible(False)
 
@@ -180,8 +181,7 @@ class FinancePage(QWidget):
             "%d.%m.%Y %H:%M"
         )
         self.shift_status_label.setText(
-            f"Smena ochiq — {self.current_shift.cashier_name} "
-            f"({opened_text})"
+            tr("Smena ochiq — {0} ({1})").format(self.current_shift.cashier_name, opened_text)
         )
         self.open_shift_button.setVisible(False)
         self.close_shift_button.setVisible(True)
@@ -190,13 +190,13 @@ class FinancePage(QWidget):
 
         self.sales_count_card.set_value(summary["sales_count"])
         self.total_amount_card.set_value(
-            f"{format_money(summary['total_amount'])} so'm"
+            tr("{0} so'm").format(format_money(summary['total_amount']))
         )
         self.cash_total_card.set_value(
-            f"{format_money(summary['cash_total'])} so'm"
+            tr("{0} so'm").format(format_money(summary['cash_total']))
         )
         self.card_total_card.set_value(
-            f"{format_money(summary['card_total'])} so'm"
+            tr("{0} so'm").format(format_money(summary['card_total']))
         )
 
     def open_shift(self):
@@ -205,9 +205,9 @@ class FinancePage(QWidget):
         if not users:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Avval \"Foydalanuvchilar\" bo'limida xodim "
-                "qo'shing.",
+                tr("Diqqat"),
+                tr("Avval \"Foydalanuvchilar\" bo'limida xodim "
+                "qo'shing."),
             )
             return
 
@@ -232,7 +232,7 @@ class FinancePage(QWidget):
                 cashier_name, opening_cash_amount, cashier_user_id
             )
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
             return
 
         self.load_data()
@@ -253,7 +253,7 @@ class FinancePage(QWidget):
                 self.current_shift.id, closing_cash_amount
             )
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
             return
 
         self.load_data()
@@ -276,8 +276,8 @@ class FinancePage(QWidget):
         if shift.status != "closed":
             QMessageBox.information(
                 self,
-                "Diqqat",
-                "Bu smena hali yopilmagan.",
+                tr("Diqqat"),
+                tr("Bu smena hali yopilmagan."),
             )
             return
 

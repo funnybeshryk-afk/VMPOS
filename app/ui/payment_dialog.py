@@ -12,6 +12,7 @@ from app.ui.touch_dialog import TouchDialog
 from app.utils.amount_buffer import AmountBuffer
 from app.utils.formatters import format_money
 from app.widgets.numpad import AmountField, NumPad
+from app.i18n import tr
 
 _TOLERANCE = 0.01
 
@@ -28,7 +29,7 @@ class PaymentDialog(TouchDialog):
     """
 
     def __init__(self, total_amount, payment_method=None, parent=None):
-        super().__init__("To'lov", parent, min_width=560)
+        super().__init__(tr("To'lov"), parent, min_width=560)
 
         self.total_amount = total_amount
         self.fixed_payment_method = payment_method
@@ -52,7 +53,7 @@ class PaymentDialog(TouchDialog):
 
         layout.addWidget(self._build_total_box())
 
-        self._received = AmountField("Qabul qilindi", "so'm")
+        self._received = AmountField(tr("Qabul qilindi"), tr("so'm"))
         self._received.set_active(True)
         layout.addWidget(self._received)
 
@@ -62,7 +63,7 @@ class PaymentDialog(TouchDialog):
 
         self._chips_row = QHBoxLayout()
         self._chips_row.setSpacing(8)
-        self._chips = [self.make_chip("Aniq", self._exact)]
+        self._chips = [self.make_chip(tr("Aniq"), self._exact)]
 
         for amount in _NOTE_CHIPS:
             self._chips.append(
@@ -81,7 +82,7 @@ class PaymentDialog(TouchDialog):
         self.connect_numpad(self._pad)
         layout.addWidget(self._pad)
 
-        layout.addLayout(self.build_footer("Tasdiqlash"))
+        layout.addLayout(self.build_footer(tr("Tasdiqlash")))
 
         self.buffer_changed()
 
@@ -92,13 +93,11 @@ class PaymentDialog(TouchDialog):
         box.setObjectName("totalBox")
         box.setFixedHeight(84)
 
-        caption = QLabel("To'lash kerak")
+        caption = QLabel(tr("To'lash kerak"))
         caption.setObjectName("cartTotalCaption")
 
         amount = QLabel(
-            f"{format_money(self.total_amount)} "
-            "<span style='font-size:18px;font-weight:500;"
-            "color:#a8a29e'>so'm</span>"
+            tr("{0} <span style='font-size:18px;font-weight:500;color:#a8a29e'>so'm</span>").format(format_money(self.total_amount))
         )
         amount.setObjectName("cartTotalAmount")
         amount.setTextFormat(Qt.RichText)
@@ -118,8 +117,8 @@ class PaymentDialog(TouchDialog):
         group = QButtonGroup(self)
         group.setExclusive(True)
 
-        self.cash_tab = self._tab("Naqd pul", checked=True)
-        self.card_tab = self._tab("Karta")
+        self.cash_tab = self._tab(tr("Naqd pul"), checked=True)
+        self.card_tab = self._tab(tr("Karta"))
 
         for tab in (self.cash_tab, self.card_tab):
             group.addButton(tab)
@@ -149,7 +148,7 @@ class PaymentDialog(TouchDialog):
     def buffer_changed(self):
         if self._is_card:
             self._received.set_text(format_money(self.total_amount))
-            self._change.setText("Karta: butun summa yechiladi")
+            self._change.setText(tr("Karta: butun summa yechiladi"))
             self._set_change_state("ok")
             self.ok_button.setEnabled(True)
         else:
@@ -159,14 +158,14 @@ class PaymentDialog(TouchDialog):
 
             if difference >= -_TOLERANCE:
                 self._change.setText(
-                    f"Qaytim: {format_money(max(difference, 0))} so'm"
+                    tr("Qaytim: {0} so'm").format(format_money(max(difference, 0)))
                 )
                 self._set_change_state("ok")
                 self._received.set_state("ok")
                 self.ok_button.setEnabled(True)
             else:
                 self._change.setText(
-                    f"Yetmayapti: {format_money(-difference)} so'm"
+                    tr("Yetmayapti: {0} so'm").format(format_money(-difference))
                 )
                 self._set_change_state("bad")
                 self._received.set_state("bad")

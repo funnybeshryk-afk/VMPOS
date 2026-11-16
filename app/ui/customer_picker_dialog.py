@@ -19,6 +19,7 @@ from app.utils.formatters import format_money
 from app.widgets.badge import StatusBadge, set_badge_variant
 from app.widgets.numpad import AmountField, NumPad
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 _TOLERANCE = 0.01
 
@@ -41,7 +42,7 @@ class CustomerPickerDialog(TouchDialog):
     """
 
     def __init__(self, customers, total_amount, parent=None):
-        super().__init__("Mijozni tanlash", parent, min_width=900)
+        super().__init__(tr("Mijozni tanlash"), parent, min_width=900)
         self.resize(940, 660)
 
         self._customers = list(customers)
@@ -58,13 +59,13 @@ class CustomerPickerDialog(TouchDialog):
         left = QVBoxLayout()
         left.setSpacing(12)
 
-        info_label = QLabel("Nasiya kimga yoziladi?")
+        info_label = QLabel(tr("Nasiya kimga yoziladi?"))
         info_label.setObjectName("entryProduct")
 
         self.search_edit = QLineEdit()
         self.search_edit.setObjectName("searchInput")
         self.search_edit.setPlaceholderText(
-            "Mijoz nomi yoki telefon bo'yicha qidirish..."
+            tr("Mijoz nomi yoki telefon bo'yicha qidirish...")
         )
         self.search_edit.textChanged.connect(self._apply_filter)
 
@@ -82,7 +83,7 @@ class CustomerPickerDialog(TouchDialog):
         # Yangi mijoz qo'shish ism/telefon yozishni talab qiladi —
         # bu yerda jismoniy klaviatura kerak (kassir ish jarayonidan
         # tashqari, kamdan-kam amal).
-        self.add_customer_button = SecondaryButton("Yangi mijoz qo'shish")
+        self.add_customer_button = SecondaryButton(tr("Yangi mijoz qo'shish"))
         self.add_customer_button.clicked.connect(self._add_new_customer)
 
         left.addWidget(info_label)
@@ -98,13 +99,11 @@ class CustomerPickerDialog(TouchDialog):
         total_box.setObjectName("totalBox")
         total_box.setFixedHeight(76)
 
-        total_caption = QLabel("Chek jamisi")
+        total_caption = QLabel(tr("Chek jamisi"))
         total_caption.setObjectName("cartTotalCaption")
 
         total_amount_label = QLabel(
-            f"{format_money(total_amount)} "
-            "<span style='font-size:16px;font-weight:500;"
-            "color:#a8a29e'>so'm</span>"
+            tr("{0} <span style='font-size:16px;font-weight:500;color:#a8a29e'>so'm</span>").format(format_money(total_amount))
         )
         total_amount_label.setObjectName("cartTotalAmount")
         total_amount_label.setTextFormat(Qt.RichText)
@@ -115,13 +114,13 @@ class CustomerPickerDialog(TouchDialog):
         total_row.addStretch()
         total_row.addWidget(total_amount_label)
 
-        self._debt_field = AmountField("Qarzga yoziladigan summa", "so'm")
+        self._debt_field = AmountField(tr("Qarzga yoziladigan summa"), tr("so'm"))
         self._debt_field.set_active(True)
 
         chips = QHBoxLayout()
         chips.setSpacing(8)
-        chips.addWidget(self.make_chip("Hammasi", lambda: self._set_debt(1)))
-        chips.addWidget(self.make_chip("Yarmi", lambda: self._set_debt(0.5)))
+        chips.addWidget(self.make_chip(tr("Hammasi"), lambda: self._set_debt(1)))
+        chips.addWidget(self.make_chip(tr("Yarmi"), lambda: self._set_debt(0.5)))
 
         self.cash_hint_badge = StatusBadge("", "neutral")
 
@@ -135,7 +134,7 @@ class CustomerPickerDialog(TouchDialog):
             self.cash_hint_badge, alignment=Qt.AlignCenter
         )
         right.addWidget(pad)
-        right.addLayout(self.build_footer("Tasdiqlash"))
+        right.addLayout(self.build_footer(tr("Tasdiqlash")))
 
         # Tasdiqlash — tekshiruv bilan (mijoz tanlanganmi, summa to'g'rimi).
         self.ok_button.clicked.disconnect()
@@ -175,7 +174,7 @@ class CustomerPickerDialog(TouchDialog):
 
             if customer.debt_amount > 0:
                 details.append(
-                    f"qarz: {format_money(customer.debt_amount)} so'm"
+                    tr("qarz: {0} so'm").format(format_money(customer.debt_amount))
                 )
 
             label = customer.name
@@ -222,8 +221,8 @@ class CustomerPickerDialog(TouchDialog):
         if not data["name"]:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Mijoz nomini kiriting.",
+                tr("Diqqat"),
+                tr("Mijoz nomini kiriting."),
             )
             return
 
@@ -248,21 +247,20 @@ class CustomerPickerDialog(TouchDialog):
         if not valid:
             set_badge_variant(
                 self.cash_hint_badge,
-                "Summa 0 dan katta va chek jamisidan oshmasligi "
-                "kerak",
+                tr("Summa 0 dan katta va chek jamisidan oshmasligi "
+                "kerak"),
                 "danger",
             )
         elif cash_now <= _TOLERANCE:
             set_badge_variant(
                 self.cash_hint_badge,
-                "Butun summa qarzga yoziladi",
+                tr("Butun summa qarzga yoziladi"),
                 "neutral",
             )
         else:
             set_badge_variant(
                 self.cash_hint_badge,
-                f"Hoziroq naqd qabul qilinadi: "
-                f"{format_money(cash_now)} so'm",
+                tr("Hoziroq naqd qabul qilinadi: {0} so'm").format(format_money(cash_now)),
                 "success",
             )
 
@@ -270,8 +268,8 @@ class CustomerPickerDialog(TouchDialog):
         if self.get_selected_customer() is None:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Mijozni tanlang.",
+                tr("Diqqat"),
+                tr("Mijozni tanlang."),
             )
             return
 
@@ -280,18 +278,18 @@ class CustomerPickerDialog(TouchDialog):
         if debt_amount <= 0:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Qarzga yoziladigan summa noldan katta bo'lishi "
-                "kerak.",
+                tr("Diqqat"),
+                tr("Qarzga yoziladigan summa noldan katta bo'lishi "
+                "kerak."),
             )
             return
 
         if debt_amount > self.total_amount + _TOLERANCE:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Qarzga yoziladigan summa chek jamisidan katta "
-                "bo'lishi mumkin emas.",
+                tr("Diqqat"),
+                tr("Qarzga yoziladigan summa chek jamisidan katta "
+                "bo'lishi mumkin emas."),
             )
             return
 

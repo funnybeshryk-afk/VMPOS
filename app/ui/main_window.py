@@ -29,6 +29,7 @@ from app.utils.paths import get_bundle_base_dir
 from app.version import APP_VERSION
 from app.widgets.app_status_bar import AppStatusBar
 from app.widgets.sidebar_menu import SidebarMenu
+from app.i18n import tr
 
 # (matn kaliti -> Feather ikonka nomi). Aniq muqobili yo'q joylarda
 # eng yaqin ma'nodagi ikonka tanlangan: Ombor — "archive" (ombor
@@ -38,15 +39,15 @@ from app.widgets.sidebar_menu import SidebarMenu
 # Rels kengligi 96 px — uzun nomlar sig'maydi: rels yorlig'i qisqa,
 # to'liq nom (TEXT) tooltip sifatida ko'rsatiladi.
 _RAIL_LABELS = {
-    "sale": "Sotuv",
-    "products": "Mahsulot",
-    "warehouse": "Ombor",
-    "reports": "Hisobot",
-    "customers": "Mijoz",
-    "suppliers": "Ta'minot",
-    "finance": "Moliya",
-    "users": "Xodimlar",
-    "settings": "Sozlama",
+    "sale": tr("Sotuv"),
+    "products": tr("Mahsulot"),
+    "warehouse": tr("Ombor"),
+    "reports": tr("Hisobot"),
+    "customers": tr("Mijoz"),
+    "suppliers": tr("Ta'minot"),
+    "finance": tr("Moliya"),
+    "users": tr("Xodimlar"),
+    "settings": tr("Sozlama"),
 }
 
 _MENU_ICONS = {
@@ -66,7 +67,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle(f"VMPOS v{APP_VERSION}")
+        self.setWindowTitle(tr("VMPOS v{0}").format(APP_VERSION))
         self.resize(1200, 700)
 
         self._build_ui()
@@ -133,9 +134,9 @@ class MainWindow(QMainWindow):
         }
 
         self._menu_groups = [
-            ("Asosiy", ["sale", "products", "warehouse", "reports"]),
-            ("Aloqalar", ["customers", "suppliers"]),
-            ("Boshqaruv", ["finance", "users", "settings"]),
+            (tr("Asosiy"), ["sale", "products", "warehouse", "reports"]),
+            (tr("Aloqalar"), ["customers", "suppliers"]),
+            (tr("Boshqaruv"), ["finance", "users", "settings"]),
         ]
 
         for page, _roles in self._pages_by_key.values():
@@ -167,7 +168,7 @@ class MainWindow(QMainWindow):
         icon_label.setObjectName("railLogo")
         icon_label.setFixedSize(64, 64)
         icon_label.setAlignment(Qt.AlignCenter)
-        icon_label.setToolTip("Vodiy Market")
+        icon_label.setToolTip(tr("Vodiy Market"))
         icon_label.setPixmap(
             QPixmap(str(logo_path)).scaled(
                 48, 48, Qt.KeepAspectRatio, Qt.SmoothTransformation
@@ -276,7 +277,7 @@ class MainWindow(QMainWindow):
                 load_icon("user", color="#ffffff", size=22)
             )
             self.switch_user_button.setToolTip(
-                "Foydalanuvchi tanlanmagan — bosing"
+                tr("Foydalanuvchi tanlanmagan — bosing")
             )
         else:
             role_text = ROLE_LABELS.get(
@@ -288,8 +289,7 @@ class MainWindow(QMainWindow):
                 current_user.full_name[:1].upper()
             )
             self.switch_user_button.setToolTip(
-                f"{current_user.full_name} · {role_text}\n"
-                "Almashtirish uchun bosing"
+                tr("{0} · {1}\nAlmashtirish uchun bosing").format(current_user.full_name, role_text)
             )
 
         if not visible_keys:
