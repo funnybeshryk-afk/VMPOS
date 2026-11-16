@@ -121,6 +121,7 @@ for key in ["sale", "products", "warehouse", "reports", "customers", "suppliers"
         if t: texts.add(t)
         tip = w.toolTip()
         if tip: texts.add(tip)
+sys.stdout.reconfigure(encoding="utf-8")
 print("\n".join(sorted(texts)))
 """
 
@@ -129,7 +130,7 @@ def test_russian_ui_has_no_uzbek_leftovers(tmp_path):
     env = dict(os.environ, VMPOS_DATA_DIR=str(tmp_path))
     result = subprocess.run(
         [sys.executable, "-c", _SMOKE, str(ROOT)],
-        capture_output=True, text=True, env=env, timeout=120,
+        capture_output=True, text=True, encoding="utf-8", env=env, timeout=120,
     )
 
     assert result.returncode == 0, result.stderr[-800:]
