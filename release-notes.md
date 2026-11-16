@@ -1,5 +1,6 @@
-VMPOS 1.2.3 — shtrix-kod yorliqlari va skaner sinovi:
-- Yorliqdagi shtrix-kod endi ishonchliroq o'qiladi: chetlardagi bo'sh joy (tinch zona) kamida 10 modul, kod kengroq, chiziqlar printer pikseliga butun qilib tekislanadi.
-- Yorliq chop etish oynasida: tanlangan o'lchamda shtrix-kod juda zich bo'lsa ogohlantirish chiqadi (masalan, 13 raqamli kod 30x20 yorliqda). 40x30 yoki kattaroq oling.
-- Maslahat: shtrix-kodni ekrandan emas, qog'ozga chop etib skanerlang — ekranda kod juda mayda bo'lib qoladi.
-- Yangi: Sozlamalar -> Skaner -> "Skaner sinovi". Skaner nima yuborayotganini ko'rsatadi (matn, oxirgi Enter/Tab, tezlik).
+VMPOS 1.3.0 — rus tili / русский язык:
+- Yangi: dasturning to'liq rus tilidagi interfeysi. Sozlamalar -> "Til" bo'limidan O'zbekcha yoki Русский tanlanadi; o'zgarish dasturni qayta ochgandan keyin kuchga kiradi.
+- Standart til o'zbekcha — hech narsa o'zgarmaydi, agar rus tilini tanlamasangiz.
+- Qt standart oynalari (Ha/Yo'q, fayl tanlash, kalendar) ham rus tilida chiqadi; o'lchov birliklari (dona, kg) ruscha qisqartmalar bilan ko'rsatiladi.
+- Mahsulot, kategoriya va mijoz nomlari o'zgarishsiz qoladi (bu sizning ma'lumotlaringiz).
+- Ma'lumotlar bazasi tuzilmasi o'zgarmagan (sxema v1): eski versiyalar bilan to'liq mos.
