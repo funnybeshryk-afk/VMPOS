@@ -37,6 +37,8 @@ _COLOR_CARD_BG = QColor("#ffffff")
 _COLOR_CARD_BORDER = QColor("#ece7df")
 _COLOR_CARD_BORDER_HOVER = QColor("#a8a29e")
 _COLOR_ACCENT = QColor("#059669")
+_COLOR_DISABLED = QColor("#a8a29e")
+_SOLD_OUT_OPACITY = 0.5
 _COLOR_PHOTO_BG = QColor("#f6f3ee")
 _COLOR_INK = QColor("#1c1917")
 _COLOR_NAME = QColor("#1c1917")
@@ -134,14 +136,27 @@ class ProductCardDelegate(QStyledItemDelegate):
             content_rect.width(),
             _PHOTO_HEIGHT,
         )
+        # Qoldiq tugagan mahsulot "sotuvga tayyor" ko'rinmasligi kerak:
+        # rasm, matn va "+" xira, faqat "Tugagan" belgisi yorqin qoladi.
+        sold_out = (product.quantity or 0) <= 0
+
+        if sold_out:
+            painter.setOpacity(_SOLD_OUT_OPACITY)
+
         self._paint_photo(painter, product, photo_rect)
+
+        painter.setOpacity(1.0)
         self._paint_badge(painter, product, photo_rect)
+
+        if sold_out:
+            painter.setOpacity(_SOLD_OUT_OPACITY)
 
         if in_cart:
             self._paint_cart_marker(painter, product, in_cart, photo_rect)
 
         self._paint_text(painter, option, product, content_rect, photo_rect)
-        self._paint_add_button(painter, content_rect)
+        self._paint_add_button(painter, content_rect, disabled=sold_out)
+        painter.setOpacity(1.0)
 
         painter.restore()
 
@@ -343,7 +358,7 @@ class ProductCardDelegate(QStyledItemDelegate):
             f"{format_quantity(product.quantity)} {unit_label(unit)}",
         )
 
-    def _paint_add_button(self, painter, content_rect):
+    def _paint_add_button(self, painter, content_rect, disabled=False):
         """Yumaloq izumrud "+": kartochkani bosish 1 ta qo'shishini
         ko'rsatadi. Alohida bosiladigan zona emas — butun kartochka
         bosiladi (kassirga aniq nishonga olish shart emas)."""
@@ -356,7 +371,7 @@ class ProductCardDelegate(QStyledItemDelegate):
         )
 
         painter.setPen(Qt.NoPen)
-        painter.setBrush(_COLOR_ACCENT)
+        painter.setBrush(_COLOR_DISABLED if disabled else _COLOR_ACCENT)
         painter.drawEllipse(button_rect)
 
         center = QPointF(button_rect.center()) + QPointF(0.5, 0.5)

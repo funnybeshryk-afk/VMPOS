@@ -556,6 +556,8 @@ class SalePage(QWidget):
         if product is None:
             return
 
+        self._sync_stock(product)
+
         if product.quantity <= 0:
             play_error_sound()
 
@@ -589,6 +591,8 @@ class SalePage(QWidget):
 
         if product is None:
             return
+
+        self._sync_stock(product)
 
         # Ehtiyot chorasi: yuqorida add_product() nolinchi qoldiqni
         # allaqachon to'xtatadi, lekin bu yerda ham tekshiruv qoldiq —
@@ -641,6 +645,21 @@ class SalePage(QWidget):
 
         return unit_price, is_wholesale
 
+    def _sync_stock(self, product):
+        """Katalog sahifa ochilganda yuklanadi — shu orasida qoldiq
+        o'zgargan bo'lishi mumkin (boshqa savdo, tahrir, tovar chiqimi).
+        Korzinaga qo'shish/o'zgartirishdan oldin haqiqiy qoldiqni bazadan
+        olamiz: aks holda kassir "bor" deb ko'rgan mahsulot to'lov
+        paytida "qoldiq yetarli emas" bo'lib chiqardi."""
+
+        fresh = ProductService.get_product(product.id)
+
+        if fresh is None or fresh.quantity == product.quantity:
+            return
+
+        product.quantity = fresh.quantity
+        self.populate_products(self._shown_products)
+
     def _find_product(self, product_id):
         for product in self.products:
             if product.id == product_id:
@@ -667,6 +686,7 @@ class SalePage(QWidget):
             return
 
         product = item["product"]
+        self._sync_stock(product)
 
         if new_quantity > product.quantity:
             play_error_sound()
@@ -687,6 +707,7 @@ class SalePage(QWidget):
         item = self.cart[product_id]
 
         product = item["product"]
+        self._sync_stock(product)
 
         dialog = QuantityEditDialog(
             product,

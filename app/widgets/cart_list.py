@@ -1,4 +1,5 @@
 from PySide6.QtCore import (
+    QSize,
     QEasingCurve,
     QParallelAnimationGroup,
     QPropertyAnimation,
@@ -21,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils import motion
+from app.utils.icons import load_icon
 from app.utils.formatters import format_money, format_quantity
 from app.utils.units import is_weight_unit, unit_label
 from app.widgets.badge import StatusBadge
@@ -134,6 +136,14 @@ class _CartRow(QFrame):
         self.quantity_button.setCursor(Qt.PointingHandCursor)
         self.quantity_button.setFocusPolicy(Qt.NoFocus)
         self.quantity_button.setToolTip(tr("Miqdorni kiritish"))
+
+        if weight:
+            # Og'irlikda "+/-" yo'q — miqdor faqat shu tugma orqali
+            # o'zgartiriladi. Oddiy matn kabi ko'rinsa kassir buni
+            # sezmaydi, shuning uchun ramkali tugma + qalam belgisi.
+            self.quantity_button.setProperty("editable", "true")
+            self.quantity_button.setIcon(load_icon("edit-2", color="#57534e", size=16))
+            self.quantity_button.setIconSize(QSize(16, 16))
         self.quantity_button.clicked.connect(
             lambda: self.editRequested.emit(self._product_id)
         )

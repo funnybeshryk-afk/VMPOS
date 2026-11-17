@@ -1130,6 +1130,20 @@ QPushButton#qtyValue:hover {
     border-radius: 12px;
 }
 
+/* Og'irlikli mahsulot: "+/-" yo'q, miqdor shu tugma orqali o'zgaradi —
+   shuning uchun u tahrirlanadigan maydonga o'xshab ko'rinishi kerak. */
+QPushButton#qtyValue[editable="true"] {
+    background: #ffffff;
+    border: 1px solid #ddd6cb;
+    border-radius: 12px;
+    padding: 0 12px;
+}
+
+QPushButton#qtyValue[editable="true"]:hover {
+    background: #ece7df;
+    border-color: #a8a29e;
+}
+
 /* Jami — qora blok, yorqin izumrud summa (palitraga qo'shimcha ochiq
    izumrud #34d399: faqat qora fonda o'qilishi uchun). */
 

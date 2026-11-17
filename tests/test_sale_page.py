@@ -268,3 +268,107 @@ def test_mixed_sale_goes_through_touch_dialog(selling_page, monkeypatch):
     sale = SaleService.get_all_sales()[0]
     assert (sale.cash_amount, sale.card_amount) == (5000, 5000)
     assert stock_of(sut) == 49
+
+
+# ---- qoldiq yangilanishi (kassir "bor" ko'rgan mahsulot tugagan) ----------
+
+def _set_db_quantity(product_id, quantity):
+    from app.database.database import SessionLocal
+    from app.models.product import Product
+
+    session = SessionLocal()
+    session.query(Product).filter(Product.id == product_id).update(
+        {"quantity": quantity}
+    )
+    session.commit()
+    session.close()
+
+
+def test_stale_stock_is_rechecked_when_adding(page):
+    non = page._products["non"]
+    # Katalog ochilgandan keyin qoldiq bazada tugadi (masalan, tovar chiqimi).
+    _set_db_quantity(non.id, 0)
+
+    page.add_product(non.id)
+
+    assert page.cart == {}, "tugagan mahsulot korzinaga tushmasligi kerak"
+    assert page._warnings, "kassirga ogohlantirish chiqishi kerak"
+    # Katalogdagi kartochka ham yangilanadi.
+    assert page._find_product(non.id).quantity == 0
+
+
+def test_stale_stock_limits_quantity_when_stepping(page):
+    non = page._products["non"]
+    page.add_product(non.id)
+    page.add_product(non.id)  # korzinada 2 ta
+    _set_db_quantity(non.id, 2)  # bazada endi atigi 2 ta qoldi
+
+    page.change_quantity(non.id, 1)
+
+    assert page.cart[non.id]["quantity"] == 2
+    assert page._warnings
+
+
+# ---- og'irlikli mahsulot miqdorini tahrirlash ------------------------------
+
+def test_weight_row_quantity_is_a_visible_editable_button(page):
+    guruch = page._products["guruch"]
+    page.add_to_cart(guruch.id, 0.5)
+    row = page.cart_list._rows[guruch.id]
+
+    assert row.quantity_button.property("editable") == "true"
+    assert not row.quantity_button.icon().isNull()
+
+    # Dona mahsulotda "+/-" bor — alohida belgi kerak emas.
+    non = page._products["non"]
+    page.add_to_cart(non.id, 1)
+    assert page.cart_list._rows[non.id].quantity_button.property("editable") != "true"
+
+
+def test_weight_quantity_button_opens_edit_and_applies(page, monkeypatch):
+    from app.ui import quantity_edit_dialog as qed
+
+    guruch = page._products["guruch"]
+    page.add_to_cart(guruch.id, 0.5)
+
+    monkeypatch.setattr(qed.QuantityEditDialog, "exec", lambda self: 1)
+    monkeypatch.setattr(qed.QuantityEditDialog, "get_quantity", lambda self: 2.25)
+
+    page.cart_list._rows[guruch.id].quantity_button.click()
+
+    assert page.cart[guruch.id]["quantity"] == 2.25
+
+
+def test_sold_out_card_is_dimmed_with_grey_plus(page):
+    from PySide6.QtCore import QRect
+    from PySide6.QtGui import QImage, QPainter
+    from PySide6.QtWidgets import QStyleOptionViewItem
+
+    from app.widgets.product_card_delegate import CARD_SIZE
+
+    def paint_plus_color(quantity):
+        from app.widgets.product_list_model import ProductRole
+
+        grid = page.product_grid
+        row = grid._model.row_of(page._products["non"].id)
+        index = grid._model.index(row)
+        index.data(ProductRole).quantity = quantity
+        delegate = grid.itemDelegate()
+
+        image = QImage(CARD_SIZE, QImage.Format_RGB32)
+        image.fill(0xFFFFFFFF)
+        painter = QPainter(image)
+        option = QStyleOptionViewItem()
+        option.rect = QRect(0, 0, CARD_SIZE.width(), CARD_SIZE.height())
+        delegate.paint(painter, option, index)
+        painter.end()
+
+        # "+" doirasi kartochkaning pastki-o'ng burchagida.
+        return image.pixelColor(CARD_SIZE.width() - 40, CARD_SIZE.height() - 40)
+
+    in_stock = paint_plus_color(5)
+    sold_out = paint_plus_color(0)
+
+    assert in_stock.green() > in_stock.red() + 40, "bor mahsulotda yashil '+'"
+    # Tugagan mahsulotda '+' yashil emas (kulrang/xira).
+    assert abs(sold_out.green() - sold_out.red()) < 30
