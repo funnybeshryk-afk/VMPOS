@@ -209,6 +209,7 @@ class SalePage(QWidget):
         self.cart_list.setFocusPolicy(Qt.NoFocus)
         self.cart_list.changeRequested.connect(self.change_quantity)
         self.cart_list.editRequested.connect(self.edit_quantity)
+        self.cart_list.removeRequested.connect(self.remove_item)
 
         self.cart_empty_state = self.build_cart_empty_state()
 
@@ -739,13 +740,17 @@ class SalePage(QWidget):
         """Delete tugmasi: korzinada tanlangan (bosilgan) qatorni olib
         tashlaydi."""
 
-        product_id = self.cart_list.selected_product_id()
+        self.remove_item(self.cart_list.selected_product_id())
+
+    def remove_item(self, product_id):
+        """Mahsulotni korzinadan butunlay olib tashlaydi (× tugmasi)."""
 
         if product_id not in self.cart:
             return
 
         del self.cart[product_id]
         self.update_cart_table()
+        self.focus_search()
 
     def clear_cart(self):
         self.cart.clear()

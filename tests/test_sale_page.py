@@ -372,3 +372,36 @@ def test_sold_out_card_is_dimmed_with_grey_plus(page):
     assert in_stock.green() > in_stock.red() + 40, "bor mahsulotda yashil '+'"
     # Tugagan mahsulotda '+' yashil emas (kulrang/xira).
     assert abs(sold_out.green() - sold_out.red()) < 30
+
+
+# ---- qatorni korzinadan butunlay olib tashlash ("×") ----------------------
+
+def test_every_cart_row_has_remove_button_that_deletes_the_item(page):
+    from PySide6.QtWidgets import QPushButton
+
+    guruch = page._products["guruch"]
+    non = page._products["non"]
+    page.add_to_cart(guruch.id, 1.5)
+    page.add_to_cart(non.id, 3)
+
+    for product_id in (guruch.id, non.id):
+        row = page.cart_list._rows[product_id]
+        assert row.findChild(QPushButton, "cartRowRemove") is not None
+
+    page.cart_list._rows[guruch.id].findChild(
+        QPushButton, "cartRowRemove"
+    ).click()
+
+    assert guruch.id not in page.cart
+    assert non.id in page.cart and page.cart[non.id]["quantity"] == 3
+    assert guruch.id not in page.cart_list._rows
+
+
+def test_removing_last_item_empties_the_cart(page):
+    guruch = page._products["guruch"]
+    page.add_to_cart(guruch.id, 0.5)
+
+    page.remove_item(guruch.id)
+
+    assert page.cart == {}
+    assert page.calculate_cart_total() == 0

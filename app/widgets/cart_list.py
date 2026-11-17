@@ -28,7 +28,7 @@ from app.utils.units import is_weight_unit, unit_label
 from app.widgets.badge import StatusBadge
 from app.i18n import tr
 
-_ROW_HEIGHT = 88
+_ROW_HEIGHT = 96
 
 
 class _ElidedLabel(QLabel):
@@ -67,6 +67,7 @@ class _CartRow(QFrame):
     selectRequested = Signal(int)
     changeRequested = Signal(int, int)  # product_id, +1 / -1
     editRequested = Signal(int)
+    removeRequested = Signal(int)
 
     def __init__(self, product_id, item, selected):
         super().__init__()
@@ -102,6 +103,21 @@ class _CartRow(QFrame):
         top_row.setSpacing(8)
         top_row.addWidget(name_label, 1)
         top_row.addWidget(total_label)
+
+        # Qatorni butunlay olib tashlash: og'irlikli mahsulotda "–" yo'q
+        # (miqdor 0 ga tushmaydi), dona mahsulotda esa 5 marta bosish
+        # kerak bo'lardi — shuning uchun har qatorda alohida "×".
+        remove_button = QPushButton()
+        remove_button.setObjectName("cartRowRemove")
+        remove_button.setCursor(Qt.PointingHandCursor)
+        remove_button.setFocusPolicy(Qt.NoFocus)
+        remove_button.setToolTip(tr("O'chirish"))
+        remove_button.setIcon(load_icon("x", color="#78716c", size=16))
+        remove_button.setIconSize(QSize(16, 16))
+        remove_button.clicked.connect(
+            lambda: self.removeRequested.emit(self._product_id)
+        )
+        top_row.addWidget(remove_button)
 
         # 2-qator: birlik narxi (+ "Optom") va miqdor stepperi.
         price_label = QLabel(tr("{0} so'm").format(format_money(unit_price)))
@@ -207,6 +223,7 @@ class CartList(QScrollArea):
 
     changeRequested = Signal(int, int)
     editRequested = Signal(int)
+    removeRequested = Signal(int)
 
     def __init__(self):
         super().__init__()
@@ -267,6 +284,7 @@ class CartList(QScrollArea):
             row.selectRequested.connect(self.select)
             row.changeRequested.connect(self.changeRequested)
             row.editRequested.connect(self.editRequested)
+            row.removeRequested.connect(self.removeRequested)
 
             self._rows_layout.insertWidget(index, row)
             self._rows[product_id] = row
