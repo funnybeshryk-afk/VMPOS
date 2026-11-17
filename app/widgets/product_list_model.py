@@ -52,6 +52,19 @@ class ProductListModel(QAbstractListModel):
 
         return remaining * remaining  # tez so'nadi (ease-out)
 
+    def flashing_product_ids(self):
+        """Vspishkasi hozir (yoki hozirgina) davom etayotgan mahsulotlar —
+        tugaganlari ham, shunda oxirgi "tozalangan" kadr chiziladi."""
+
+        return list(self._flash_started)
+
+    def row_of(self, product_id):
+        for row, product in enumerate(self._products):
+            if product.id == product_id:
+                return row
+
+        return None
+
     def has_active_flash(self):
         # Tugagan vspishkalarni ham tozalaydi.
         for product_id in list(self._flash_started):
