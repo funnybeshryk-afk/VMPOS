@@ -18,6 +18,7 @@ from app.widgets.danger_button import DangerButton
 from app.widgets.data_table import DataTable
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 
 class CustomersPage(QWidget):
@@ -28,7 +29,7 @@ class CustomersPage(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
 
-        title = QLabel("Mijozlar")
+        title = QLabel(tr("Mijozlar"))
         title.setObjectName("pageTitle")
 
         buttons_layout = QHBoxLayout()
@@ -36,19 +37,19 @@ class CustomersPage(QWidget):
         # "Qo'shish" — ro'yxat sahifalarining barchasida (Mahsulotlar,
         # Yetkazib beruvchilar) bir xil qoidaga bo'ysunadi: eng ko'p
         # bosiladigan amal — yagona qora PrimaryButton.
-        self.add_button = PrimaryButton("Qo'shish")
+        self.add_button = PrimaryButton(tr("Qo'shish"))
         self.add_button.clicked.connect(self.add_customer)
 
-        self.edit_button = SecondaryButton("Tahrirlash")
+        self.edit_button = SecondaryButton(tr("Tahrirlash"))
         self.edit_button.clicked.connect(self.edit_customer)
 
-        self.delete_button = DangerButton("O'chirish")
+        self.delete_button = DangerButton(tr("O'chirish"))
         self.delete_button.clicked.connect(self.delete_customer)
 
-        self.debt_payment_button = SecondaryButton("Qarz to'lovi")
+        self.debt_payment_button = SecondaryButton(tr("Qarz to'lovi"))
         self.debt_payment_button.clicked.connect(self.pay_debt)
 
-        self.debt_history_button = SecondaryButton("To'lovlar tarixi")
+        self.debt_history_button = SecondaryButton(tr("To'lovlar tarixi"))
         self.debt_history_button.clicked.connect(
             self.open_debt_payments_history
         )
@@ -63,12 +64,12 @@ class CustomersPage(QWidget):
         self.customers_table = DataTable()
         self.customers_table.setColumnCount(6)
         self.customers_table.setHorizontalHeaderLabels([
-            "Nomi",
-            "Telefon",
-            "Manzil",
-            "Qarz",
-            "Qarz sanasi",
-            "Holat",
+            tr("Nomi"),
+            tr("Telefon"),
+            tr("Manzil"),
+            tr("Qarz"),
+            tr("Qarz sanasi"),
+            tr("Holat"),
         ])
         self.customers_table.pin_column_width(5)
 
@@ -93,7 +94,7 @@ class CustomersPage(QWidget):
 
             if customer.debt_amount > 0:
                 debt_amount = (
-                    f"{format_money(customer.debt_amount)} so'm"
+                    tr("{0} so'm").format(format_money(customer.debt_amount))
                 )
 
                 if customer.debt_date:
@@ -103,7 +104,7 @@ class CustomersPage(QWidget):
                 else:
                     debt_date = "-"
             else:
-                debt_amount = "Yo'q"
+                debt_amount = tr("Yo'q")
                 debt_date = "-"
 
             self.customers_table.setItem(row, 0, name_item)
@@ -129,9 +130,9 @@ class CustomersPage(QWidget):
             )
 
             if customer.debt_amount > 0:
-                status_badge = badge_cell("Qarz bor", "warning")
+                status_badge = badge_cell(tr("Qarz bor"), "warning")
             else:
-                status_badge = badge_cell("Qarz yo'q", "success")
+                status_badge = badge_cell(tr("Qarz yo'q"), "success")
 
             self.customers_table.setCellWidget(row, 5, status_badge)
 
@@ -159,8 +160,8 @@ class CustomersPage(QWidget):
         if not data["name"]:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Mijoz nomini kiriting.",
+                tr("Diqqat"),
+                tr("Mijoz nomini kiriting."),
             )
             return
 
@@ -173,8 +174,8 @@ class CustomersPage(QWidget):
         if customer_id is None:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Tahrirlash uchun mijozni tanlang.",
+                tr("Diqqat"),
+                tr("Tahrirlash uchun mijozni tanlang."),
             )
             return
 
@@ -193,8 +194,8 @@ class CustomersPage(QWidget):
         if not data["name"]:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Mijoz nomini kiriting.",
+                tr("Diqqat"),
+                tr("Mijoz nomini kiriting."),
             )
             return
 
@@ -207,8 +208,8 @@ class CustomersPage(QWidget):
         if customer_id is None:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "O'chirish uchun mijozni tanlang.",
+                tr("Diqqat"),
+                tr("O'chirish uchun mijozni tanlang."),
             )
             return
 
@@ -219,8 +220,8 @@ class CustomersPage(QWidget):
 
         reply = QMessageBox.question(
             self,
-            "Tasdiqlash",
-            f'"{customer.name}" o‘chirmoqchimisiz?',
+            tr("Tasdiqlash"),
+            tr("\"{0}\" o‘chirmoqchimisiz?").format(customer.name),
             QMessageBox.Yes | QMessageBox.No,
         )
 
@@ -234,8 +235,8 @@ class CustomersPage(QWidget):
         if customer_id is None:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "To'lov uchun mijozni tanlang.",
+                tr("Diqqat"),
+                tr("To'lov uchun mijozni tanlang."),
             )
             return
 
@@ -247,8 +248,8 @@ class CustomersPage(QWidget):
         if customer.debt_amount <= 0:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Mijozda qarz yo'q.",
+                tr("Diqqat"),
+                tr("Mijozda qarz yo'q."),
             )
             return
 
@@ -266,7 +267,7 @@ class CustomersPage(QWidget):
         except ValueError as error:
             QMessageBox.warning(
                 self,
-                "Diqqat",
+                tr("Diqqat"),
                 str(error),
             )
             return
@@ -275,9 +276,8 @@ class CustomersPage(QWidget):
 
         QMessageBox.information(
             self,
-            "Muvaffaqiyatli",
-            "Qolgan qarz: "
-            f"{format_money(updated_customer.debt_amount)} so'm",
+            tr("Muvaffaqiyatli"),
+            tr("Qolgan qarz: {0} so'm").format(format_money(updated_customer.debt_amount)),
         )
 
     def open_debt_payments_history(self):

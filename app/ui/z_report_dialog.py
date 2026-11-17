@@ -7,18 +7,19 @@ from PySide6.QtWidgets import (
 
 from app.utils.formatters import format_money
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 
 class ZReportDialog(QDialog):
     def __init__(self, shift, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle(f"Z-hisobot — smena #{shift.id}")
+        self.setWindowTitle(tr("Z-hisobot — smena #{0}").format(shift.id))
         self.setMinimumWidth(360)
 
         main_layout = QVBoxLayout(self)
 
-        title = QLabel(f"Z-hisobot — smena #{shift.id}")
+        title = QLabel(tr("Z-hisobot — smena #{0}").format(shift.id))
         title.setObjectName("pageTitle")
 
         form_layout = QFormLayout()
@@ -30,40 +31,40 @@ class ZReportDialog(QDialog):
             else "—"
         )
 
-        form_layout.addRow("Kassir:", QLabel(shift.cashier_name))
-        form_layout.addRow("Ochilgan:", QLabel(opened_text))
-        form_layout.addRow("Yopilgan:", QLabel(closed_text))
+        form_layout.addRow(tr("Kassir:"), QLabel(shift.cashier_name))
+        form_layout.addRow(tr("Ochilgan:"), QLabel(opened_text))
+        form_layout.addRow(tr("Yopilgan:"), QLabel(closed_text))
         form_layout.addRow(
-            "Cheklar soni:", QLabel(str(shift.sales_count))
+            tr("Cheklar soni:"), QLabel(str(shift.sales_count))
         )
         form_layout.addRow(
-            "Savdo summasi:",
-            QLabel(f"{format_money(shift.total_amount)} so'm"),
+            tr("Savdo summasi:"),
+            QLabel(tr("{0} so'm").format(format_money(shift.total_amount))),
         )
         form_layout.addRow(
-            "Naqd pul:",
-            QLabel(f"{format_money(shift.cash_total)} so'm"),
+            tr("Naqd pul:"),
+            QLabel(tr("{0} so'm").format(format_money(shift.cash_total))),
         )
         form_layout.addRow(
-            "Karta:",
-            QLabel(f"{format_money(shift.card_total)} so'm"),
+            tr("Karta:"),
+            QLabel(tr("{0} so'm").format(format_money(shift.card_total))),
         )
         form_layout.addRow(
-            "Boshlang'ich summa (kassa):",
+            tr("Boshlang'ich summa (kassa):"),
             QLabel(
-                f"{format_money(shift.opening_cash_amount)} so'm"
+                tr("{0} so'm").format(format_money(shift.opening_cash_amount))
             ),
         )
         form_layout.addRow(
-            "Kutilgan summa (kassa):",
+            tr("Kutilgan summa (kassa):"),
             QLabel(
-                f"{format_money(shift.expected_cash_amount)} so'm"
+                tr("{0} so'm").format(format_money(shift.expected_cash_amount))
             ),
         )
         form_layout.addRow(
-            "Hisoblangan summa (kassa):",
+            tr("Hisoblangan summa (kassa):"),
             QLabel(
-                f"{format_money(shift.closing_cash_amount)} so'm"
+                tr("{0} so'm").format(format_money(shift.closing_cash_amount))
             ),
         )
 
@@ -74,9 +75,9 @@ class ZReportDialog(QDialog):
             self._difference_object_name(shift.cash_difference)
         )
 
-        form_layout.addRow("Farq:", difference_label)
+        form_layout.addRow(tr("Farq:"), difference_label)
 
-        close_button = SecondaryButton("Yopish")
+        close_button = SecondaryButton(tr("Yopish"))
         close_button.clicked.connect(self.accept)
 
         main_layout.addWidget(title)
@@ -89,12 +90,12 @@ class ZReportDialog(QDialog):
             return "—"
 
         if difference < -0.01:
-            return f"Kamomad: {format_money(abs(difference))} so'm"
+            return tr("Kamomad: {0} so'm").format(format_money(abs(difference)))
 
         if difference > 0.01:
-            return f"Ortiqcha: {format_money(difference)} so'm"
+            return tr("Ortiqcha: {0} so'm").format(format_money(difference))
 
-        return "Kassa mos keldi"
+        return tr("Kassa mos keldi")
 
     @staticmethod
     def _difference_object_name(difference):

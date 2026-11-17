@@ -31,6 +31,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from app.version import APP_VERSION
+from app.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -139,44 +140,44 @@ def explain_network_error(error):
 
         if code in (403, 429) and remaining == "0":
             message = (
-                "GitHub so'rovlar limiti tugadi (bitta tarmoqdan juda ko'p "
-                "kompyuter so'ragan). Bir soatdan keyin urinib ko'ring."
+                tr("GitHub so'rovlar limiti tugadi (bitta tarmoqdan juda ko'p "
+                "kompyuter so'ragan). Bir soatdan keyin urinib ko'ring.")
             )
         elif code == 407:
-            message = "Proxy-server login/parol so'rayapti (407)."
+            message = tr("Proxy-server login/parol so'rayapti (407).")
         elif code == 403:
             message = (
-                "Kirish taqiqlangan (403): tarmoq (firewall/proxy) "
-                "github.com'ni bloklagan bo'lishi mumkin."
+                tr("Kirish taqiqlangan (403): tarmoq (firewall/proxy) "
+                "github.com'ni bloklagan bo'lishi mumkin.")
             )
         elif code == 404:
-            message = "Reliz topilmadi (404)."
+            message = tr("Reliz topilmadi (404).")
         elif code >= 500:
-            message = f"GitHub vaqtincha ishlamayapti (xato {code}). Keyinroq urinib ko'ring."
+            message = tr("GitHub vaqtincha ishlamayapti (xato {0}). Keyinroq urinib ko'ring.").format(code)
         else:
-            message = f"Server xatosi: HTTP {code}."
+            message = tr("Server xatosi: HTTP {0}.").format(code)
     elif isinstance(reason, ssl.SSLError) or isinstance(error, ssl.SSLError):
         message = (
-            "Xavfsiz ulanish (SSL) xatosi. Kompyuter sanasi va vaqti "
+            tr("Xavfsiz ulanish (SSL) xatosi. Kompyuter sanasi va vaqti "
             "to'g'rimi? Antivirus yoki proxy sertifikatni almashtirayotgan "
-            "bo'lishi mumkin."
+            "bo'lishi mumkin.")
         )
     elif isinstance(reason, socket.gaierror):
         message = (
-            "Manzil topilmadi (DNS): tarmoqda internet yo'q yoki "
-            "github.com bloklangan."
+            tr("Manzil topilmadi (DNS): tarmoqda internet yo'q yoki "
+            "github.com bloklangan.")
         )
     elif isinstance(reason, (socket.timeout, TimeoutError)) or isinstance(
         error, (socket.timeout, TimeoutError)
     ):
         message = (
-            "Javob kelmadi (vaqt tugadi): tarmoq juda sekin yoki "
-            "github.com bloklangan."
+            tr("Javob kelmadi (vaqt tugadi): tarmoq juda sekin yoki "
+            "github.com bloklangan.")
         )
     elif isinstance(reason, OSError) or isinstance(error, OSError):
-        message = "Ulanish rad etildi (firewall yoki proxy to'sib qo'ygan bo'lishi mumkin)."
+        message = tr("Ulanish rad etildi (firewall yoki proxy to'sib qo'ygan bo'lishi mumkin).")
     else:
-        message = "Serverga ulanib bo'lmadi."
+        message = tr("Serverga ulanib bo'lmadi.")
 
     return message, technical
 
@@ -377,10 +378,9 @@ def check_for_update(current_version=APP_VERSION):
         logger.warning("Zaxira yo'l ham ishlamadi: %s", fallback_technical)
 
         raise UpdateError(
-            f"Yangilanishni tekshirib bo'lmadi. {message}",
+            tr("Yangilanishni tekshirib bo'lmadi. {0}").format(message),
             technical=(
-                f"GitHub API: {api_technical}\n"
-                f"github.com: {fallback_technical}"
+                tr("GitHub API: {0}\ngithub.com: {1}").format(api_technical, fallback_technical)
             ),
         ) from fallback_error
 
@@ -396,30 +396,28 @@ def verify_local_installer(path, current_version=APP_VERSION):
 
     if match is None:
         raise UpdateError(
-            "Fayl nomi VMPOS-Setup-X.Y.Z.exe ko'rinishida bo'lishi kerak "
-            "(relizdan yuklab olingan nomni o'zgartirmang)."
+            tr("Fayl nomi VMPOS-Setup-X.Y.Z.exe ko'rinishida bo'lishi kerak "
+            "(relizdan yuklab olingan nomni o'zgartirmang).")
         )
 
     version = match.group(1)
 
     if not is_newer(version, current_version):
         raise UpdateError(
-            f"Bu versiya (v{version}) o'rnatilganidan (v{current_version}) "
-            "yangi emas."
+            tr("Bu versiya (v{0}) o'rnatilganidan (v{1}) yangi emas.").format(version, current_version)
         )
 
     hash_path = path.with_name(path.name + ".sha256")
 
     if not hash_path.is_file():
         raise UpdateError(
-            f"Yoniga {hash_path.name} faylini ham qo'ying (relizdan ikkalasini "
-            "yuklab oling) — shunda fayl buzilmaganini tekshiramiz."
+            tr("Yoniga {0} faylini ham qo'ying (relizdan ikkalasini yuklab oling) — shunda fayl buzilmaganini tekshiramiz.").format(hash_path.name)
         )
 
     expected = _extract_hash(hash_path.read_text(encoding="utf-8", errors="replace"))
 
     if not expected:
-        raise UpdateError(f"{hash_path.name} ichida SHA-256 topilmadi.")
+        raise UpdateError(tr("{0} ichida SHA-256 topilmadi.").format(hash_path.name))
 
     digest = hashlib.sha256()
 
@@ -429,8 +427,8 @@ def verify_local_installer(path, current_version=APP_VERSION):
 
     if digest.hexdigest() != expected:
         raise UpdateError(
-            "Fayl buzilgan yoki boshqa fayl (SHA-256 mos kelmadi). "
-            "Qayta yuklab oling."
+            tr("Fayl buzilgan yoki boshqa fayl (SHA-256 mos kelmadi). "
+            "Qayta yuklab oling.")
         )
 
     return UpdateInfo(
@@ -448,7 +446,7 @@ def download_installer(info, progress=None, is_cancelled=None):
     tekshiradi. Mos kelmasa fayl o'chiriladi va UpdateError ko'tariladi."""
 
     if not is_allowed_download_url(info.installer_url):
-        raise UpdateError("Ruxsat etilmagan yuklab olish manzili.")
+        raise UpdateError(tr("Ruxsat etilmagan yuklab olish manzili."))
 
     target_dir = Path(tempfile.mkdtemp(prefix="vmpos_update_"))
     target = target_dir / info.installer_name
@@ -462,7 +460,7 @@ def download_installer(info, progress=None, is_cancelled=None):
             with open(target, "wb") as out:
                 while True:
                     if is_cancelled is not None and is_cancelled():
-                        raise UpdateCancelled("Bekor qilindi.")
+                        raise UpdateCancelled(tr("Bekor qilindi."))
 
                     chunk = response.read(_CHUNK_SIZE)
 
@@ -472,7 +470,7 @@ def download_installer(info, progress=None, is_cancelled=None):
                     received += len(chunk)
 
                     if received > _MAX_INSTALLER_BYTES:
-                        raise UpdateError("Fayl haddan tashqari katta.")
+                        raise UpdateError(tr("Fayl haddan tashqari katta."))
 
                     out.write(chunk)
                     digest.update(chunk)
@@ -482,8 +480,8 @@ def download_installer(info, progress=None, is_cancelled=None):
 
         if digest.hexdigest() != info.sha256.lower():
             raise UpdateError(
-                "Yuklab olingan fayl buzilgan (SHA-256 mos kelmadi). "
-                "Yangilanish bekor qilindi."
+                tr("Yuklab olingan fayl buzilgan (SHA-256 mos kelmadi). "
+                "Yangilanish bekor qilindi.")
             )
 
         return target
@@ -500,7 +498,7 @@ def launch_installer(installer_path):
 
     if not can_install():
         raise UpdateError(
-            "Yangilash faqat o'rnatilgan dasturda (Windows) ishlaydi."
+            tr("Yangilash faqat o'rnatilgan dasturda (Windows) ishlaydi.")
         )
 
     flags = 0

@@ -5,6 +5,7 @@ from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPainterPath
 
 from app.utils.barcode_render import get_barcode_modules
 from app.utils.formatters import format_money
+from app.i18n import tr
 
 _PADDING_RATIO = 0.06
 
@@ -195,7 +196,7 @@ def paint_product_label(painter, rect, product):
     painter.drawText(
         price_rect,
         Qt.AlignHCenter | Qt.AlignVCenter,
-        f"{format_money(product.sell_price)} so'm",
+        tr("{0} so'm").format(format_money(product.sell_price)),
     )
 
     side_margin = rect.width() * _BARCODE_SIDE_MARGIN_RATIO

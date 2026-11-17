@@ -1,6 +1,7 @@
 from app.database.database import SessionLocal
 from app.models.shift import Shift
 from app.models.user import ROLE_ADMIN, ROLE_CASHIER, User
+from app.i18n import tr
 
 _VALID_ROLES = {ROLE_ADMIN, ROLE_CASHIER}
 
@@ -37,10 +38,10 @@ class UserService:
         role = data.get("role")
 
         if not full_name:
-            raise ValueError("Foydalanuvchi ismini kiriting.")
+            raise ValueError(tr("Foydalanuvchi ismini kiriting."))
 
         if role not in _VALID_ROLES:
-            raise ValueError("Rol noto'g'ri tanlandi.")
+            raise ValueError(tr("Rol noto'g'ri tanlandi."))
 
         session = SessionLocal()
 
@@ -66,10 +67,10 @@ class UserService:
         role = data.get("role")
 
         if not full_name:
-            raise ValueError("Foydalanuvchi ismini kiriting.")
+            raise ValueError(tr("Foydalanuvchi ismini kiriting."))
 
         if role not in _VALID_ROLES:
-            raise ValueError("Rol noto'g'ri tanlandi.")
+            raise ValueError(tr("Rol noto'g'ri tanlandi."))
 
         session = SessionLocal()
 
@@ -119,8 +120,8 @@ class UserService:
 
             if open_shift is not None:
                 raise ValueError(
-                    "Bu foydalanuvchi hozir ochiq smenaga "
-                    "biriktirilgan."
+                    tr("Bu foydalanuvchi hozir ochiq smenaga "
+                    "biriktirilgan.")
                 )
 
             session.delete(user)
@@ -144,5 +145,5 @@ class UserService:
 
         if other_admins == 0:
             raise ValueError(
-                "Kamida bitta Administrator qolishi kerak."
+                tr("Kamida bitta Administrator qolishi kerak.")
             )

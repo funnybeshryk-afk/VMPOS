@@ -6,6 +6,7 @@ from app.services.settings_service import SettingsService
 from app.utils import receipt_render
 from app.utils.receipt import DEFAULT_FOOTER, build_receipt
 from app.utils.receipt_render import ReceiptPrintError, render_receipt
+from app.i18n import tr
 
 __all__ = ["ReceiptService", "ReceiptPrintError"]
 
@@ -43,12 +44,12 @@ class ReceiptService:
         paper = str(data.get("paper_mm", "80"))
 
         if paper not in _VALID_PAPERS:
-            raise ValueError("Qog'oz kengligi 58 yoki 80 mm bo'lishi kerak.")
+            raise ValueError(tr("Qog'oz kengligi 58 yoki 80 mm bo'lishi kerak."))
 
         footer = (data.get("footer") or "").strip()
 
         if len(footer) > _FOOTER_MAX:
-            raise ValueError(f"Pastki yozuv {_FOOTER_MAX} belgidan oshmasligi kerak.")
+            raise ValueError(tr("Pastki yozuv {0} belgidan oshmasligi kerak.").format(_FOOTER_MAX))
 
         SettingsService.save_setting("receipt_printer", data.get("printer") or "")
         SettingsService.save_setting("receipt_paper_mm", paper)
@@ -87,7 +88,7 @@ class ReceiptService:
         sale = SaleService.get_sale(sale_id)
 
         if sale is None:
-            raise ValueError("Chek topilmadi.")
+            raise ValueError(tr("Chek topilmadi."))
 
         items = SaleService.get_sale_items(sale_id)
         settings = ReceiptService.get_settings()

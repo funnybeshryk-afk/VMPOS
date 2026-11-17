@@ -20,6 +20,7 @@ from app.widgets.badge import (
 from app.widgets.danger_button import DangerButton
 from app.widgets.data_table import DataTable
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 
 class SaleDetailsDialog(QDialog):
@@ -28,14 +29,14 @@ class SaleDetailsDialog(QDialog):
 
         self.sale = sale
 
-        self.setWindowTitle(f"Chek #{sale.id}")
+        self.setWindowTitle(tr("Chek #{0}").format(sale.id))
         self.resize(650, 470)
 
         main_layout = QVBoxLayout(self)
 
         header_layout = QHBoxLayout()
 
-        self.title_label = QLabel(f"Chek #{sale.id}")
+        self.title_label = QLabel(tr("Chek #{0}").format(sale.id))
         self.title_label.setObjectName("pageTitle")
 
         self.status_badge = StatusBadge("", "neutral")
@@ -47,12 +48,12 @@ class SaleDetailsDialog(QDialog):
         self.items_table = DataTable()
         self.items_table.setColumnCount(6)
         self.items_table.setHorizontalHeaderLabels([
-            "Mahsulot",
-            "Narxi",
-            "Soni",
-            "Jami",
-            "Qaytarilgan",
-            "Qoldiq",
+            tr("Mahsulot"),
+            tr("Narxi"),
+            tr("Soni"),
+            tr("Jami"),
+            tr("Qaytarilgan"),
+            tr("Qoldiq"),
         ])
 
         self.total_label = QLabel()
@@ -65,17 +66,17 @@ class SaleDetailsDialog(QDialog):
         # Qaytarish — omborga tovar qaytadi va chekning moliyaviy
         # summasi kamayadi, orqaga qaytarib bo'lmaydi — shuning uchun
         # DangerButton. To'liq/qisman tanlov endi ReturnDialog ichida.
-        self.refund_button = DangerButton("Qaytarish")
+        self.refund_button = DangerButton(tr("Qaytarish"))
         self.refund_button.clicked.connect(self.open_return_dialog)
 
         # Chekni qayta chop etish / ko'rish (FISKAL emas).
-        self.view_receipt_button = SecondaryButton("Chekni ko'rish")
+        self.view_receipt_button = SecondaryButton(tr("Chekni ko'rish"))
         self.view_receipt_button.clicked.connect(self.view_receipt)
 
-        self.print_receipt_button = SecondaryButton("Chekni chop etish")
+        self.print_receipt_button = SecondaryButton(tr("Chekni chop etish"))
         self.print_receipt_button.clicked.connect(self.print_receipt)
 
-        close_button = SecondaryButton("Yopish")
+        close_button = SecondaryButton(tr("Yopish"))
         close_button.clicked.connect(self.accept)
 
         main_layout.addLayout(header_layout)
@@ -99,7 +100,7 @@ class SaleDetailsDialog(QDialog):
         set_badge_variant(self.status_badge, status_text, status_variant)
 
         self.total_label.setText(
-            f"Jami: {format_money(sale.total_amount)} so'm"
+            tr("Jami: {0} so'm").format(format_money(sale.total_amount))
         )
 
         self.vat_label.setText(self._vat_text(sale))
@@ -117,14 +118,14 @@ class SaleDetailsDialog(QDialog):
         try:
             ReceiptService.print_sale(self.sale.id)
         except ReceiptPrintError as error:
-            QMessageBox.warning(self, "Chek chop etilmadi", str(error))
+            QMessageBox.warning(self, tr("Chek chop etilmadi"), str(error))
 
     @staticmethod
     def _vat_text(sale):
         parts = []
 
         if (sale.vat_total or 0) > 0:
-            parts.append(f"QQS: {format_money(sale.vat_total)} so'm")
+            parts.append(tr("QQS: {0} so'm").format(format_money(sale.vat_total)))
 
         fiscal_text = {
             "pending": "Fiskal: yuborilmoqda",

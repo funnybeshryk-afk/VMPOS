@@ -22,13 +22,14 @@ from app.utils.formatters import (
 from app.utils.icons import load_icon
 from app.utils.paths import resolve_data_path
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 _REMOVE_ICON_SIZE = 14
 _REMOVE_ICON_COLOR = "#78716c"
 
 _IMAGE_PREVIEW_SIZE = 72
 _IMAGE_FILE_FILTER = (
-    "Rasmlar (*.png *.jpg *.jpeg *.webp *.bmp)"
+    tr("Rasmlar (*.png *.jpg *.jpeg *.webp *.bmp)")
 )
 
 
@@ -36,7 +37,7 @@ class ProductDialog(QDialog):
     def __init__(self, product=None, price_tiers=None):
         super().__init__()
 
-        self.setWindowTitle("Yangi mahsulot")
+        self.setWindowTitle(tr("Yangi mahsulot"))
         self.resize(480, 680)
 
         layout = QFormLayout(self)
@@ -44,7 +45,7 @@ class ProductDialog(QDialog):
         self._selected_image_source_path = None
         self._remove_image = False
 
-        layout.addRow("Rasm", self._build_photo_row(product))
+        layout.addRow(tr("Rasm"), self._build_photo_row(product))
 
         self.barcode = QLineEdit()
         self.name = QLineEdit()
@@ -61,14 +62,14 @@ class ProductDialog(QDialog):
         self.package_code = QLineEdit()
         self.vat_rate = QLineEdit()
 
-        self.ikpu_code.setPlaceholderText("IKPU (MXIK) kodi — faqat raqamlar")
-        self.package_code.setPlaceholderText("Qadoq kodi — faqat raqamlar")
-        self.vat_rate.setPlaceholderText("Bo'sh = do'konning standart stavkasi")
+        self.ikpu_code.setPlaceholderText(tr("IKPU (MXIK) kodi — faqat raqamlar"))
+        self.package_code.setPlaceholderText(tr("Qadoq kodi — faqat raqamlar"))
+        self.vat_rate.setPlaceholderText(tr("Bo'sh = do'konning standart stavkasi"))
 
-        self.buy_price.setPlaceholderText("Masalan: 15 000,50")
-        self.sell_price.setPlaceholderText("Masalan: 18 000")
-        self.quantity.setPlaceholderText("Masalan: 10 yoki 0,5")
-        self.min_quantity.setPlaceholderText("Masalan: 2")
+        self.buy_price.setPlaceholderText(tr("Masalan: 15 000,50"))
+        self.sell_price.setPlaceholderText(tr("Masalan: 18 000"))
+        self.quantity.setPlaceholderText(tr("Masalan: 10 yoki 0,5"))
+        self.min_quantity.setPlaceholderText(tr("Masalan: 2"))
 
         if product:
             self.barcode.setText(product.barcode or "")
@@ -90,17 +91,17 @@ class ProductDialog(QDialog):
             if product.vat_rate is not None:
                 self.vat_rate.setText(f"{product.vat_rate:g}")
 
-        layout.addRow("Shtrix kod", self.barcode)
-        layout.addRow("Nomi", self.name)
-        layout.addRow("Kategoriya", self.category)
-        layout.addRow("Sotib olish narxi", self.buy_price)
-        layout.addRow("Sotish narxi", self.sell_price)
-        layout.addRow("Birlik", self.unit)
-        layout.addRow("Qoldiq", self.quantity)
-        layout.addRow("Minimal qoldiq", self.min_quantity)
-        layout.addRow("IKPU kodi", self.ikpu_code)
-        layout.addRow("Qadoq kodi", self.package_code)
-        layout.addRow("QQS stavkasi, %", self.vat_rate)
+        layout.addRow(tr("Shtrix kod"), self.barcode)
+        layout.addRow(tr("Nomi"), self.name)
+        layout.addRow(tr("Kategoriya"), self.category)
+        layout.addRow(tr("Sotib olish narxi"), self.buy_price)
+        layout.addRow(tr("Sotish narxi"), self.sell_price)
+        layout.addRow(tr("Birlik"), self.unit)
+        layout.addRow(tr("Qoldiq"), self.quantity)
+        layout.addRow(tr("Minimal qoldiq"), self.min_quantity)
+        layout.addRow(tr("IKPU kodi"), self.ikpu_code)
+        layout.addRow(tr("Qadoq kodi"), self.package_code)
+        layout.addRow(tr("QQS stavkasi, %"), self.vat_rate)
 
         # Optom narxlar — ixtiyoriy. Odatda mahsulotda bitta ham
         # qator yo'q, bu holda oddiy sotish narxi doim qo'llanadi.
@@ -117,7 +118,7 @@ class ProductDialog(QDialog):
         self.price_tiers_rows_layout.setSpacing(6)
 
         add_price_tier_button = SecondaryButton(
-            "+ Optom narx qo'shish"
+            tr("+ Optom narx qo'shish")
         )
         add_price_tier_button.clicked.connect(
             lambda: self._add_price_tier_row()
@@ -128,7 +129,7 @@ class ProductDialog(QDialog):
         )
         price_tiers_section_layout.addWidget(add_price_tier_button)
 
-        layout.addRow("Optom narxlar", price_tiers_section)
+        layout.addRow(tr("Optom narxlar"), price_tiers_section)
 
         for tier in price_tiers or []:
             self._add_price_tier_row(
@@ -136,7 +137,7 @@ class ProductDialog(QDialog):
                 format_money(tier.price),
             )
 
-        layout.addRow("Tavsif", self.description)
+        layout.addRow(tr("Tavsif"), self.description)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.Save | QDialogButtonBox.Cancel
@@ -164,11 +165,11 @@ class ProductDialog(QDialog):
         buttons_column = QVBoxLayout()
         buttons_column.setSpacing(6)
 
-        select_image_button = SecondaryButton("Rasmni tanlash")
+        select_image_button = SecondaryButton(tr("Rasmni tanlash"))
         select_image_button.clicked.connect(self._choose_image)
 
         remove_image_button = SecondaryButton(
-            "Rasmni olib tashlash"
+            tr("Rasmni olib tashlash")
         )
         remove_image_button.clicked.connect(self._clear_image)
 
@@ -191,7 +192,7 @@ class ProductDialog(QDialog):
     def _choose_image(self):
         file_path, _selected_filter = QFileDialog.getOpenFileName(
             self,
-            "Rasmni tanlash",
+            tr("Rasmni tanlash"),
             "",
             _IMAGE_FILE_FILTER,
         )
@@ -226,7 +227,7 @@ class ProductDialog(QDialog):
 
     def _show_empty_image_preview(self):
         self.image_preview_label.setPixmap(QPixmap())
-        self.image_preview_label.setText("Rasm yo'q")
+        self.image_preview_label.setText(tr("Rasm yo'q"))
 
     def _add_price_tier_row(
         self, min_quantity_text="", price_text=""
@@ -238,11 +239,11 @@ class ProductDialog(QDialog):
         row_layout.setSpacing(6)
 
         min_quantity_edit = QLineEdit(min_quantity_text)
-        min_quantity_edit.setPlaceholderText("Miqdor")
+        min_quantity_edit.setPlaceholderText(tr("Miqdor"))
         min_quantity_edit.setFixedWidth(70)
 
         price_edit = QLineEdit(price_text)
-        price_edit.setPlaceholderText("Narx")
+        price_edit.setPlaceholderText(tr("Narx"))
 
         remove_button = QPushButton()
         remove_button.setIcon(
@@ -262,9 +263,9 @@ class ProductDialog(QDialog):
         )
 
         row_layout.addWidget(min_quantity_edit)
-        row_layout.addWidget(QLabel("donadan →"))
+        row_layout.addWidget(QLabel(tr("donadan →")))
         row_layout.addWidget(price_edit, 1)
-        row_layout.addWidget(QLabel("so'm"))
+        row_layout.addWidget(QLabel(tr("so'm")))
         row_layout.addWidget(remove_button)
 
         self.price_tiers_rows_layout.addWidget(row_widget)

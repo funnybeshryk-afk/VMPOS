@@ -9,6 +9,8 @@ from app.services.fiscal_service import FiscalService
 from app.services.product_service import ProductService
 from app.services.settings_service import SettingsService
 from app.utils.vat import effective_vat_rate, vat_included
+from app.i18n import tr
+
 
 class SaleService:
 
@@ -40,12 +42,12 @@ class SaleService:
 
                 if product is None:
                     raise ValueError(
-                        f"Mahsulot topilmadi: {cart_product.name}"
+                        tr("Mahsulot topilmadi: {0}").format(cart_product.name)
                     )
 
                 if product.quantity < quantity:
                     raise ValueError(
-                        f"Qoldiq yetarli emas: {product.name}"
+                        tr("Qoldiq yetarli emas: {0}").format(product.name)
                     )
 
                 # Narx bu yerda, checkout paytida, serverda qayta
@@ -64,7 +66,7 @@ class SaleService:
             if payment_method == "debt":
                 if not customer_id:
                     raise ValueError(
-                        "Nasiya savdo uchun mijozni tanlash shart."
+                        tr("Nasiya savdo uchun mijozni tanlash shart.")
                     )
 
                 # UI ko'rsatgan summaga ishonilmaydi — narx kabi bu
@@ -76,18 +78,18 @@ class SaleService:
 
                 if debt_amount <= 0:
                     raise ValueError(
-                        "Qarzga yoziladigan summa noldan katta "
-                        "bo'lishi kerak."
+                        tr("Qarzga yoziladigan summa noldan katta "
+                        "bo'lishi kerak.")
                     )
 
                 if debt_amount > total_amount + 0.01:
                     raise ValueError(
-                        "Qarzga yoziladigan summa chek jamisidan "
-                        "katta bo'lishi mumkin emas."
+                        tr("Qarzga yoziladigan summa chek jamisidan "
+                        "katta bo'lishi mumkin emas.")
                     )
 
             if payment_method == "cash" and paid_amount < total_amount:
-                raise ValueError("Berilgan summa yetarli emas.")
+                raise ValueError(tr("Berilgan summa yetarli emas."))
 
             if payment_method == "card":
                 paid_amount = total_amount
@@ -95,12 +97,12 @@ class SaleService:
             if payment_method == "mixed":
                 if cash_amount is None or card_amount is None:
                     raise ValueError(
-                        "Aralash to'lov summalari ko'rsatilmagan."
+                        tr("Aralash to'lov summalari ko'rsatilmagan.")
                     )
 
                 if cash_amount < 0 or card_amount < 0:
                     raise ValueError(
-                        "Summalar manfiy bo'lishi mumkin emas."
+                        tr("Summalar manfiy bo'lishi mumkin emas.")
                     )
 
                 if (
@@ -108,8 +110,8 @@ class SaleService:
                     > 0.01
                 ):
                     raise ValueError(
-                        "Naqd va karta summalari jami chek "
-                        "summasiga teng emas."
+                        tr("Naqd va karta summalari jami chek "
+                        "summasiga teng emas.")
                     )
 
                 paid_amount = cash_amount + card_amount
@@ -192,7 +194,7 @@ class SaleService:
                 customer = session.get(Customer, customer_id)
 
                 if customer is None:
-                    raise ValueError("Mijoz topilmadi.")
+                    raise ValueError(tr("Mijoz topilmadi."))
 
                 # Qarz hozir 0 bo'lsa — yangi qarz davri boshlanadi,
                 # sana bugungiga o'rnatiladi. Qarz allaqachon bor

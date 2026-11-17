@@ -19,6 +19,7 @@ from app.services import update_service
 from app.services.backup_service import KIND_PREUPDATE, BackupService
 from app.services.update_service import UpdateCancelled, UpdateError
 from app.version import APP_VERSION
+from app.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class _CheckWorker(QThread):
             self.failed.emit(str(error), error.technical)
         except Exception as error:  # kutilmagan xato ham oqimni o'ldirmasin
             logger.exception("Yangilanishni tekshirishda xato")
-            self.failed.emit("Yangilanishni tekshirib bo'lmadi.", repr(error))
+            self.failed.emit(tr("Yangilanishni tekshirib bo'lmadi."), repr(error))
 
 
 class _DownloadWorker(QThread):
@@ -111,12 +112,12 @@ class UpdateFlow(QObject):
 
         box = QMessageBox(self._dialog_parent())
         box.setIcon(QMessageBox.Warning)
-        box.setWindowTitle("Yangilanish")
+        box.setWindowTitle(tr("Yangilanish"))
         box.setText(message)
         box.setInformativeText(
-            "Bu kompyuterda internet cheklangan bo'lsa: boshqa kompyuterdan "
+            tr("Bu kompyuterda internet cheklangan bo'lsa: boshqa kompyuterdan "
             "yangilanish faylini (VMPOS-Setup-X.Y.Z.exe va .sha256) yuklab "
-            "olib, \"Fayldan o'rnatish\" tugmasi orqali o'rnating."
+            "olib, \"Fayldan o'rnatish\" tugmasi orqali o'rnating.")
         )
         box.setDetailedText(technical)
         box.exec()
@@ -128,8 +129,8 @@ class UpdateFlow(QObject):
             if not self._silent:
                 QMessageBox.information(
                     self._dialog_parent(),
-                    "Yangilanish",
-                    f"Sizda eng so'nggi versiya o'rnatilgan (v{APP_VERSION}).",
+                    tr("Yangilanish"),
+                    tr("Sizda eng so'nggi versiya o'rnatilgan (v{0}).").format(APP_VERSION),
                 )
             return
 
@@ -146,16 +147,16 @@ class UpdateFlow(QObject):
         if not update_service.can_install():
             QMessageBox.information(
                 parent,
-                "Yangilanish",
-                "Fayldan o'rnatish faqat o'rnatilgan dasturda (Windows) ishlaydi.",
+                tr("Yangilanish"),
+                tr("Fayldan o'rnatish faqat o'rnatilgan dasturda (Windows) ishlaydi."),
             )
             return
 
         path, _filter = QFileDialog.getOpenFileName(
             parent,
-            "Yangilanish faylini tanlang",
+            tr("Yangilanish faylini tanlang"),
             "",
-            "VMPOS o'rnatuvchi (VMPOS-Setup-*.exe)",
+            tr("VMPOS o'rnatuvchi (VMPOS-Setup-*.exe)"),
         )
 
         if not path:
@@ -164,15 +165,13 @@ class UpdateFlow(QObject):
         try:
             info = update_service.verify_local_installer(path)
         except UpdateError as error:
-            QMessageBox.warning(parent, "Yangilanish", str(error))
+            QMessageBox.warning(parent, tr("Yangilanish"), str(error))
             return
 
         answer = QMessageBox.question(
             parent,
-            "Yangilanish",
-            f"VMPOS v{info.version} o'rnatiladi (hozir v{APP_VERSION}).\n\n"
-            "Joriy savdoni yakunlang. Ma'lumotlaringiz saqlanadi va "
-            "avtomatik zaxiralanadi.",
+            tr("Yangilanish"),
+            tr("VMPOS v{0} o'rnatiladi (hozir v{1}).\n\nJoriy savdoni yakunlang. Ma'lumotlaringiz saqlanadi va avtomatik zaxiralanadi.").format(info.version, APP_VERSION),
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No,
         )
@@ -185,9 +184,9 @@ class UpdateFlow(QObject):
     def _offer(self, info):
         box = QMessageBox(self._dialog_parent())
         box.setIcon(QMessageBox.Information)
-        box.setWindowTitle("Yangi versiya")
+        box.setWindowTitle(tr("Yangi versiya"))
         box.setText(
-            f"VMPOS v{info.version} chiqdi (sizda v{APP_VERSION})."
+            tr("VMPOS v{0} chiqdi (sizda v{1}).").format(info.version, APP_VERSION)
         )
 
         if info.notes:
@@ -196,17 +195,17 @@ class UpdateFlow(QObject):
         if not update_service.can_install():
             box.setStandardButtons(QMessageBox.Ok)
             box.setDetailedText(
-                "Avtomatik yangilash faqat o'rnatilgan dasturda ishlaydi."
+                tr("Avtomatik yangilash faqat o'rnatilgan dasturda ishlaydi.")
             )
             box.exec()
             return
 
-        later = box.addButton("Keyinroq", QMessageBox.RejectRole)
-        update = box.addButton("Yangilash", QMessageBox.AcceptRole)
+        later = box.addButton(tr("Keyinroq"), QMessageBox.RejectRole)
+        update = box.addButton(tr("Yangilash"), QMessageBox.AcceptRole)
         box.setDefaultButton(later)
         box.setDetailedText(
-            "Yangilashdan oldin joriy savdoni yakunlang. Ma'lumotlaringiz "
-            "saqlanadi va avtomatik zaxiralanadi."
+            tr("Yangilashdan oldin joriy savdoni yakunlang. Ma'lumotlaringiz "
+            "saqlanadi va avtomatik zaxiralanadi.")
         )
         box.exec()
 
@@ -217,10 +216,10 @@ class UpdateFlow(QObject):
 
     def _download(self, info):
         dialog = QProgressDialog(
-            f"v{info.version} yuklanmoqda…", "Bekor qilish", 0, 100,
+            tr("v{0} yuklanmoqda…").format(info.version), tr("Bekor qilish"), 0, 100,
             self._dialog_parent(),
         )
-        dialog.setWindowTitle("Yangilanish")
+        dialog.setWindowTitle(tr("Yangilanish"))
         dialog.setWindowModality(Qt.WindowModal)
         dialog.setMinimumDuration(0)
         dialog.setAutoClose(False)
@@ -252,8 +251,8 @@ class UpdateFlow(QObject):
         logger.warning("Yuklab olish muvaffaqiyatsiz: %s", message)
         QMessageBox.warning(
             self._dialog_parent(),
-            "Yangilanish",
-            f"Yangilab bo'lmadi:\n{message}\n\nDastur avvalgidek ishlayveradi.",
+            tr("Yangilanish"),
+            tr("Yangilab bo'lmadi:\n{0}\n\nDastur avvalgidek ishlayveradi.").format(message),
         )
 
     def _on_downloaded(self, installer_path):
@@ -272,8 +271,8 @@ class UpdateFlow(QObject):
             logger.exception("O'rnatuvchini ishga tushirib bo'lmadi")
             QMessageBox.warning(
                 self._dialog_parent(),
-                "Yangilanish",
-                f"O'rnatuvchini ishga tushirib bo'lmadi:\n{error}",
+                tr("Yangilanish"),
+                tr("O'rnatuvchini ishga tushirib bo'lmadi:\n{0}").format(error),
             )
             return
 

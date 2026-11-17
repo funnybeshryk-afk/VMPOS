@@ -88,7 +88,17 @@ class ProductGrid(QListView):
             self._flash_timer.start()
 
     def _tick_flash(self):
-        self.viewport().update()
+        # Faqat vspishka bor kartochkalarni qayta chizamiz. Avval butun
+        # viewport (barcha ko'rinadigan kartochka, rasmlar bilan) ~60
+        # marta/s chizilar edi — sekin kassa kompyuterlarida bu ekran
+        # "miltillashi" va qotishiga olib kelardi.
+        for product_id in self._model.flashing_product_ids():
+            row = self._model.row_of(product_id)
+
+            if row is not None:
+                self.viewport().update(
+                    self.visualRect(self._model.index(row))
+                )
 
         if not self._model.has_active_flash():
             self._flash_timer.stop()

@@ -17,6 +17,7 @@ from app.utils.paths import (
     resolve_data_path,
     to_data_relative,
 )
+from app.i18n import tr
 
 
 class ProductService:
@@ -108,19 +109,19 @@ class ProductService:
 
             if min_quantity <= 0:
                 raise ValueError(
-                    "Optom narx miqdori noldan katta bo'lishi "
-                    "kerak."
+                    tr("Optom narx miqdori noldan katta bo'lishi "
+                    "kerak.")
                 )
 
             if price <= 0:
                 raise ValueError(
-                    "Optom narx noldan katta bo'lishi kerak."
+                    tr("Optom narx noldan katta bo'lishi kerak.")
                 )
 
             if min_quantity in seen_min_quantities:
                 raise ValueError(
-                    "Optom narxlar orasida miqdor takrorlanmasligi "
-                    "kerak."
+                    tr("Optom narxlar orasida miqdor takrorlanmasligi "
+                    "kerak.")
                 )
 
             seen_min_quantities.add(min_quantity)
@@ -149,7 +150,7 @@ class ProductService:
 
                 if existing_product:
                     raise ValueError(
-                        "Bu shtrix-kod allaqachon mavjud."
+                        tr("Bu shtrix-kod allaqachon mavjud.")
                     )
             else:
                 barcode = ProductService._generate_internal_barcode(
@@ -256,7 +257,7 @@ class ProductService:
                     and existing_product.id != product_id
                 ):
                     raise ValueError(
-                        "Bu shtrix-kod allaqachon mavjud."
+                        tr("Bu shtrix-kod allaqachon mavjud.")
                     )
             else:
                 barcode = (
@@ -329,7 +330,7 @@ class ProductService:
     @staticmethod
     def add_stock(product_id, quantity, supplier_id=None):
         if quantity <= 0:
-            raise ValueError("Miqdor noldan katta bo'lishi kerak.")
+            raise ValueError(tr("Miqdor noldan katta bo'lishi kerak."))
 
         session = SessionLocal()
 
@@ -337,7 +338,7 @@ class ProductService:
             product = session.get(Product, product_id)
 
             if product is None:
-                raise ValueError("Mahsulot topilmadi.")
+                raise ValueError(tr("Mahsulot topilmadi."))
 
             supplier = None
 
@@ -346,7 +347,7 @@ class ProductService:
 
                 if supplier is None:
                     raise ValueError(
-                        "Yetkazib beruvchi topilmadi."
+                        tr("Yetkazib beruvchi topilmadi.")
                     )
 
             product.quantity += quantity

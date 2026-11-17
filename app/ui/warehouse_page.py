@@ -17,6 +17,7 @@ from app.widgets.data_table import DataTable
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.secondary_button import SecondaryButton
 from app.widgets.summary_card import SummaryCard
+from app.i18n import tr
 
 
 class WarehousePage(QWidget):
@@ -27,14 +28,14 @@ class WarehousePage(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
 
-        title = QLabel("Ombor")
+        title = QLabel(tr("Ombor"))
         title.setObjectName("pageTitle")
 
         summary_layout = QHBoxLayout()
 
-        self.total_products_card = SummaryCard("Jami mahsulotlar")
-        self.low_stock_card = SummaryCard("Kam qolgan", "warning")
-        self.out_of_stock_card = SummaryCard("Tugagan", "danger")
+        self.total_products_card = SummaryCard(tr("Jami mahsulotlar"))
+        self.low_stock_card = SummaryCard(tr("Kam qolgan"), "warning")
+        self.out_of_stock_card = SummaryCard(tr("Tugagan"), "danger")
 
         summary_layout.addWidget(self.total_products_card)
         summary_layout.addWidget(self.low_stock_card)
@@ -45,13 +46,13 @@ class WarehousePage(QWidget):
         # "Tovar qabul qilish" — bu sahifadagi eng ko'p bosiladigan
         # amal (ombordan tovar kirimi), shuning uchun yagona qora
         # PrimaryButton. Qolgan ikkitasi — yordamchi amallar.
-        self.receive_button = PrimaryButton("Tovar qabul qilish")
+        self.receive_button = PrimaryButton(tr("Tovar qabul qilish"))
         self.receive_button.clicked.connect(self.receive_stock)
 
-        self.history_button = SecondaryButton("Qabul tarixi")
+        self.history_button = SecondaryButton(tr("Qabul tarixi"))
         self.history_button.clicked.connect(self.open_receipts_history)
 
-        self.refresh_button = SecondaryButton("Yangilash")
+        self.refresh_button = SecondaryButton(tr("Yangilash"))
         self.refresh_button.clicked.connect(self.load_products)
 
         buttons_layout.addWidget(self.receive_button)
@@ -63,11 +64,11 @@ class WarehousePage(QWidget):
         self.products_table.verticalHeader().setDefaultSectionSize(36)
         self.products_table.setColumnCount(5)
         self.products_table.setHorizontalHeaderLabels([
-            "Shtrix-kod",
-            "Mahsulot",
-            "Qoldiq",
-            "Minimal qoldiq",
-            "Holat",
+            tr("Shtrix-kod"),
+            tr("Mahsulot"),
+            tr("Qoldiq"),
+            tr("Minimal qoldiq"),
+            tr("Holat"),
         ])
         self.products_table.pin_column_width(4)
 
@@ -134,8 +135,8 @@ class WarehousePage(QWidget):
         if current_row < 0:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Qabul qilish uchun mahsulotni tanlang.",
+                tr("Diqqat"),
+                tr("Qabul qilish uchun mahsulotni tanlang."),
             )
             return
 
@@ -149,8 +150,8 @@ class WarehousePage(QWidget):
         if product is None:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Mahsulot topilmadi.",
+                tr("Diqqat"),
+                tr("Mahsulot topilmadi."),
             )
             return
 
@@ -169,7 +170,7 @@ class WarehousePage(QWidget):
         except ValueError as error:
             QMessageBox.warning(
                 self,
-                "Diqqat",
+                tr("Diqqat"),
                 str(error),
             )
             return
@@ -178,9 +179,8 @@ class WarehousePage(QWidget):
 
         QMessageBox.information(
             self,
-            "Muvaffaqiyatli",
-            f"{updated_product.name} qoldig'i: "
-            f"{format_quantity(updated_product.quantity)}",
+            tr("Muvaffaqiyatli"),
+            tr("{0} qoldig'i: {1}").format(updated_product.name, format_quantity(updated_product.quantity)),
         )
 
     def open_receipts_history(self):

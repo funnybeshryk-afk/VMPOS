@@ -4,13 +4,14 @@ from app.services.customer_service import CustomerService
 from app.utils.formatters import format_money
 from app.widgets.data_table import DataTable
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 
 class DebtPaymentsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Qarz to'lovlari tarixi")
+        self.setWindowTitle(tr("Qarz to'lovlari tarixi"))
         self.resize(650, 400)
 
         main_layout = QVBoxLayout(self)
@@ -18,12 +19,12 @@ class DebtPaymentsDialog(QDialog):
         self.payments_table = DataTable()
         self.payments_table.setColumnCount(3)
         self.payments_table.setHorizontalHeaderLabels([
-            "Sana",
-            "Mijoz",
-            "To'lov",
+            tr("Sana"),
+            tr("Mijoz"),
+            tr("To'lov"),
         ])
 
-        close_button = SecondaryButton("Yopish")
+        close_button = SecondaryButton(tr("Yopish"))
         close_button.clicked.connect(self.accept)
 
         main_layout.addWidget(self.payments_table)
@@ -55,6 +56,6 @@ class DebtPaymentsDialog(QDialog):
                 row,
                 2,
                 QTableWidgetItem(
-                    f"{format_money(payment.amount)} so'm"
+                    tr("{0} so'm").format(format_money(payment.amount))
                 ),
             )

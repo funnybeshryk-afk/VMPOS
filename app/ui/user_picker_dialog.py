@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.models.user import ROLE_LABELS
+from app.i18n import tr
 
 
 class UserPickerDialog(QDialog):
@@ -22,12 +23,12 @@ class UserPickerDialog(QDialog):
     def __init__(self, users, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Foydalanuvchini tanlash")
+        self.setWindowTitle(tr("Foydalanuvchini tanlash"))
         self.setMinimumWidth(320)
 
         main_layout = QVBoxLayout(self)
 
-        info_label = QLabel("Hozir kim ishlayapti?")
+        info_label = QLabel(tr("Hozir kim ishlayapti?"))
         info_label.setObjectName("sectionTitle")
 
         self.users_list = QListWidget()

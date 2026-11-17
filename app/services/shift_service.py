@@ -3,6 +3,7 @@ from datetime import datetime
 from app.database.database import SessionLocal
 from app.models.sale import Sale
 from app.models.shift import Shift
+from app.i18n import tr
 
 
 class ShiftService:
@@ -90,11 +91,11 @@ class ShiftService:
         cashier_name = (cashier_name or "").strip()
 
         if not cashier_name:
-            raise ValueError("Kassir ismini kiriting.")
+            raise ValueError(tr("Kassir ismini kiriting."))
 
         if opening_cash_amount < 0:
             raise ValueError(
-                "Boshlang'ich summa manfiy bo'lishi mumkin emas."
+                tr("Boshlang'ich summa manfiy bo'lishi mumkin emas.")
             )
 
         session = SessionLocal()
@@ -107,7 +108,7 @@ class ShiftService:
             )
 
             if existing_open_shift is not None:
-                raise ValueError("Allaqachon ochiq smena mavjud.")
+                raise ValueError(tr("Allaqachon ochiq smena mavjud."))
 
             shift = Shift(
                 cashier_name=cashier_name,
@@ -132,7 +133,7 @@ class ShiftService:
     def close_shift(shift_id, closing_cash_amount):
         if closing_cash_amount < 0:
             raise ValueError(
-                "Kassadagi summa manfiy bo'lishi mumkin emas."
+                tr("Kassadagi summa manfiy bo'lishi mumkin emas.")
             )
 
         session = SessionLocal()
@@ -141,10 +142,10 @@ class ShiftService:
             shift = session.get(Shift, shift_id)
 
             if shift is None:
-                raise ValueError("Smena topilmadi.")
+                raise ValueError(tr("Smena topilmadi."))
 
             if shift.status != "open":
-                raise ValueError("Bu smena allaqachon yopilgan.")
+                raise ValueError(tr("Bu smena allaqachon yopilgan."))
 
             summary = ShiftService._summarize_sales_between(
                 shift.opened_at, datetime.now()

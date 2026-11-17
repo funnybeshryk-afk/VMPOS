@@ -1,4 +1,5 @@
 from PySide6.QtCore import (
+    QSize,
     QEasingCurve,
     QParallelAnimationGroup,
     QPropertyAnimation,
@@ -21,11 +22,13 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils import motion
+from app.utils.icons import load_icon
 from app.utils.formatters import format_money, format_quantity
-from app.utils.units import is_weight_unit
+from app.utils.units import is_weight_unit, unit_label
 from app.widgets.badge import StatusBadge
+from app.i18n import tr
 
-_ROW_HEIGHT = 88
+_ROW_HEIGHT = 96
 
 
 class _ElidedLabel(QLabel):
@@ -64,6 +67,7 @@ class _CartRow(QFrame):
     selectRequested = Signal(int)
     changeRequested = Signal(int, int)  # product_id, +1 / -1
     editRequested = Signal(int)
+    removeRequested = Signal(int)
 
     def __init__(self, product_id, item, selected):
         super().__init__()
@@ -100,8 +104,23 @@ class _CartRow(QFrame):
         top_row.addWidget(name_label, 1)
         top_row.addWidget(total_label)
 
+        # Qatorni butunlay olib tashlash: og'irlikli mahsulotda "–" yo'q
+        # (miqdor 0 ga tushmaydi), dona mahsulotda esa 5 marta bosish
+        # kerak bo'lardi — shuning uchun har qatorda alohida "×".
+        remove_button = QPushButton()
+        remove_button.setObjectName("cartRowRemove")
+        remove_button.setCursor(Qt.PointingHandCursor)
+        remove_button.setFocusPolicy(Qt.NoFocus)
+        remove_button.setToolTip(tr("O'chirish"))
+        remove_button.setIcon(load_icon("x", color="#78716c", size=16))
+        remove_button.setIconSize(QSize(16, 16))
+        remove_button.clicked.connect(
+            lambda: self.removeRequested.emit(self._product_id)
+        )
+        top_row.addWidget(remove_button)
+
         # 2-qator: birlik narxi (+ "Optom") va miqdor stepperi.
-        price_label = QLabel(f"{format_money(unit_price)} so'm")
+        price_label = QLabel(tr("{0} so'm").format(format_money(unit_price)))
         price_label.setObjectName("cartRowPrice")
 
         bottom_row = QHBoxLayout()
@@ -109,7 +128,7 @@ class _CartRow(QFrame):
         bottom_row.addWidget(price_label)
 
         if item["is_wholesale"]:
-            bottom_row.addWidget(StatusBadge("Optom", "success"))
+            bottom_row.addWidget(StatusBadge(tr("Optom"), "success"))
 
         bottom_row.addStretch()
 
@@ -126,13 +145,21 @@ class _CartRow(QFrame):
         quantity_text = format_quantity(quantity)
 
         if weight:
-            quantity_text += f" {product.unit.strip()}"
+            quantity_text += f" {unit_label(product.unit)}"
 
         self.quantity_button = QPushButton(quantity_text)
         self.quantity_button.setObjectName("qtyValue")
         self.quantity_button.setCursor(Qt.PointingHandCursor)
         self.quantity_button.setFocusPolicy(Qt.NoFocus)
-        self.quantity_button.setToolTip("Miqdorni kiritish")
+        self.quantity_button.setToolTip(tr("Miqdorni kiritish"))
+
+        if weight:
+            # Og'irlikda "+/-" yo'q — miqdor faqat shu tugma orqali
+            # o'zgartiriladi. Oddiy matn kabi ko'rinsa kassir buni
+            # sezmaydi, shuning uchun ramkali tugma + qalam belgisi.
+            self.quantity_button.setProperty("editable", "true")
+            self.quantity_button.setIcon(load_icon("edit-2", color="#57534e", size=16))
+            self.quantity_button.setIconSize(QSize(16, 16))
         self.quantity_button.clicked.connect(
             lambda: self.editRequested.emit(self._product_id)
         )
@@ -196,6 +223,7 @@ class CartList(QScrollArea):
 
     changeRequested = Signal(int, int)
     editRequested = Signal(int)
+    removeRequested = Signal(int)
 
     def __init__(self):
         super().__init__()
@@ -256,6 +284,7 @@ class CartList(QScrollArea):
             row.selectRequested.connect(self.select)
             row.changeRequested.connect(self.changeRequested)
             row.editRequested.connect(self.editRequested)
+            row.removeRequested.connect(self.removeRequested)
 
             self._rows_layout.insertWidget(index, row)
             self._rows[product_id] = row

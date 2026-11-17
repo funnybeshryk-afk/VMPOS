@@ -1130,6 +1130,34 @@ QPushButton#qtyValue:hover {
     border-radius: 12px;
 }
 
+QPushButton#cartRowRemove {
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    min-width: 32px;
+    max-width: 32px;
+    min-height: 32px;
+    max-height: 32px;
+}
+
+QPushButton#cartRowRemove:hover {
+    background: #fee2e2;
+}
+
+/* Og'irlikli mahsulot: "+/-" yo'q, miqdor shu tugma orqali o'zgaradi —
+   shuning uchun u tahrirlanadigan maydonga o'xshab ko'rinishi kerak. */
+QPushButton#qtyValue[editable="true"] {
+    background: #ffffff;
+    border: 1px solid #ddd6cb;
+    border-radius: 12px;
+    padding: 0 12px;
+}
+
+QPushButton#qtyValue[editable="true"]:hover {
+    background: #ece7df;
+    border-color: #a8a29e;
+}
+
 /* Jami — qora blok, yorqin izumrud summa (palitraga qo'shimcha ochiq
    izumrud #34d399: faqat qora fonda o'qilishi uchun). */
 

@@ -14,6 +14,7 @@ from app.widgets.danger_button import DangerButton
 from app.widgets.data_table import DataTable
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 
 class SuppliersPage(QWidget):
@@ -24,18 +25,18 @@ class SuppliersPage(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
 
-        title = QLabel("Yetkazib beruvchilar")
+        title = QLabel(tr("Yetkazib beruvchilar"))
         title.setObjectName("pageTitle")
 
         buttons_layout = QHBoxLayout()
 
-        self.add_button = PrimaryButton("Qo'shish")
+        self.add_button = PrimaryButton(tr("Qo'shish"))
         self.add_button.clicked.connect(self.add_supplier)
 
-        self.edit_button = SecondaryButton("Tahrirlash")
+        self.edit_button = SecondaryButton(tr("Tahrirlash"))
         self.edit_button.clicked.connect(self.edit_supplier)
 
-        self.delete_button = DangerButton("O'chirish")
+        self.delete_button = DangerButton(tr("O'chirish"))
         self.delete_button.clicked.connect(self.delete_supplier)
 
         buttons_layout.addWidget(self.add_button)
@@ -46,9 +47,9 @@ class SuppliersPage(QWidget):
         self.suppliers_table = DataTable()
         self.suppliers_table.setColumnCount(3)
         self.suppliers_table.setHorizontalHeaderLabels([
-            "Nomi",
-            "Telefon",
-            "Manzil",
+            tr("Nomi"),
+            tr("Telefon"),
+            tr("Manzil"),
         ])
 
         main_layout.addWidget(title)
@@ -106,8 +107,8 @@ class SuppliersPage(QWidget):
         if not data["name"]:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Yetkazib beruvchi nomini kiriting.",
+                tr("Diqqat"),
+                tr("Yetkazib beruvchi nomini kiriting."),
             )
             return
 
@@ -120,8 +121,8 @@ class SuppliersPage(QWidget):
         if supplier_id is None:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Tahrirlash uchun yetkazib beruvchini tanlang.",
+                tr("Diqqat"),
+                tr("Tahrirlash uchun yetkazib beruvchini tanlang."),
             )
             return
 
@@ -140,8 +141,8 @@ class SuppliersPage(QWidget):
         if not data["name"]:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Yetkazib beruvchi nomini kiriting.",
+                tr("Diqqat"),
+                tr("Yetkazib beruvchi nomini kiriting."),
             )
             return
 
@@ -154,8 +155,8 @@ class SuppliersPage(QWidget):
         if supplier_id is None:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "O'chirish uchun yetkazib beruvchini tanlang.",
+                tr("Diqqat"),
+                tr("O'chirish uchun yetkazib beruvchini tanlang."),
             )
             return
 
@@ -166,8 +167,8 @@ class SuppliersPage(QWidget):
 
         reply = QMessageBox.question(
             self,
-            "Tasdiqlash",
-            f'"{supplier.name}" o‘chirmoqchimisiz?',
+            tr("Tasdiqlash"),
+            tr("\"{0}\" o‘chirmoqchimisiz?").format(supplier.name),
             QMessageBox.Yes | QMessageBox.No,
         )
 

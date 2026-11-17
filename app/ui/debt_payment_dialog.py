@@ -7,20 +7,21 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.formatters import format_money, parse_number
+from app.i18n import tr
 
 
 class DebtPaymentDialog(QDialog):
     def __init__(self, customer, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Qarz to'lovi")
+        self.setWindowTitle(tr("Qarz to'lovi"))
         self.setMinimumWidth(320)
 
         layout = QFormLayout(self)
 
         customer_name = QLabel(customer.name)
         debt_amount = QLabel(
-            f"{format_money(customer.debt_amount)} so'm"
+            tr("{0} so'm").format(format_money(customer.debt_amount))
         )
 
         self.amount_edit = QLineEdit()
@@ -28,12 +29,12 @@ class DebtPaymentDialog(QDialog):
             format_money(customer.debt_amount)
         )
         self.amount_edit.setPlaceholderText(
-            "Masalan: 150 000 yoki 150 000,50"
+            tr("Masalan: 150 000 yoki 150 000,50")
         )
 
-        layout.addRow("Mijoz:", customer_name)
-        layout.addRow("Qarz:", debt_amount)
-        layout.addRow("To'lov summasi:", self.amount_edit)
+        layout.addRow(tr("Mijoz:"), customer_name)
+        layout.addRow(tr("Qarz:"), debt_amount)
+        layout.addRow(tr("To'lov summasi:"), self.amount_edit)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel

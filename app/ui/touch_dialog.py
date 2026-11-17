@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QDialog, QHBoxLayout, QPushButton
 from app.utils.amount_buffer import apply_key_event
 from app.widgets.secondary_button import SecondaryButton
 from app.widgets.success_button import SuccessButton
+from app.i18n import tr
 
 
 class TouchDialog(QDialog):
@@ -37,13 +38,13 @@ class TouchDialog(QDialog):
 
     # ---- umumiy qismlar ------------------------------------------
 
-    def build_footer(self, ok_text="Tasdiqlash"):
-        cancel = SecondaryButton("Bekor qilish", large=True)
+    def build_footer(self, ok_text=None):
+        cancel = SecondaryButton(tr("Bekor qilish"), large=True)
         cancel.setObjectName("dialogCancel")
         cancel.setFocusPolicy(Qt.NoFocus)
         cancel.clicked.connect(self.reject)
 
-        self.ok_button = SuccessButton(ok_text, large=True)
+        self.ok_button = SuccessButton(ok_text or tr("Tasdiqlash"), large=True)
         self.ok_button.setDefault(True)
         self.ok_button.clicked.connect(self.accept)
 

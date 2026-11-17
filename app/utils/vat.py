@@ -10,6 +10,7 @@ yig'indisi.
 
 import re
 from decimal import ROUND_HALF_UP, Decimal
+from app.i18n import tr
 
 VAT_RATE_MAX = 100
 CODE_MAX_LENGTH = 20
@@ -53,10 +54,10 @@ def validate_vat_rate(value):
     try:
         rate = float(str(value).replace(" ", "").replace(",", "."))
     except ValueError:
-        raise ValueError("QQS stavkasi son bo'lishi kerak.")
+        raise ValueError(tr("QQS stavkasi son bo'lishi kerak."))
 
     if not 0 <= rate <= VAT_RATE_MAX:
-        raise ValueError("QQS stavkasi 0 dan 100 gacha bo'lishi kerak.")
+        raise ValueError(tr("QQS stavkasi 0 dan 100 gacha bo'lishi kerak."))
 
     return rate
 
@@ -72,11 +73,11 @@ def validate_digits_code(value, label):
         return ""
 
     if not code.isdigit():
-        raise ValueError(f"{label} faqat raqamlardan iborat bo'lishi kerak.")
+        raise ValueError(tr("{0} faqat raqamlardan iborat bo'lishi kerak.").format(label))
 
     if len(code) > CODE_MAX_LENGTH:
         raise ValueError(
-            f"{label} {CODE_MAX_LENGTH} belgidan oshmasligi kerak."
+            tr("{0} {1} belgidan oshmasligi kerak.").format(label, CODE_MAX_LENGTH)
         )
 
     return code
@@ -100,6 +101,6 @@ def validate_tin(value):
         return ""
 
     if not code.isdigit() or len(code) > 14:
-        raise ValueError("STIR faqat raqamlardan iborat (9 yoki 14 xona).")
+        raise ValueError(tr("STIR faqat raqamlardan iborat (9 yoki 14 xona)."))
 
     return code

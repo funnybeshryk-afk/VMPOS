@@ -1,5 +1,4 @@
-VMPOS 1.2.3 — shtrix-kod yorliqlari va skaner sinovi:
-- Yorliqdagi shtrix-kod endi ishonchliroq o'qiladi: chetlardagi bo'sh joy (tinch zona) kamida 10 modul, kod kengroq, chiziqlar printer pikseliga butun qilib tekislanadi.
-- Yorliq chop etish oynasida: tanlangan o'lchamda shtrix-kod juda zich bo'lsa ogohlantirish chiqadi (masalan, 13 raqamli kod 30x20 yorliqda). 40x30 yoki kattaroq oling.
-- Maslahat: shtrix-kodni ekrandan emas, qog'ozga chop etib skanerlang — ekranda kod juda mayda bo'lib qoladi.
-- Yangi: Sozlamalar -> Skaner -> "Skaner sinovi". Skaner nima yuborayotganini ko'rsatadi (matn, oxirgi Enter/Tab, tezlik).
+VMPOS 1.3.2 — korzinadagi mahsulotni o'chirish:
+- Korzinadagi har bir qatorda endi "×" tugmasi bor: mahsulotni (og'irlikli ham, dona ham) bir bosishda butunlay olib tashlaydi. Oldin og'irlikli mahsulotni faqat "Tozalash" yoki Delete tugmasi bilan o'chirish mumkin edi.
+- Qator balandligi biroz kattalashtirildi (tugmalar sig'ishi uchun).
+- Ma'lumotlar bazasi tuzilmasi o'zgarmagan (sxema v1).

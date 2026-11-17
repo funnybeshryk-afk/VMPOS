@@ -23,6 +23,7 @@ from PySide6.QtPrintSupport import QPrinter, QPrinterInfo
 
 from app.utils.label_printing import paint_barcode
 from app.utils.receipt import BARCODE, GAP, PAIR, RULE
+from app.i18n import tr
 
 DPI = 203
 
@@ -183,14 +184,13 @@ def print_image(image, paper_mm="80", printer_name="", pdf_path=None):
         if printer_name:
             if printer_name not in names:
                 raise ReceiptPrintError(
-                    f"Printer topilmadi: {printer_name}. Sozlamalarda "
-                    "printerni qayta tanlang."
+                    tr("Printer topilmadi: {0}. Sozlamalarda printerni qayta tanlang.").format(printer_name)
                 )
             printer.setPrinterName(printer_name)
         elif not names:
             raise ReceiptPrintError(
-                "Kompyuterda printer o'rnatilmagan. Printerni ulang va "
-                "Sozlamalarda tanlang."
+                tr("Kompyuterda printer o'rnatilmagan. Printerni ulang va "
+                "Sozlamalarda tanlang.")
             )
 
     height_mm = image.height() / DPI * 25.4 + _FEED_MM
@@ -203,8 +203,8 @@ def print_image(image, paper_mm="80", printer_name="", pdf_path=None):
 
     if not painter.begin(printer):
         raise ReceiptPrintError(
-            "Printerni ochib bo'lmadi. Printer yoqilgan va ulanganini "
-            "tekshiring."
+            tr("Printerni ochib bo'lmadi. Printer yoqilgan va ulanganini "
+            "tekshiring.")
         )
 
     try:

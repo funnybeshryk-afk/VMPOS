@@ -29,8 +29,9 @@ from app.utils.label_printing import (
 from app.widgets.data_table import DataTable
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
-_CUSTOM_SIZE_LABEL = "Boshqa..."
+_CUSTOM_SIZE_LABEL = tr("Boshqa...")
 _COPIES_COLUMN = 3
 
 # Preview — A4 varaqning kichraytirilgan maketi (haqiqiy nisbatda),
@@ -58,7 +59,7 @@ class LabelPrintDialog(QDialog):
 
         self._products = products
 
-        self.setWindowTitle("Narx yorliqlarini chop etish")
+        self.setWindowTitle(tr("Narx yorliqlarini chop etish"))
         self.resize(760, 700)
 
         main_layout = QVBoxLayout(self)
@@ -74,7 +75,7 @@ class LabelPrintDialog(QDialog):
 
         self.custom_width_edit = QDoubleSpinBox()
         self.custom_width_edit.setRange(10, 200)
-        self.custom_width_edit.setSuffix(" mm")
+        self.custom_width_edit.setSuffix(tr(" mm"))
         self.custom_width_edit.setValue(40)
         self.custom_width_edit.valueChanged.connect(
             self.update_preview
@@ -82,7 +83,7 @@ class LabelPrintDialog(QDialog):
 
         self.custom_height_edit = QDoubleSpinBox()
         self.custom_height_edit.setRange(10, 200)
-        self.custom_height_edit.setSuffix(" mm")
+        self.custom_height_edit.setSuffix(tr(" mm"))
         self.custom_height_edit.setValue(30)
         self.custom_height_edit.valueChanged.connect(
             self.update_preview
@@ -93,8 +94,8 @@ class LabelPrintDialog(QDialog):
         custom_size_row.addWidget(QLabel("x"))
         custom_size_row.addWidget(self.custom_height_edit)
 
-        size_form.addRow("Yorliq o'lchami:", self.size_combo)
-        size_form.addRow("Maxsus o'lcham:", custom_size_row)
+        size_form.addRow(tr("Yorliq o'lchami:"), self.size_combo)
+        size_form.addRow(tr("Maxsus o'lcham:"), custom_size_row)
 
         main_layout.addLayout(size_form)
 
@@ -106,10 +107,10 @@ class LabelPrintDialog(QDialog):
         self.items_table = DataTable()
         self.items_table.setColumnCount(4)
         self.items_table.setHorizontalHeaderLabels([
-            "Mahsulot",
-            "Narxi",
-            "Shtrix kod",
-            "Nusxalar soni",
+            tr("Mahsulot"),
+            tr("Narxi"),
+            tr("Shtrix kod"),
+            tr("Nusxalar soni"),
         ])
         self.items_table.pin_column_width(_COPIES_COLUMN)
         main_layout.addWidget(self.items_table)
@@ -143,8 +144,8 @@ class LabelPrintDialog(QDialog):
         main_layout.addWidget(self.density_warning)
 
         scan_tip = QLabel(
-            "Maslahat: shtrix-kodni ekrandan emas, qog'ozga chop etib "
-            "skanerlang (ekranda chiziqlar juda mayda bo'lib qoladi)."
+            tr("Maslahat: shtrix-kodni ekrandan emas, qog'ozga chop etib "
+            "skanerlang (ekranda chiziqlar juda mayda bo'lib qoladi).")
         )
         scan_tip.setObjectName("mutedText")
         scan_tip.setWordWrap(True)
@@ -153,14 +154,14 @@ class LabelPrintDialog(QDialog):
         button_row = QHBoxLayout()
 
         self.export_pdf_button = SecondaryButton(
-            "PDF sifatida saqlash"
+            tr("PDF sifatida saqlash")
         )
         self.export_pdf_button.clicked.connect(self.export_pdf)
 
-        self.print_button = PrimaryButton("Chop etish")
+        self.print_button = PrimaryButton(tr("Chop etish"))
         self.print_button.clicked.connect(self.print_labels)
 
-        close_button = SecondaryButton("Yopish")
+        close_button = SecondaryButton(tr("Yopish"))
         close_button.clicked.connect(self.reject)
 
         button_row.addWidget(self.export_pdf_button)
@@ -185,7 +186,7 @@ class LabelPrintDialog(QDialog):
                 row,
                 1,
                 QTableWidgetItem(
-                    f"{format_money(product.sell_price)} so'm"
+                    tr("{0} so'm").format(format_money(product.sell_price))
                 ),
             )
             self.items_table.setItem(
@@ -261,13 +262,12 @@ class LabelPrintDialog(QDialog):
 
             per_page = cols * rows
             self.preview_caption.setText(
-                f"1-varaq / {len(pages)} varaq — har varaqqa "
-                f"{per_page} tagacha yorliq, jami {len(entries)} dona"
+                tr("1-varaq / {0} varaq — har varaqqa {1} tagacha yorliq, jami {2} dona").format(len(pages), per_page, len(entries))
             )
         else:
             self.preview_caption.setText(
-                "Chop etiladigan yorliq yo'q — nusxalar sonini "
-                "tekshiring."
+                tr("Chop etiladigan yorliq yo'q — nusxalar sonini "
+                "tekshiring.")
             )
 
         self.preview_label.setPixmap(pixmap)
@@ -284,10 +284,7 @@ class LabelPrintDialog(QDialog):
             return
 
         self.density_warning.setText(
-            f"Diqqat: {len(dense)} ta mahsulotning shtrix-kodi bu o'lchamda "
-            "juda zich (eng tor chiziq 0,25 mm dan kichik) — skaner "
-            "o'qimasligi mumkin. Kattaroq yorliq tanlang (masalan 40 x 30 "
-            "yoki 58 x 40 mm)."
+            tr("Diqqat: {0} ta mahsulotning shtrix-kodi bu o'lchamda juda zich (eng tor chiziq 0,25 mm dan kichik) — skaner o'qimasligi mumkin. Kattaroq yorliq tanlang (masalan 40 x 30 yoki 58 x 40 mm).").format(len(dense))
         )
         self.density_warning.show()
 
@@ -341,8 +338,8 @@ class LabelPrintDialog(QDialog):
         if not entries:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Chop etish uchun mahsulot topilmadi.",
+                tr("Diqqat"),
+                tr("Chop etish uchun mahsulot topilmadi."),
             )
             return
 
@@ -360,9 +357,8 @@ class LabelPrintDialog(QDialog):
 
         QMessageBox.information(
             self,
-            "Muvaffaqiyatli",
-            f"{len(entries)} ta yorliq ({page_count} varaqda) "
-            "chop etildi.",
+            tr("Muvaffaqiyatli"),
+            tr("{0} ta yorliq ({1} varaqda) chop etildi.").format(len(entries), page_count),
         )
 
     def export_pdf(self):
@@ -371,16 +367,16 @@ class LabelPrintDialog(QDialog):
         if not entries:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Saqlash uchun mahsulot topilmadi.",
+                tr("Diqqat"),
+                tr("Saqlash uchun mahsulot topilmadi."),
             )
             return
 
         file_path, _ = QFileDialog.getSaveFileName(
             self,
-            "PDF sifatida saqlash",
+            tr("PDF sifatida saqlash"),
             "narx_yorliqlari.pdf",
-            "PDF fayllar (*.pdf)",
+            tr("PDF fayllar (*.pdf)"),
         )
 
         if not file_path:
@@ -399,7 +395,6 @@ class LabelPrintDialog(QDialog):
 
         QMessageBox.information(
             self,
-            "Muvaffaqiyatli",
-            f"Saqlandi: {file_path}\n"
-            f"{len(entries)} ta yorliq, {page_count} varaq.",
+            tr("Muvaffaqiyatli"),
+            tr("Saqlandi: {0}\n{1} ta yorliq, {2} varaq.").format(file_path, len(entries), page_count),
         )

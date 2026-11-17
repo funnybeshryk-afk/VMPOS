@@ -12,6 +12,7 @@ from app.services.backup_service import BackupService
 from app.widgets.danger_button import DangerButton
 from app.widgets.data_table import DataTable
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 
 def _format_size(num_bytes):
@@ -36,7 +37,7 @@ class BackupRestoreDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Zaxiradan tiklash")
+        self.setWindowTitle(tr("Zaxiradan tiklash"))
         self.setMinimumWidth(480)
         self.resize(480, 380)
 
@@ -45,8 +46,8 @@ class BackupRestoreDialog(QDialog):
         self.backups_table = DataTable()
         self.backups_table.setColumnCount(2)
         self.backups_table.setHorizontalHeaderLabels([
-            "Fayl",
-            "Hajmi",
+            tr("Fayl"),
+            tr("Hajmi"),
         ])
         self.backups_table.pin_column_width(1)
         self.backups_table.cellDoubleClicked.connect(
@@ -54,16 +55,16 @@ class BackupRestoreDialog(QDialog):
         )
 
         self.restore_button = DangerButton(
-            "Tanlangandan tiklash"
+            tr("Tanlangandan tiklash")
         )
         self.restore_button.clicked.connect(self.restore_selected)
 
         self.browse_button = SecondaryButton(
-            "Boshqa faylni tanlash..."
+            tr("Boshqa faylni tanlash...")
         )
         self.browse_button.clicked.connect(self.restore_from_browse)
 
-        close_button = SecondaryButton("Bekor qilish")
+        close_button = SecondaryButton(tr("Bekor qilish"))
         close_button.clicked.connect(self.reject)
 
         main_layout.addWidget(self.backups_table)
@@ -100,8 +101,8 @@ class BackupRestoreDialog(QDialog):
         if current_row < 0:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Tiklash uchun zaxira faylini tanlang.",
+                tr("Diqqat"),
+                tr("Tiklash uchun zaxira faylini tanlang."),
             )
             return
 
@@ -111,9 +112,9 @@ class BackupRestoreDialog(QDialog):
     def restore_from_browse(self):
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "Zaxira faylini tanlash",
+            tr("Zaxira faylini tanlash"),
             "backups",
-            "SQLite baza (*.db)",
+            tr("SQLite baza (*.db)"),
         )
 
         if not file_path:
@@ -124,11 +125,11 @@ class BackupRestoreDialog(QDialog):
     def _confirm_and_restore(self, backup_path):
         reply = QMessageBox.question(
             self,
-            "Tasdiqlash",
-            "Joriy baza shu zaxira bilan butunlay almashtiriladi.\n"
+            tr("Tasdiqlash"),
+            tr("Joriy baza shu zaxira bilan butunlay almashtiriladi.\n"
             "Joriy holat ham avtomatik zaxiralanadi, lekin bu "
             "amalni bekor qilib bo'lmaydi.\n\n"
-            "Davom etasizmi?",
+            "Davom etasizmi?"),
             QMessageBox.Yes | QMessageBox.No,
         )
 
@@ -139,22 +140,22 @@ class BackupRestoreDialog(QDialog):
             BackupService.restore_backup(backup_path)
 
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
             return
 
         except Exception:
             QMessageBox.critical(
                 self,
-                "Xatolik",
-                "Zaxiradan tiklashda xatolik yuz berdi.",
+                tr("Xatolik"),
+                tr("Zaxiradan tiklashda xatolik yuz berdi."),
             )
             return
 
         QMessageBox.information(
             self,
-            "Muvaffaqiyatli",
-            "Baza tiklandi. Dastur hozir yopiladi — "
-            "o'zgarishlar kuchga kirishi uchun uni qayta oching.",
+            tr("Muvaffaqiyatli"),
+            tr("Baza tiklandi. Dastur hozir yopiladi — "
+            "o'zgarishlar kuchga kirishi uchun uni qayta oching."),
         )
 
         QApplication.instance().quit()

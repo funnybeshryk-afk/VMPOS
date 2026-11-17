@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QListWidget, QVBoxLayout
 
 from app.utils.scan_burst import ScanBurstParser
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 
 class ScannerTestDialog(QDialog):
@@ -16,14 +17,14 @@ class ScannerTestDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Skaner sinovi")
+        self.setWindowTitle(tr("Skaner sinovi"))
         self.resize(520, 460)
 
         self._parser = ScanBurstParser()
 
         intro = QLabel(
-            "Shtrix-kodni skanerlang. Skaner yuborgan narsa pastda "
-            "ko'rinadi: matn, oxirgi tugma (Enter/Tab) va tezlik."
+            tr("Shtrix-kodni skanerlang. Skaner yuborgan narsa pastda "
+            "ko'rinadi: matn, oxirgi tugma (Enter/Tab) va tezlik.")
         )
         intro.setWordWrap(True)
 
@@ -31,13 +32,13 @@ class ScannerTestDialog(QDialog):
         self.results.setFocusPolicy(Qt.NoFocus)
 
         self.hint = QLabel(
-            "Hech narsa chiqmasa: skaner USB/klaviatura (HID) rejimida "
-            "emasmi yoki ulanmaganmi, tekshiring."
+            tr("Hech narsa chiqmasa: skaner USB/klaviatura (HID) rejimida "
+            "emasmi yoki ulanmaganmi, tekshiring.")
         )
         self.hint.setObjectName("mutedText")
         self.hint.setWordWrap(True)
 
-        close_button = SecondaryButton("Yopish", large=True)
+        close_button = SecondaryButton(tr("Yopish"), large=True)
         close_button.clicked.connect(self.accept)
         close_button.setFocusPolicy(Qt.NoFocus)
 
@@ -87,10 +88,9 @@ class ScannerTestDialog(QDialog):
         if record is None:
             return
 
-        kind = "skaner tezligi" if record.looks_like_scanner else "qo'lda yozilgandek"
-        suffix = record.suffix or "oxirida tugma yo'q"
+        kind = tr("skaner tezligi") if record.looks_like_scanner else tr("qo'lda yozilgandek")
+        suffix = record.suffix or tr("oxirida tugma yo'q")
         self.results.insertItem(
             0,
-            f"{record.text}   |   {len(record.text)} belgi   |   {suffix}   |   "
-            f"{record.duration_ms} ms ({kind})",
+            tr("{0}   |   {1} belgi   |   {2}   |   {3} ms ({4})").format(record.text, len(record.text), suffix, record.duration_ms, kind),
         )

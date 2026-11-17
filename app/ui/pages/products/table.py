@@ -5,6 +5,7 @@ from app.services.product_service import ProductService
 from app.utils.formatters import format_money, format_quantity
 from app.widgets.badge import stock_status_badge
 from app.widgets.data_table import DataTable
+from app.i18n import tr
 
 
 class ProductsTable(DataTable):
@@ -16,12 +17,12 @@ class ProductsTable(DataTable):
         self.setColumnCount(6)
 
         self.setHorizontalHeaderLabels([
-            "Shtrix kod",
-            "Nomi",
-            "Kategoriya",
-            "Narxi",
-            "Qoldiq",
-            "Holat",
+            tr("Shtrix kod"),
+            tr("Nomi"),
+            tr("Kategoriya"),
+            tr("Narxi"),
+            tr("Qoldiq"),
+            tr("Holat"),
         ])
         self.pin_column_width(5)
 

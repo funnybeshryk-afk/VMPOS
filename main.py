@@ -158,6 +158,14 @@ def main():
     if not _prepare_data(app, interactive=not smoke_test):
         sys.exit(1)
 
+    # Til — baza tayyor bo'lgandan keyin, interfeys modullari
+    # import qilinishidan OLDIN o'rnatiladi (tr() modul darajasida ham
+    # ishlatiladi).
+    from app.i18n import install_qt_translations, load_saved_language
+
+    load_saved_language()
+    install_qt_translations(app)
+
     # Animatsiyalar yoqilgan/o'chirilgani (Sozlamalar) — baza tayyor bo'lgach.
     motion.load_from_settings()
 

@@ -1,5 +1,6 @@
 from app.ui.numeric_entry_dialog import NumericEntryDialog
-from app.utils.units import is_weight_unit
+from app.utils.units import is_weight_unit, unit_label
+from app.i18n import tr
 
 _WEIGHT_PRESETS = (("0,5", 0.5), ("1", 1), ("2", 2), ("5", 5))
 
@@ -11,9 +12,9 @@ class QuantityEditDialog(NumericEntryDialog):
         weight = is_weight_unit(product.unit)
 
         super().__init__(
-            title="Miqdorni o'zgartirish",
+            title=tr("Miqdorni o'zgartirish"),
             product=product,
-            unit=(product.unit or "").strip() if weight else "ta",
+            unit=unit_label(product.unit) if weight else unit_label("ta"),
             allow_decimal=weight,
             minimum=0.001 if weight else 1,
             initial=current_quantity,

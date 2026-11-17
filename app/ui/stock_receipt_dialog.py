@@ -8,13 +8,15 @@ from PySide6.QtWidgets import (
 )
 
 from app.services.supplier_service import SupplierService
+from app.i18n import tr
+from app.utils.units import unit_label
 
 
 class StockReceiptDialog(QDialog):
     def __init__(self, product, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Tovar qabul qilish")
+        self.setWindowTitle(tr("Tovar qabul qilish"))
         self.setMinimumWidth(320)
 
         layout = QFormLayout(self)
@@ -23,7 +25,7 @@ class StockReceiptDialog(QDialog):
 
         self.supplier_combo = QComboBox()
         self.supplier_combo.addItem(
-            "Yetkazib beruvchi tanlanmagan",
+            tr("Yetkazib beruvchi tanlanmagan"),
             None,
         )
 
@@ -42,14 +44,14 @@ class StockReceiptDialog(QDialog):
         self.quantity_spinbox.setValue(1)
 
         if product.unit:
-            self.quantity_spinbox.setSuffix(f" {product.unit}")
+            self.quantity_spinbox.setSuffix(f" {unit_label(product.unit)}")
 
-        layout.addRow("Mahsulot:", product_name)
+        layout.addRow(tr("Mahsulot:"), product_name)
         layout.addRow(
-            "Yetkazib beruvchi:",
+            tr("Yetkazib beruvchi:"),
             self.supplier_combo,
         )
-        layout.addRow("Kelgan miqdor:", self.quantity_spinbox)
+        layout.addRow(tr("Kelgan miqdor:"), self.quantity_spinbox)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel

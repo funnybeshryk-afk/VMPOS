@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 from app.services.receipt_service import ReceiptPrintError, ReceiptService
 from app.widgets.secondary_button import SecondaryButton
 from app.widgets.success_button import SuccessButton
+from app.i18n import tr
 
 
 class ReceiptPreviewDialog(QDialog):
@@ -24,7 +25,7 @@ class ReceiptPreviewDialog(QDialog):
 
         self._receipt = receipt
 
-        self.setWindowTitle("Chek")
+        self.setWindowTitle(tr("Chek"))
         self.resize(520, 720)
 
         image = ReceiptService.render(receipt, antialias=True)
@@ -38,13 +39,13 @@ class ReceiptPreviewDialog(QDialog):
         scroll.setWidget(label)
         scroll.setWidgetResizable(True)
 
-        self.print_button = SuccessButton("Chop etish", large=True)
+        self.print_button = SuccessButton(tr("Chop etish"), large=True)
         self.print_button.clicked.connect(self.print_receipt)
 
-        self.pdf_button = SecondaryButton("PDF saqlash", large=True)
+        self.pdf_button = SecondaryButton(tr("PDF saqlash"), large=True)
         self.pdf_button.clicked.connect(self.save_pdf)
 
-        close_button = SecondaryButton("Yopish", large=True)
+        close_button = SecondaryButton(tr("Yopish"), large=True)
         close_button.clicked.connect(self.accept)
 
         buttons = QHBoxLayout()
@@ -63,11 +64,11 @@ class ReceiptPreviewDialog(QDialog):
         try:
             ReceiptService.print_receipt(self._receipt)
         except ReceiptPrintError as error:
-            QMessageBox.warning(self, "Chek chop etilmadi", str(error))
+            QMessageBox.warning(self, tr("Chek chop etilmadi"), str(error))
 
     def save_pdf(self):
         path, _ = QFileDialog.getSaveFileName(
-            self, "Chekni PDF sifatida saqlash", "chek.pdf", "PDF fayllar (*.pdf)"
+            self, tr("Chekni PDF sifatida saqlash"), "chek.pdf", tr("PDF fayllar (*.pdf)")
         )
 
         if not path:
@@ -79,4 +80,4 @@ class ReceiptPreviewDialog(QDialog):
         try:
             ReceiptService.print_receipt(self._receipt, pdf_path=path)
         except ReceiptPrintError as error:
-            QMessageBox.warning(self, "PDF saqlanmadi", str(error))
+            QMessageBox.warning(self, tr("PDF saqlanmadi"), str(error))

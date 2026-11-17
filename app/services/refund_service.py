@@ -6,6 +6,7 @@ from app.models.refund import Refund, RefundItem
 from app.models.sale import Sale, SaleItem
 from app.services.fiscal_service import FiscalService
 from app.utils.vat import vat_included
+from app.i18n import tr
 
 _TOLERANCE = 0.001
 
@@ -43,16 +44,16 @@ class RefundService:
             sale = session.get(Sale, sale_id)
 
             if sale is None:
-                raise ValueError("Chek topilmadi.")
+                raise ValueError(tr("Chek topilmadi."))
 
             if sale.status == "refunded":
                 raise ValueError(
-                    "Bu chek allaqachon to'liq qaytarilgan."
+                    tr("Bu chek allaqachon to'liq qaytarilgan.")
                 )
 
             if not items:
                 raise ValueError(
-                    "Qaytariladigan mahsulot tanlanmagan."
+                    tr("Qaytariladigan mahsulot tanlanmagan.")
                 )
 
             original_total = sale.total_amount
@@ -81,7 +82,7 @@ class RefundService:
                 )
 
                 if sale_item is None or sale_item.sale_id != sale.id:
-                    raise ValueError("Chek qatori topilmadi.")
+                    raise ValueError(tr("Chek qatori topilmadi."))
 
                 remaining = (
                     sale_item.quantity - sale_item.returned_quantity
@@ -89,9 +90,7 @@ class RefundService:
 
                 if quantity > remaining + _TOLERANCE:
                     raise ValueError(
-                        f"{sale_item.product_name}: qaytarish "
-                        "miqdori qoldiqdan katta bo'lishi mumkin "
-                        "emas."
+                        tr("{0}: qaytarish miqdori qoldiqdan katta bo'lishi mumkin emas.").format(sale_item.product_name)
                     )
 
                 line_total = sale_item.price * quantity
@@ -126,7 +125,7 @@ class RefundService:
 
             if total_refund <= 0:
                 raise ValueError(
-                    "Qaytariladigan mahsulot tanlanmagan."
+                    tr("Qaytariladigan mahsulot tanlanmagan.")
                 )
 
             if original_total > _TOLERANCE:

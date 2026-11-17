@@ -4,6 +4,7 @@ from app.ui.touch_dialog import TouchDialog
 from app.utils.amount_buffer import AmountBuffer
 from app.utils.formatters import format_money, format_quantity
 from app.widgets.numpad import AmountField, NumPad
+from app.i18n import tr
 
 _EPSILON = 1e-9
 
@@ -27,7 +28,7 @@ class NumericEntryDialog(TouchDialog):
         initial,
         presets=(),
         price_for=None,
-        price_caption="so'm",
+        price_caption=tr("so'm"),
         parent=None,
     ):
         super().__init__(title, parent, min_width=460)
@@ -54,7 +55,7 @@ class NumericEntryDialog(TouchDialog):
         )
         price_label.setObjectName("mutedText")
 
-        self._field = AmountField("Miqdor", unit)
+        self._field = AmountField(tr("Miqdor"), unit)
         self._field.set_active(True)
 
         self._hint = QLabel()
@@ -99,17 +100,16 @@ class NumericEntryDialog(TouchDialog):
         state = "ok"
 
         if value < self._minimum - _EPSILON:
-            message = f"Eng kami: {format_quantity(self._minimum)} {self._unit}"
+            message = tr("Eng kami: {0} {1}").format(format_quantity(self._minimum), self._unit)
             valid = False
         elif value > self._maximum + _EPSILON:
             message = (
-                f"Qoldiq yetarli emas: {format_quantity(self._maximum)} "
-                f"{self._unit} bor"
+                tr("Qoldiq yetarli emas: {0} {1} bor").format(format_quantity(self._maximum), self._unit)
             )
             valid = False
         elif self._price_for is not None:
             total = self._price_for(value) * value
-            message = f"Jami: {format_money(total)} so'm"
+            message = tr("Jami: {0} so'm").format(format_money(total))
         else:
             message = ""
 

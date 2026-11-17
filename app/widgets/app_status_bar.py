@@ -7,12 +7,13 @@ from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QWidget
 from app.services.receipt_service import ReceiptService
 from app.utils import receipt_render
 from app.utils.scan_burst import ScanBurstParser
+from app.i18n import tr
 from app.widgets.badge import StatusBadge, set_badge_variant
 
 _HOTKEYS = [
-    ("F2", "Qidiruv"),
-    ("F5", "Bekor qilish"),
-    ("F4", "To'lov"),
+    ("F2", tr("Qidiruv")),
+    ("F5", tr("Bekor qilish")),
+    ("F4", tr("To'lov")),
 ]
 
 _PRINTER_REFRESH_MS = 10_000
@@ -27,14 +28,14 @@ def printer_state(saved_name, available, default_name):
 
     if saved_name:
         if saved_name in available:
-            return "Tayyor", "success"
+            return tr("Tayyor"), "success"
 
-        return "Topilmadi", "danger"
+        return tr("Topilmadi"), "danger"
 
     if default_name and default_name in available:
-        return "Tayyor", "success"
+        return tr("Tayyor"), "success"
 
-    return "PDF", "neutral"
+    return tr("PDF"), "neutral"
 
 
 class ScanActivityMonitor(QObject):
@@ -104,11 +105,11 @@ class AppStatusBar(QWidget):
         layout.addWidget(hotkeys_label)
         layout.addStretch()
 
-        self.scanner_badge = StatusBadge("Kutilmoqda", "neutral")
-        self.printer_badge = StatusBadge("PDF", "neutral")
+        self.scanner_badge = StatusBadge(tr("Kutilmoqda"), "neutral")
+        self.printer_badge = StatusBadge(tr("PDF"), "neutral")
 
-        layout.addWidget(self._indicator("Skaner", self.scanner_badge))
-        layout.addWidget(self._indicator("Printer", self.printer_badge))
+        layout.addWidget(self._indicator(tr("Skaner"), self.scanner_badge))
+        layout.addWidget(self._indicator(tr("Printer"), self.printer_badge))
 
         self.refresh_printer()
 
@@ -125,12 +126,11 @@ class AppStatusBar(QWidget):
     def note_scan(self, record):
         set_badge_variant(
             self.scanner_badge,
-            f"Skan {datetime.now():%H:%M}",
+            tr("Skan {0}").format(f"{datetime.now():%H:%M}"),
             "success",
         )
         self.scanner_badge.setToolTip(
-            f"Oxirgi shtrix-kod: {record.text} "
-            f"({record.ms_per_char:.0f} ms/belgi)"
+            tr("Oxirgi shtrix-kod: {0} ({1:.0f} ms/belgi)").format(record.text, record.ms_per_char)
         )
 
     def refresh_printer(self):
@@ -142,7 +142,7 @@ class AppStatusBar(QWidget):
                 receipt_render.default_printer_name(),
             )
         except Exception:
-            text, variant = "Noma'lum", "neutral"
+            text, variant = tr("Noma'lum"), "neutral"
 
         set_badge_variant(self.printer_badge, text, variant)
 

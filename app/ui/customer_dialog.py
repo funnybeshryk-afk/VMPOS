@@ -9,13 +9,14 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.formatters import format_money, parse_number
+from app.i18n import tr
 
 
 class CustomerDialog(QDialog):
     def __init__(self, customer=None, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Mijoz")
+        self.setWindowTitle(tr("Mijoz"))
         self.setMinimumWidth(380)
 
         layout = QFormLayout(self)
@@ -28,7 +29,7 @@ class CustomerDialog(QDialog):
         self.debt_amount_edit = QLineEdit()
         self.debt_amount_edit.setText("0")
         self.debt_amount_edit.setPlaceholderText(
-            "Masalan: 150 000 yoki 150 000,50"
+            tr("Masalan: 150 000 yoki 150 000,50")
         )
 
         self.debt_date_edit = QDateEdit()
@@ -56,12 +57,12 @@ class CustomerDialog(QDialog):
                     )
                 )
 
-        layout.addRow("Nomi:", self.name_edit)
-        layout.addRow("Telefon:", self.phone_edit)
-        layout.addRow("Manzil:", self.address_edit)
-        layout.addRow("Qarz summasi:", self.debt_amount_edit)
-        layout.addRow("Qarz sanasi:", self.debt_date_edit)
-        layout.addRow("Izoh:", self.description_edit)
+        layout.addRow(tr("Nomi:"), self.name_edit)
+        layout.addRow(tr("Telefon:"), self.phone_edit)
+        layout.addRow(tr("Manzil:"), self.address_edit)
+        layout.addRow(tr("Qarz summasi:"), self.debt_amount_edit)
+        layout.addRow(tr("Qarz sanasi:"), self.debt_date_edit)
+        layout.addRow(tr("Izoh:"), self.description_edit)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.Save | QDialogButtonBox.Cancel

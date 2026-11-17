@@ -22,6 +22,7 @@ from app.widgets.danger_button import DangerButton
 from app.widgets.data_table import DataTable
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.secondary_button import SecondaryButton
+from app.i18n import tr
 
 
 class ReturnDialog(QDialog):
@@ -45,7 +46,7 @@ class ReturnDialog(QDialog):
         self._sale_items = []
         self._row_inputs = {}
 
-        self.setWindowTitle("Tovarni qaytarish")
+        self.setWindowTitle(tr("Tovarni qaytarish"))
         self.resize(760, 620)
 
         main_layout = QVBoxLayout(self)
@@ -56,10 +57,10 @@ class ReturnDialog(QDialog):
         self.results_table = DataTable()
         self.results_table.setColumnCount(4)
         self.results_table.setHorizontalHeaderLabels([
-            "Chek raqami",
-            "Sana",
-            "Jami",
-            "Holat",
+            tr("Chek raqami"),
+            tr("Sana"),
+            tr("Jami"),
+            tr("Holat"),
         ])
         self.results_table.pin_column_width(3)
         self.results_table.setMaximumHeight(160)
@@ -68,26 +69,26 @@ class ReturnDialog(QDialog):
         )
         main_layout.addWidget(self.results_table)
 
-        self.sale_info_label = QLabel("Chek tanlanmagan")
+        self.sale_info_label = QLabel(tr("Chek tanlanmagan"))
         self.sale_info_label.setObjectName("sectionTitle")
         main_layout.addWidget(self.sale_info_label)
 
         self.items_table = DataTable()
         self.items_table.setColumnCount(6)
         self.items_table.setHorizontalHeaderLabels([
-            "Mahsulot",
-            "Narxi",
-            "Sotilgan",
-            "Qaytarilgan",
-            "Qoldiq",
-            "Qaytariladigan",
+            tr("Mahsulot"),
+            tr("Narxi"),
+            tr("Sotilgan"),
+            tr("Qaytarilgan"),
+            tr("Qoldiq"),
+            tr("Qaytariladigan"),
         ])
         main_layout.addWidget(self.items_table)
 
         action_row = QHBoxLayout()
 
         self.select_all_button = SecondaryButton(
-            "Hammasini qaytarish"
+            tr("Hammasini qaytarish")
         )
         self.select_all_button.clicked.connect(
             self.fill_max_quantities
@@ -99,20 +100,20 @@ class ReturnDialog(QDialog):
         main_layout.addLayout(action_row)
 
         self.total_refund_label = QLabel(
-            "Qaytariladigan summa: 0 so'm"
+            tr("Qaytariladigan summa: 0 so'm")
         )
         self.total_refund_label.setObjectName("cartTotal")
         self.total_refund_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.total_refund_label)
 
         self.confirm_button = DangerButton(
-            "Qaytarishni tasdiqlash", large=True
+            tr("Qaytarishni tasdiqlash"), large=True
         )
         self.confirm_button.clicked.connect(self.confirm_refund)
         self.confirm_button.setEnabled(False)
         main_layout.addWidget(self.confirm_button)
 
-        close_button = SecondaryButton("Yopish")
+        close_button = SecondaryButton(tr("Yopish"))
         close_button.clicked.connect(self.reject)
         main_layout.addWidget(close_button)
 
@@ -131,7 +132,7 @@ class ReturnDialog(QDialog):
 
         self.receipt_number_edit = QLineEdit()
         self.receipt_number_edit.setPlaceholderText(
-            "Chek raqami, masalan: 42"
+            tr("Chek raqami, masalan: 42")
         )
         self.receipt_number_edit.returnPressed.connect(self.search)
 
@@ -141,12 +142,12 @@ class ReturnDialog(QDialog):
         self.date_edit.setDate(QDate.currentDate())
         self.date_edit.dateChanged.connect(self.search)
 
-        search_button = PrimaryButton("Qidirish")
+        search_button = PrimaryButton(tr("Qidirish"))
         search_button.clicked.connect(self.search)
 
-        row.addWidget(QLabel("Chek raqami:"))
+        row.addWidget(QLabel(tr("Chek raqami:")))
         row.addWidget(self.receipt_number_edit, 1)
-        row.addWidget(QLabel("Sana:"))
+        row.addWidget(QLabel(tr("Sana:")))
         row.addWidget(self.date_edit)
         row.addWidget(search_button)
 
@@ -166,8 +167,8 @@ class ReturnDialog(QDialog):
         except ValueError:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Chek raqami butun son bo'lishi kerak.",
+                tr("Diqqat"),
+                tr("Chek raqami butun son bo'lishi kerak."),
             )
             return
 
@@ -177,8 +178,8 @@ class ReturnDialog(QDialog):
             self.populate_results([])
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Bunday raqamli chek topilmadi.",
+                tr("Diqqat"),
+                tr("Bunday raqamli chek topilmadi."),
             )
             return
 
@@ -218,7 +219,7 @@ class ReturnDialog(QDialog):
                 row,
                 2,
                 QTableWidgetItem(
-                    f"{format_money(sale.total_amount)} so'm"
+                    tr("{0} so'm").format(format_money(sale.total_amount))
                 ),
             )
             self.results_table.setCellWidget(
@@ -246,9 +247,7 @@ class ReturnDialog(QDialog):
         status_text, _ = resolve_sale_status(sale.status)
 
         self.sale_info_label.setText(
-            f"Chek #{sale.id} — "
-            f"{sale.created_at.strftime('%d.%m.%Y %H:%M')} — "
-            f"{format_money(sale.total_amount)} so'm — {status_text}"
+            tr("Chek #{0} — {1} — {2} so'm — {3}").format(sale.id, sale.created_at.strftime('%d.%m.%Y %H:%M'), format_money(sale.total_amount), status_text)
         )
 
         self.items_table.setRowCount(len(self._sale_items))
@@ -265,7 +264,7 @@ class ReturnDialog(QDialog):
                 row,
                 1,
                 QTableWidgetItem(
-                    f"{format_money(sale_item.price)} so'm"
+                    tr("{0} so'm").format(format_money(sale_item.price))
                 ),
             )
             self.items_table.setItem(
@@ -331,7 +330,7 @@ class ReturnDialog(QDialog):
             total += spinbox.value() * sale_item.price
 
         self.total_refund_label.setText(
-            f"Qaytariladigan summa: {format_money(total)} so'm"
+            tr("Qaytariladigan summa: {0} so'm").format(format_money(total))
         )
 
     def confirm_refund(self):
@@ -347,8 +346,8 @@ class ReturnDialog(QDialog):
         if not items:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Qaytariladigan mahsulot miqdorini kiriting.",
+                tr("Diqqat"),
+                tr("Qaytariladigan mahsulot miqdorini kiriting."),
             )
             return
 
@@ -367,21 +366,21 @@ class ReturnDialog(QDialog):
             )
 
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
             return
 
         except Exception:
             QMessageBox.critical(
                 self,
-                "Xatolik",
-                "Qaytarishni saqlashda xatolik yuz berdi.",
+                tr("Xatolik"),
+                tr("Qaytarishni saqlashda xatolik yuz berdi."),
             )
             return
 
         QMessageBox.information(
             self,
-            "Muvaffaqiyatli",
-            f"Qaytarildi: {format_money(refund.total_amount)} so'm",
+            tr("Muvaffaqiyatli"),
+            tr("Qaytarildi: {0} so'm").format(format_money(refund.total_amount)),
         )
 
         updated_sale = SaleService.get_sale(self._sale.id)

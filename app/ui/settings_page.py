@@ -23,6 +23,8 @@ from app.widgets.danger_button import DangerButton
 from app.widgets.primary_button import PrimaryButton
 from app.widgets.secondary_button import SecondaryButton
 from app.version import APP_VERSION
+from app.i18n import get_language, save_language, tr
+from app.i18n import tr
 
 
 class SettingsPage(QWidget):
@@ -33,7 +35,7 @@ class SettingsPage(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
 
-        title = QLabel("Sozlamalar")
+        title = QLabel(tr("Sozlamalar"))
         title.setObjectName("pageTitle")
 
         form_layout = QFormLayout()
@@ -42,26 +44,36 @@ class SettingsPage(QWidget):
         self.store_phone_edit = QLineEdit()
         self.store_address_edit = QLineEdit()
 
-        form_layout.addRow("Do'kon nomi:", self.store_name_edit)
-        form_layout.addRow("Telefon:", self.store_phone_edit)
-        form_layout.addRow("Manzil:", self.store_address_edit)
+        form_layout.addRow(tr("Do'kon nomi:"), self.store_name_edit)
+        form_layout.addRow(tr("Telefon:"), self.store_phone_edit)
+        form_layout.addRow(tr("Manzil:"), self.store_address_edit)
+
+        # Til: o'zgartirish qayta ishga tushirgandan keyin kuchga kiradi.
+        self.language_combo = QComboBox()
+        self.language_combo.addItem("O'zbekcha", "uz")
+        self.language_combo.addItem("Русский", "ru")
+        self.language_combo.setCurrentIndex(
+            max(0, self.language_combo.findData(get_language()))
+        )
+        self.language_combo.currentIndexChanged.connect(self.change_language)
+        form_layout.addRow(tr("Til:"), self.language_combo)
 
         # Soliq rekvizitlari — fiskalizatsiyaga tayyorgarlik (hozircha
         # hech narsa soliq operatoriga yuborilmaydi).
-        fiscal_title = QLabel("Soliq rekvizitlari")
+        fiscal_title = QLabel(tr("Soliq rekvizitlari"))
         fiscal_title.setObjectName("sectionTitle")
 
         fiscal_form = QFormLayout()
 
         self.store_tin_edit = QLineEdit()
-        self.store_tin_edit.setPlaceholderText("9 yoki 14 xona")
+        self.store_tin_edit.setPlaceholderText(tr("9 yoki 14 xona"))
         self.store_legal_name_edit = QLineEdit()
         self.default_vat_edit = QLineEdit()
-        self.default_vat_edit.setPlaceholderText("Masalan: 12 (QQS to'lovchisi bo'lmasa — 0)")
+        self.default_vat_edit.setPlaceholderText(tr("Masalan: 12 (QQS to'lovchisi bo'lmasa — 0)"))
 
-        fiscal_form.addRow("STIR:", self.store_tin_edit)
-        fiscal_form.addRow("Yuridik nomi:", self.store_legal_name_edit)
-        fiscal_form.addRow("Standart QQS, %:", self.default_vat_edit)
+        fiscal_form.addRow(tr("STIR:"), self.store_tin_edit)
+        fiscal_form.addRow(tr("Yuridik nomi:"), self.store_legal_name_edit)
+        fiscal_form.addRow(tr("Standart QQS, %:"), self.default_vat_edit)
 
         self.fiscal_hint_label = QLabel()
         self.fiscal_hint_label.setObjectName("mutedText")
@@ -69,31 +81,31 @@ class SettingsPage(QWidget):
 
         # Chek printeri (FISKAL emas): oddiy tizim printeri orqali
         # (termoprinter drayveri) yoki PDF.
-        receipt_title = QLabel("Chek printeri")
+        receipt_title = QLabel(tr("Chek printeri"))
         receipt_title.setObjectName("sectionTitle")
 
         receipt_form = QFormLayout()
 
         self.receipt_printer_combo = QComboBox()
         self.receipt_paper_combo = QComboBox()
-        self.receipt_paper_combo.addItem("80 mm", "80")
-        self.receipt_paper_combo.addItem("58 mm", "58")
+        self.receipt_paper_combo.addItem(tr("80 mm"), "80")
+        self.receipt_paper_combo.addItem(tr("58 mm"), "58")
         self.receipt_footer_edit = QLineEdit()
-        self.receipt_footer_edit.setPlaceholderText("Masalan: Xaridingiz uchun rahmat!")
+        self.receipt_footer_edit.setPlaceholderText(tr("Masalan: Xaridingiz uchun rahmat!"))
         self.receipt_auto_print_checkbox = QCheckBox(
-            "Savdodan keyin chekni avtomatik chop etish"
+            tr("Savdodan keyin chekni avtomatik chop etish")
         )
         self.receipt_barcode_checkbox = QCheckBox(
-            "Chekda shtrix-kod (chek raqami) chiqarish"
+            tr("Chekda shtrix-kod (chek raqami) chiqarish")
         )
 
-        receipt_form.addRow("Printer:", self.receipt_printer_combo)
-        receipt_form.addRow("Qog'oz kengligi:", self.receipt_paper_combo)
-        receipt_form.addRow("Pastki yozuv:", self.receipt_footer_edit)
+        receipt_form.addRow(tr("Printer:"), self.receipt_printer_combo)
+        receipt_form.addRow(tr("Qog'oz kengligi:"), self.receipt_paper_combo)
+        receipt_form.addRow(tr("Pastki yozuv:"), self.receipt_footer_edit)
 
-        self.test_receipt_view_button = SecondaryButton("Sinov chekini ko'rish")
+        self.test_receipt_view_button = SecondaryButton(tr("Sinov chekini ko'rish"))
         self.test_receipt_view_button.clicked.connect(self.view_test_receipt)
-        self.test_receipt_print_button = SecondaryButton("Sinov chekini chop etish")
+        self.test_receipt_print_button = SecondaryButton(tr("Sinov chekini chop etish"))
         self.test_receipt_print_button.clicked.connect(self.print_test_receipt)
 
         receipt_buttons = QHBoxLayout()
@@ -103,10 +115,10 @@ class SettingsPage(QWidget):
 
         # Sahifadagi yagona amal — saqlash, shuning uchun yagona
         # qora PrimaryButton.
-        self.save_button = PrimaryButton("Saqlash")
+        self.save_button = PrimaryButton(tr("Saqlash"))
         self.save_button.clicked.connect(self.save_settings)
 
-        backup_title = QLabel("Ma'lumotlar bazasi")
+        backup_title = QLabel(tr("Ma'lumotlar bazasi"))
         backup_title.setObjectName("sectionTitle")
 
         # Yaratish — xavfsiz, qaytariladigan amal (SecondaryButton).
@@ -114,14 +126,14 @@ class SettingsPage(QWidget):
         # uchun DangerButton, xuddi boshqa qaytarib bo'lmaydigan
         # amallar kabi (masalan mahsulotni o'chirish).
         self.create_backup_button = SecondaryButton(
-            "Zaxira nusxa yaratish"
+            tr("Zaxira nusxa yaratish")
         )
         self.create_backup_button.clicked.connect(
             self.create_backup
         )
 
         self.restore_backup_button = DangerButton(
-            "Zaxiradan tiklash"
+            tr("Zaxiradan tiklash")
         )
         self.restore_backup_button.clicked.connect(
             self.open_restore_dialog
@@ -133,10 +145,10 @@ class SettingsPage(QWidget):
         backup_row.addStretch()
 
         # Skaner sinovi: skaner nima yuborayotganini ko'rsatadi.
-        scanner_title = QLabel("Skaner")
+        scanner_title = QLabel(tr("Skaner"))
         scanner_title.setObjectName("sectionTitle")
 
-        self.scanner_test_button = SecondaryButton("Skaner sinovi")
+        self.scanner_test_button = SecondaryButton(tr("Skaner sinovi"))
         self.scanner_test_button.clicked.connect(
             lambda: ScannerTestDialog(self).exec()
         )
@@ -145,26 +157,26 @@ class SettingsPage(QWidget):
         scanner_row.addWidget(self.scanner_test_button)
         scanner_row.addStretch()
 
-        interface_title = QLabel("Interfeys")
+        interface_title = QLabel(tr("Interfeys"))
         interface_title.setObjectName("sectionTitle")
 
         # Qisqa animatsiyalar (jami summa, qator chiqishi, kartochka
         # "vspishka"si). Sekin kompyuterlarda o'chirib qo'yish mumkin —
         # natija o'zgarmaydi, faqat silliqlik yo'qoladi.
         self.animations_checkbox = QCheckBox(
-            "Animatsiyalar (sekin kompyuterda o'chiring)"
+            tr("Animatsiyalar (sekin kompyuterda o'chiring)")
         )
         self.animations_checkbox.setChecked(motion.is_enabled())
         self.animations_checkbox.toggled.connect(motion.save_enabled)
 
-        update_title = QLabel("Dastur versiyasi")
+        update_title = QLabel(tr("Dastur versiyasi"))
         update_title.setObjectName("sectionTitle")
 
-        version_label = QLabel(f"VMPOS v{APP_VERSION}")
+        version_label = QLabel(tr("VMPOS v{0}").format(APP_VERSION))
         version_label.setObjectName("mutedText")
 
         self.check_update_button = SecondaryButton(
-            "Yangilanishni tekshirish"
+            tr("Yangilanishni tekshirish")
         )
         self.update_flow = UpdateFlow(self)
         self.check_update_button.clicked.connect(
@@ -172,7 +184,7 @@ class SettingsPage(QWidget):
         )
 
         # Internet cheklangan tarmoq uchun: o'rnatuvchini fayldan o'rnatish.
-        self.install_file_button = SecondaryButton("Fayldan o'rnatish")
+        self.install_file_button = SecondaryButton(tr("Fayldan o'rnatish"))
         self.install_file_button.clicked.connect(
             lambda: self.update_flow.install_from_file()
         )
@@ -232,7 +244,7 @@ class SettingsPage(QWidget):
         receipt = ReceiptService.get_settings()
 
         self.receipt_printer_combo.clear()
-        self.receipt_printer_combo.addItem("Tizim standarti", "")
+        self.receipt_printer_combo.addItem(tr("Tizim standarti"), "")
 
         names = ReceiptService.list_printers()
 
@@ -243,7 +255,7 @@ class SettingsPage(QWidget):
 
         if saved and saved not in names:
             # Saqlangan printer hozir ulanmagan — tanlov yo'qolmasin.
-            self.receipt_printer_combo.addItem(f"{saved} (topilmadi)", saved)
+            self.receipt_printer_combo.addItem(tr("{0} (topilmadi)").format(saved), saved)
 
         self.receipt_printer_combo.setCurrentIndex(
             max(0, self.receipt_printer_combo.findData(saved))
@@ -270,7 +282,7 @@ class SettingsPage(QWidget):
         try:
             ReceiptService.save_settings(self._receipt_form_data())
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
             return
 
         ReceiptPreviewDialog(ReceiptService.build_sample(), self).exec()
@@ -280,22 +292,20 @@ class SettingsPage(QWidget):
             ReceiptService.save_settings(self._receipt_form_data())
             ReceiptService.print_test()
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
         except ReceiptPrintError as error:
-            QMessageBox.warning(self, "Chek chop etilmadi", str(error))
+            QMessageBox.warning(self, tr("Chek chop etilmadi"), str(error))
 
     def _refresh_fiscal_hint(self, fiscal):
         gaps = ProductService.get_fiscal_gaps()
         mode = (
-            "o'chiq (soliq operatori hali ulanmagan)"
+            tr("o'chiq (soliq operatori hali ulanmagan)")
             if fiscal["fiscal_mode"] == SettingsService.FISCAL_MODE_OFF
             else fiscal["fiscal_mode"]
         )
 
         self.fiscal_hint_label.setText(
-            f"Fiskalizatsiya: {mode}. "
-            f"IKPU kodi yo'q: {gaps['missing_ikpu']} / {gaps['total']} "
-            f"mahsulot, qadoq kodi yo'q: {gaps['missing_package']}."
+            tr("Fiskalizatsiya: {0}. IKPU kodi yo'q: {1} / {2} mahsulot, qadoq kodi yo'q: {3}.").format(mode, gaps['missing_ikpu'], gaps['total'], gaps['missing_package'])
         )
 
     def save_settings(self):
@@ -304,8 +314,8 @@ class SettingsPage(QWidget):
         if not store_name:
             QMessageBox.warning(
                 self,
-                "Diqqat",
-                "Do'kon nomini kiriting.",
+                tr("Diqqat"),
+                tr("Do'kon nomini kiriting."),
             )
             return
 
@@ -318,13 +328,13 @@ class SettingsPage(QWidget):
                 "default_vat_rate": self.default_vat_edit.text(),
             })
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
             return
 
         try:
             ReceiptService.save_settings(self._receipt_form_data())
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
             return
 
         SettingsService.save_store_settings({
@@ -335,30 +345,46 @@ class SettingsPage(QWidget):
 
         QMessageBox.information(
             self,
-            "Muvaffaqiyatli",
-            "Sozlamalar saqlandi.",
+            tr("Muvaffaqiyatli"),
+            tr("Sozlamalar saqlandi."),
         )
+
+    def change_language(self):
+        code = self.language_combo.currentData()
+
+        if code == get_language():
+            return
+
+        save_language(code)
+
+        # Xabar YANGI tilda ko'rsatiladi (hozirgi til hali eski).
+        message = {
+            "uz": "Til o'zgartirildi. O'zgarish dasturni qayta ochgandan keyin kuchga kiradi.",
+            "ru": "Язык изменён. Изменение вступит в силу после перезапуска программы.",
+        }[code]
+
+        QMessageBox.information(self, tr("Til"), message)
 
     def create_backup(self):
         try:
             backup_path = BackupService.create_backup()
 
         except ValueError as error:
-            QMessageBox.warning(self, "Diqqat", str(error))
+            QMessageBox.warning(self, tr("Diqqat"), str(error))
             return
 
         except Exception:
             QMessageBox.critical(
                 self,
-                "Xatolik",
-                "Zaxira nusxa yaratishda xatolik yuz berdi.",
+                tr("Xatolik"),
+                tr("Zaxira nusxa yaratishda xatolik yuz berdi."),
             )
             return
 
         QMessageBox.information(
             self,
-            "Muvaffaqiyatli",
-            f"Zaxira nusxa yaratildi: {backup_path.name}",
+            tr("Muvaffaqiyatli"),
+            tr("Zaxira nusxa yaratildi: {0}").format(backup_path.name),
         )
 
     def open_restore_dialog(self):

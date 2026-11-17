@@ -8,21 +8,20 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.formatters import format_money, parse_number
+from app.i18n import tr
 
 
 class ShiftCloseDialog(QDialog):
     def __init__(self, shift, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle("Smenani yopish")
+        self.setWindowTitle(tr("Smenani yopish"))
         self.setMinimumWidth(320)
 
         main_layout = QVBoxLayout(self)
 
         info_label = QLabel(
-            f"Kassir: {shift.cashier_name}\n"
-            f"Boshlang'ich summa: "
-            f"{format_money(shift.opening_cash_amount)} so'm"
+            tr("Kassir: {0}\nBoshlang'ich summa: {1} so'm").format(shift.cashier_name, format_money(shift.opening_cash_amount))
         )
         info_label.setObjectName("mutedText")
 
@@ -30,11 +29,11 @@ class ShiftCloseDialog(QDialog):
 
         self.closing_cash_edit = QLineEdit()
         self.closing_cash_edit.setPlaceholderText(
-            "Kassadagi hisoblangan naqd pul"
+            tr("Kassadagi hisoblangan naqd pul")
         )
 
         form_layout.addRow(
-            "Kassadagi naqd pul:", self.closing_cash_edit
+            tr("Kassadagi naqd pul:"), self.closing_cash_edit
         )
 
         buttons = QDialogButtonBox(
