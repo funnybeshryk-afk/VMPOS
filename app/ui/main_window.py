@@ -27,6 +27,7 @@ from app.ui.warehouse_page import WarehousePage
 from app.utils.icons import load_icon
 from app.utils.paths import get_bundle_base_dir
 from app.version import APP_VERSION
+from app.utils.win_chrome import style_title_bar
 from app.widgets.app_status_bar import AppStatusBar
 from app.widgets.sidebar_menu import SidebarMenu
 from app.i18n import tr
@@ -73,6 +74,11 @@ class MainWindow(QMainWindow):
         self._build_ui()
         self._choose_active_user()
         self.rebuild_menu()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        # Sarlavha rangi oyna (HWND) yaratilgandan keyin qo'yiladi.
+        style_title_bar(self)
 
     def _build_ui(self):
         central_widget = QWidget()
@@ -142,13 +148,21 @@ class MainWindow(QMainWindow):
         for page, _roles in self._pages_by_key.values():
             self.workspace.addWidget(page)
 
-        content_layout.addWidget(sidebar)
-        content_layout.addWidget(self.workspace)
-
         self.status_bar = AppStatusBar()
 
-        main_layout.addLayout(content_layout)
-        main_layout.addWidget(self.status_bar)
+        # Rels BUTUN balandlikda (pastgacha), holat qatori esa faqat
+        # ish maydoni ostida: har modul o'z aniq chegarasiga ega — rels
+        # (qora), ish maydoni (krem), holat qatori (oq, ustida chiziq).
+        workspace_column = QVBoxLayout()
+        workspace_column.setContentsMargins(0, 0, 0, 0)
+        workspace_column.setSpacing(0)
+        workspace_column.addWidget(self.workspace, 1)
+        workspace_column.addWidget(self.status_bar)
+
+        content_layout.addWidget(sidebar)
+        content_layout.addLayout(workspace_column, 1)
+
+        main_layout.addLayout(content_layout, 1)
 
     def _build_logo_row(self):
         # Rels ichida logo — faqat belgi (V + barg), oq "badge" ichida

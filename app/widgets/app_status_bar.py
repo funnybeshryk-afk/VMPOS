@@ -1,3 +1,4 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from app.widgets.badge import StatusBadge
@@ -25,6 +26,10 @@ class AppStatusBar(QWidget):
         super().__init__()
 
         self.setObjectName("statusBar")
+        # Qt'da QWidget'dan meros olingan o'z klassi QSS fonini
+        # (#statusBar) FAQAT shu atribut bilan chizadi — busiz qator
+        # fonsiz va chegarasiz qolgan edi.
+        self.setAttribute(Qt.WA_StyledBackground, True)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(16, 6, 16, 6)
@@ -47,6 +52,7 @@ class AppStatusBar(QWidget):
     @staticmethod
     def _build_device_indicator(device_name):
         container = QWidget()
+        container.setObjectName("statusBarItem")
 
         container_layout = QHBoxLayout(container)
         container_layout.setContentsMargins(0, 0, 0, 0)
