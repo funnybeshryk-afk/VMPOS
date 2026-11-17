@@ -1,6 +1,6 @@
-VMPOS 1.3.0 — rus tili / русский язык:
-- Yangi: dasturning to'liq rus tilidagi interfeysi. Sozlamalar -> "Til" bo'limidan O'zbekcha yoki Русский tanlanadi; o'zgarish dasturni qayta ochgandan keyin kuchga kiradi.
-- Standart til o'zbekcha — hech narsa o'zgarmaydi, agar rus tilini tanlamasangiz.
-- Qt standart oynalari (Ha/Yo'q, fayl tanlash, kalendar) ham rus tilida chiqadi; o'lchov birliklari (dona, kg) ruscha qisqartmalar bilan ko'rsatiladi.
-- Mahsulot, kategoriya va mijoz nomlari o'zgarishsiz qoladi (bu sizning ma'lumotlaringiz).
-- Ma'lumotlar bazasi tuzilmasi o'zgarmagan (sxema v1): eski versiyalar bilan to'liq mos.
+VMPOS 1.3.1 — Sotuv tuzatishlari:
+- Ekran miltillashi kamaytirildi: korzinaga mahsulot qo'shilganda katalogdagi butun panjara emas, faqat bitta kartochka qayta chiziladi (sekin kassa kompyuterlarida yengilroq).
+- Qoldiq tugagan mahsulot katalogda endi xira va kulrang "+" bilan ko'rinadi — sotuvga tayyor mahsulotdan ajralib turadi.
+- Mahsulotni korzinaga qo'shish yoki miqdorini o'zgartirishdan oldin haqiqiy qoldiq bazadan qayta tekshiriladi: kassir "bor" deb ko'rgan mahsulot tugagan bo'lsa, to'lovda emas, darhol ogohlantiriladi.
+- Og'irlikli (kg) mahsulot miqdori endi ramkali tugma va qalam belgisi bilan ko'rinadi — bosib, miqdorni o'zgartirish mumkinligi aniq bo'ladi.
+- Ma'lumotlar bazasi tuzilmasi o'zgarmagan (sxema v1).
