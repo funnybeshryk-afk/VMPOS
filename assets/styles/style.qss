@@ -906,17 +906,23 @@ QDialogButtonBox QPushButton {
    10. СТРОКА СОСТОЯНИЯ
    -------------------------------------------------------------------------- */
 
+/* Holat qatori — chap rels va oyna sarlavhasi bilan bir xil "ink": uchala
+   qora qism birga ish maydonini (krem) aniq ramkaga oladi. */
 QWidget#statusBar {
-    background: #ffffff;
-    border-top: 1px solid #ece7df;
+    background: #1c1917;
+    border-top: 1px solid #292524;
+    min-height: 36px;
 }
 
-QLabel#statusBarHint {
-    color: #78716c;
-    font-size: 12px;
+QWidget#statusBarItem {
     background: transparent;
 }
 
+QLabel#statusBarHint {
+    color: #a8a29e;
+    font-size: 12px;
+    background: transparent;
+}
 
 /* --------------------------------------------------------------------------
    9. SOTUV REDESIGN: chap rels, qidiruv, kategoriyalar, korzina, to'lov
